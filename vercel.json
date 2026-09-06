@@ -2,5 +2,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".output",
   "installCommand": "npm install",
-  "framework": null
+  "framework": null,
+  "build": {
+    "env": {
+      "VITE_CLOUDINARY_CLOUD_NAME": "dmhfqxswo"
+    }
+  }
 }
