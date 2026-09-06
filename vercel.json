@@ -1,11 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".output",
+  "buildCommand": "NITRO_PRESET=vercel npm run build",
+  "outputDirectory": ".vercel/output",
   "installCommand": "npm install",
-  "framework": null,
-  "build": {
-    "env": {
-      "VITE_CLOUDINARY_CLOUD_NAME": "dmhfqxswo"
-    }
-  }
+  "framework": null
 }
