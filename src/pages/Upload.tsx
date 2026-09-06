@@ -15,9 +15,9 @@ import {
 import {
   MAX_FILES,
   MAX_FILE_SIZE,
-  isFirebaseConfigured,
+  isCloudinaryConfigured,
   uploadShoot,
-} from "@/lib/firebase";
+} from "@/lib/uploads";
 
 interface Item {
   file: File;
@@ -114,7 +114,7 @@ export default function UploadPage() {
 
   const start = async () => {
     if (validItems.length === 0 || !consent) return;
-    if (!isFirebaseConfigured()) {
+    if (!isCloudinaryConfigured()) {
       toast.error("Хранилище недоступно", {
         description: "Попробуйте позже или напишите нам в Telegram.",
       });
@@ -350,23 +350,14 @@ export default function UploadPage() {
               <span className="text-sm leading-relaxed text-foreground">
                 Я получил согласие клиентов на обработку фото и согласен на трансграничную передачу фото в{" "}
                 <a
-                  href="https://firebase.google.com/support/privacy?hl=ru"
+                  href="https://cloudinary.com/terms"
                   target="_blank"
                   rel="noreferrer"
                   className="text-primary hover:underline"
                 >
-                  Firebase Storage
+                  Cloudinary
                 </a>{" "}
-                (EU) и{" "}
-                <a
-                  href="https://ai.google.dev/gemini-api/terms?hl=ru"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Google Gemini
-                </a>{" "}
-                для AI-отбора. Фото хранятся 7 дней и удаляются автоматически.
+                для отображения загруженных фото. Фото хранятся 7 дней и удаляются автоматически.
               </span>
             </label>
           )}
@@ -397,25 +388,68 @@ export default function UploadPage() {
 
           {/* RESULT */}
           {status === "done" && (
-            <div className="mt-10 rounded-3xl border border-primary/40 bg-primary/10 p-6 text-center sm:p-8">
-              <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
-              <p className="mt-3 text-lg font-semibold">
-                Загружено {uploadedUrls.length} фото. Скоро покажем отбор.
-              </p>
-              <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="mt-10 rounded-3xl border border-primary/40 bg-primary/10 p-6 sm:p-8">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-lg font-semibold">
+                    Загружено {uploadedUrls.length} фото
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {email ? `Личный кабинет: ${email}` : "Без привязки к email"}
+                    {" · "}
+                    {new Date().toLocaleString("ru-RU", {
+                      timeZone: "Europe/Moscow",
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-primary/30 bg-background/60 px-4 py-3 text-sm">
+                  <p className="font-semibold text-primary">Ссылка на галерею</p>
+                  <p className="mt-1 break-all text-muted-foreground">
+                    {typeof window !== "undefined"
+                      ? `${window.location.origin}/gallery/${Date.now()}`
+                      : "Галерея создаётся..."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
                 {uploadedUrls.slice(0, 9).map((url, i) => (
                   <div
                     key={url}
-                    className="aspect-square overflow-hidden rounded-xl border border-primary/30 bg-muted"
+                    className="group relative aspect-square overflow-hidden rounded-xl border border-primary/30 bg-muted"
                   >
                     <img
                       src={url}
                       alt={`Загруженный кадр ${i + 1}`}
                       loading="lazy"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/80 to-transparent p-2 text-left">
+                      <p className="text-xs font-medium">Кадр {i + 1}</p>
+                    </div>
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Все файлы загружены в Cloudinary и будут доступны по прямой ссылке.
+                </p>
+                <button
+                  onClick={() => {
+                    setStatus("idle");
+                    setUploadedUrls([]);
+                    setItems([]);
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary"
+                >
+                  Загрузить другую съёмку
+                </button>
               </div>
             </div>
           )}
