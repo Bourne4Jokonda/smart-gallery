@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as ApiNotifyLeadRouteImport } from './routes/api/notify-lead'
+import { Route as GalleryIdRouteImport } from './routes/gallery/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const ApiNotifyLeadRoute = ApiNotifyLeadRouteImport.update({
   path: '/api/notify-lead',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GalleryIdRoute = GalleryIdRouteImport.update({
+  id: '/gallery/$id',
+  path: '/gallery/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/upload': typeof UploadRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
+  '/gallery/$id': typeof GalleryIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/upload': typeof UploadRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
+  '/gallery/$id': typeof GalleryIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,20 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/upload': typeof UploadRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
+  '/gallery/$id': typeof GalleryIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/privacy' | '/upload' | '/api/notify-lead'
+  fullPaths: '/' | '/privacy' | '/upload' | '/api/notify-lead' | '/gallery/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/privacy' | '/upload' | '/api/notify-lead'
-  id: '__root__' | '/' | '/privacy' | '/upload' | '/api/notify-lead'
+  to: '/' | '/privacy' | '/upload' | '/api/notify-lead' | '/gallery/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/privacy'
+    | '/upload'
+    | '/api/notify-lead'
+    | '/gallery/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +82,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   UploadRoute: typeof UploadRoute
   ApiNotifyLeadRoute: typeof ApiNotifyLeadRoute
+  GalleryIdRoute: typeof GalleryIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotifyLeadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/gallery/$id': {
+      id: '/gallery/$id'
+      path: '/gallery/$id'
+      fullPath: '/gallery/$id'
+      preLoaderRoute: typeof GalleryIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,17 +130,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   UploadRoute: UploadRoute,
   ApiNotifyLeadRoute: ApiNotifyLeadRoute,
+  GalleryIdRoute: GalleryIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

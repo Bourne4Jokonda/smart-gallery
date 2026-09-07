@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, createFileRoute, useParams } from "@tanstack/react-router";
 import { Camera, Download, Images, Loader2, Sparkles } from "lucide-react";
 
 interface ShootRecord {
@@ -31,13 +31,17 @@ function writeShoots(shoots: Record<string, ShootRecord>) {
   }
 }
 
+export const Route = createFileRoute("/gallery/$id")({
+  component: GalleryPage,
+});
+
 export function saveShoot(record: ShootRecord) {
   const shoots = readShoots();
   shoots[record.shootId] = record;
   writeShoots(shoots);
 }
 
-export default function GalleryPage() {
+function GalleryPage() {
   const { id = "" } = useParams({ strict: false }) as { id?: string };
   const [record, setRecord] = useState<ShootRecord | null>(null);
   const [loading, setLoading] = useState(true);
