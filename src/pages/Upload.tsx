@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   AlertTriangle,
@@ -18,6 +18,17 @@ import {
   isCloudinaryConfigured,
   uploadShoot,
 } from "@/lib/uploads";
+import { saveShoot } from "@/routes/gallery/$id";
+
+function generateShootId(): string {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+  return `shoot-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 interface Item {
   file: File;
@@ -44,10 +55,12 @@ function validate(file: File): { valid: boolean; reason: string } {
 }
 
 export default function UploadPage() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [dragging, setDragging] = useState(false);
   const [status, setStatus] = useState<"idle" | "uploading" | "done">("idle");
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
+  const [shootId, setShootId] = useState<string>("");
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -134,15 +147,25 @@ export default function UploadPage() {
           });
         },
       });
+      const newShootId = generateShootId();
+      saveShoot({
+        shootId: newShootId,
+        fileUrls: result.fileUrls,
+        email,
+        createdAt: Date.now(),
+      });
       setUploadedUrls(result.fileUrls);
+      setShootId(newShootId);
       setStatus("done");
       toast.success(`Загружено ${result.fileUrls.length} фото`, {
         description: "AI приступил к отбору — скоро покажем результат.",
       });
-    } catch {
+    } catch (err) {
       setStatus("idle");
+      const message =
+        err instanceof Error ? err.message : "Неизвестная ошибка";
       toast.error("Не удалось загрузить фото", {
-        description: "Проверьте подключение и попробуйте ещё раз.",
+        description: message,
       });
     }
   };
@@ -409,11 +432,15 @@ export default function UploadPage() {
                 </div>
                 <div className="rounded-xl border border-primary/30 bg-background/60 px-4 py-3 text-sm">
                   <p className="font-semibold text-primary">Ссылка на галерею</p>
-                  <p className="mt-1 break-all text-muted-foreground">
+                  <Link
+                    to="/gallery/$id"
+                    params={{ id: shootId }}
+                    className="mt-1 block break-all text-muted-foreground transition-colors hover:text-primary"
+                  >
                     {typeof window !== "undefined"
-                      ? `${window.location.origin}/gallery/${Date.now()}`
-                      : "Галерея создаётся..."}
-                  </p>
+                      ? `${window.location.origin}/gallery/${shootId}`
+                      : `/gallery/${shootId}`}
+                  </Link>
                 </div>
               </div>
 
