@@ -114,7 +114,7 @@ export default function UploadPage() {
       const rejected = next.filter((i) => !i.valid).length;
       if (rejected > 0) {
         toast.error(`${rejected} файл(ов) не подходят`, {
-          description: "Принимаем только изображения до 10 МБ.",
+          description: "Принимаем только изображения до 100 МБ.",
         });
       }
       return [...prev, ...next];
@@ -195,8 +195,8 @@ export default function UploadPage() {
             Загрузите свою съёмку
           </h1>
           <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground">
-            Перетащите папку с фото (до 2000 файлов, JPG/PNG/RAW до 10MB). AI отберёт
-            лучшие за 10 минут.
+            Перетащите папку с фото (до 2000 файлов, JPG/PNG/RAW до 100MB). AI отберёт
+            лучшие за 10 минут. Мы сожмём фото автоматически.
           </p>
 
           {/* DROPZONE */}
@@ -230,7 +230,7 @@ export default function UploadPage() {
               Перетащите файлы сюда или нажмите для выбора
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              JPG, PNG, RAW · до 10 МБ на файл
+              JPG, PNG, RAW · до 100 МБ на файл (сжимаем автоматически)
             </p>
             <button
               type="button"

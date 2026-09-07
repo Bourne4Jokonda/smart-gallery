@@ -1,6 +1,17 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
-import { Camera, Download, Images, Loader2, Sparkles } from "lucide-react";
+import {
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Images,
+  Loader2,
+  Sparkles,
+  X,
+} from "lucide-react";
+import JSZip from "jszip";
+import { toast } from "sonner";
 
 interface ShootRecord {
   shootId: string;
@@ -31,6 +42,55 @@ function writeShoots(shoots: Record<string, ShootRecord>) {
   }
 }
 
+function filenameFromUrl(url: string, index: number): string {
+  try {
+    const u = new URL(url);
+    const last = u.pathname.split("/").filter(Boolean).pop() ?? "";
+    if (last && /\.(jpe?g|png|webp|heic|avif|gif)$/i.test(last)) {
+      return last;
+    }
+  } catch {
+    // ignore
+  }
+  return `photo-${String(index + 1).padStart(3, "0")}.jpg`;
+}
+
+async function downloadAsZip(
+  urls: string[],
+  shootId: string,
+  onProgress?: (done: number, total: number) => void,
+) {
+  const zip = new JSZip();
+  const folder = zip.folder(`smart-gallery-${shootId.slice(-6)}`) ?? zip;
+
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i]!;
+    const name = filenameFromUrl(url, i);
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      folder.file(name, blob);
+    } catch (err) {
+      console.error("zip fetch failed", url, err);
+    }
+    onProgress?.(i + 1, urls.length);
+  }
+
+  const archive = await folder.generateAsync(
+    { type: "blob", compression: "STORE" },
+    () => {},
+  );
+  const archiveUrl = URL.createObjectURL(archive);
+  const a = document.createElement("a");
+  a.href = archiveUrl;
+  a.download = `smart-gallery-${shootId.slice(-6)}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(archiveUrl), 1000);
+}
+
 export const Route = createFileRoute("/gallery/$id")({
   component: GalleryPage,
 });
@@ -45,12 +105,64 @@ function GalleryPage() {
   const { id = "" } = useParams({ strict: false }) as { id?: string };
   const [record, setRecord] = useState<ShootRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [zipping, setZipping] = useState(false);
+  const [zipProgress, setZipProgress] = useState({ done: 0, total: 0 });
 
   useEffect(() => {
     const shoots = readShoots();
     setRecord(shoots[id] ?? null);
     setLoading(false);
   }, [id]);
+
+  // Lightbox: lock body scroll + keyboard nav
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (!record) return;
+      if (e.key === "Escape") setLightboxIndex(null);
+      if (e.key === "ArrowRight") {
+        setLightboxIndex((i) =>
+          i === null ? null : (i + 1) % record.fileUrls.length,
+        );
+      }
+      if (e.key === "ArrowLeft") {
+        setLightboxIndex((i) =>
+          i === null
+            ? null
+            : (i - 1 + record.fileUrls.length) % record.fileUrls.length,
+        );
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [lightboxIndex, record]);
+
+  const handleDownloadZip = useCallback(async () => {
+    if (!record || zipping) return;
+    setZipping(true);
+    setZipProgress({ done: 0, total: record.fileUrls.length });
+    const toastId = toast.loading("Собираем ZIP…");
+    try {
+      await downloadAsZip(record.fileUrls, record.shootId, (done, total) =>
+        setZipProgress({ done, total }),
+      );
+      toast.success(
+        `ZIP готов — ${record.fileUrls.length} фото`,
+        { id: toastId },
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Неизвестная ошибка";
+      toast.error("Не удалось собрать ZIP", { id: toastId, description: message });
+    } finally {
+      setZipping(false);
+    }
+  }, [record, zipping]);
 
   if (loading) {
     return (
@@ -147,35 +259,43 @@ function GalleryPage() {
               </p>
               <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
                 Загружено {record.fileUrls.length}{" "}
-                {record.fileUrls.length === 1
-                  ? "фото"
-                  : record.fileUrls.length < 5
-                    ? "фото"
-                    : "фото"}
+                {record.fileUrls.length === 1 ? "фото" : "фото"}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 {dateStr}
                 {record.email ? ` · ${record.email}` : " · без email"}
               </p>
             </div>
-            <a
-              href={record.fileUrls[0] ?? "#"}
-              download
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary"
+            <button
+              type="button"
+              onClick={handleDownloadZip}
+              disabled={zipping || record.fileUrls.length === 0}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Download className="h-4 w-4 text-primary" />
-              Скачать всё
-            </a>
+              {zipping ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  {zipProgress.total > 0
+                    ? `Скачиваем ${zipProgress.done} / ${zipProgress.total}`
+                    : "Собираем…"}
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 text-primary" />
+                  Скачать всё (ZIP)
+                </>
+              )}
+            </button>
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
             {record.fileUrls.map((url, i) => (
-              <a
+              <button
                 key={url}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
+                type="button"
+                onClick={() => setLightboxIndex(i)}
                 className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted transition-transform hover:scale-[1.02]"
+                aria-label={`Открыть кадр ${i + 1}`}
               >
                 <img
                   src={url}
@@ -186,7 +306,7 @@ function GalleryPage() {
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-3 text-left">
                   <p className="text-xs font-semibold">Кадр {i + 1}</p>
                 </div>
-              </a>
+              </button>
             ))}
           </div>
 
@@ -229,6 +349,70 @@ function GalleryPage() {
           </p>
         </div>
       </footer>
+
+      {/* LIGHTBOX */}
+      {lightboxIndex !== null && record.fileUrls[lightboxIndex] && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm"
+          onClick={() => setLightboxIndex(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex(null);
+            }}
+            className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-colors hover:border-primary hover:text-primary"
+            aria-label="Закрыть"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          {record.fileUrls.length > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxIndex(
+                  (lightboxIndex - 1 + record.fileUrls.length) %
+                    record.fileUrls.length,
+                );
+              }}
+              className="absolute left-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-colors hover:border-primary hover:text-primary"
+              aria-label="Предыдущее фото"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+          )}
+
+          <img
+            src={record.fileUrls[lightboxIndex]}
+            alt={`Кадр ${lightboxIndex + 1}`}
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+          />
+
+          {record.fileUrls.length > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxIndex((lightboxIndex + 1) % record.fileUrls.length);
+              }}
+              className="absolute right-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-colors hover:border-primary hover:text-primary"
+              aria-label="Следующее фото"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          )}
+
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-border bg-card/80 px-4 py-1.5 text-xs font-medium text-foreground">
+            {lightboxIndex + 1} / {record.fileUrls.length}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
