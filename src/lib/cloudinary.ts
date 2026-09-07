@@ -44,7 +44,15 @@ export async function uploadToCloudinary(
           );
         }
       } else {
-        reject(new Error(`Cloudinary upload failed: ${xhr.status}`));
+        let message = `Cloudinary upload failed: ${xhr.status}`;
+        try {
+          const data = JSON.parse(xhr.responseText) as { error?: { message?: string } };
+          const detail = data?.error?.message;
+          if (detail) message += ` — ${detail}`;
+        } catch {
+          // ignore JSON parse errors
+        }
+        reject(new Error(message));
       }
     };
 

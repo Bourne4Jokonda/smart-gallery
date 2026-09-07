@@ -9,7 +9,7 @@ export interface ShootUploadResult {
 
 export type UploadProgressHandler = (index: number, percent: number) => void;
 
-export const MAX_FILE_SIZE = 20 * 1024 * 1024;
+export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 export const MAX_FILES = 2000;
 
 export function validate(file: File): { valid: boolean; reason: string } {
