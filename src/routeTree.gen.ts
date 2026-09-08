@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as UploadRouteImport } from './routes/upload'
+import { Route as ApiCurateRouteImport } from './routes/api/curate'
 import { Route as ApiNotifyLeadRouteImport } from './routes/api/notify-lead'
 import { Route as GalleryIdRouteImport } from './routes/gallery/$id'
 
@@ -30,6 +31,11 @@ const UploadRoute = UploadRouteImport.update({
   path: '/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCurateRoute = ApiCurateRouteImport.update({
+  id: '/api/curate',
+  path: '/api/curate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNotifyLeadRoute = ApiNotifyLeadRouteImport.update({
   id: '/api/notify-lead',
   path: '/api/notify-lead',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/upload': typeof UploadRoute
+  '/api/curate': typeof ApiCurateRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
   '/gallery/$id': typeof GalleryIdRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/upload': typeof UploadRoute
+  '/api/curate': typeof ApiCurateRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
   '/gallery/$id': typeof GalleryIdRoute
 }
@@ -60,19 +68,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/upload': typeof UploadRoute
+  '/api/curate': typeof ApiCurateRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
   '/gallery/$id': typeof GalleryIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/privacy' | '/upload' | '/api/notify-lead' | '/gallery/$id'
+  fullPaths:
+    | '/'
+    | '/privacy'
+    | '/upload'
+    | '/api/curate'
+    | '/api/notify-lead'
+    | '/gallery/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/privacy' | '/upload' | '/api/notify-lead' | '/gallery/$id'
+  to:
+    | '/'
+    | '/privacy'
+    | '/upload'
+    | '/api/curate'
+    | '/api/notify-lead'
+    | '/gallery/$id'
   id:
     | '__root__'
     | '/'
     | '/privacy'
     | '/upload'
+    | '/api/curate'
     | '/api/notify-lead'
     | '/gallery/$id'
   fileRoutesById: FileRoutesById
@@ -81,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PrivacyRoute: typeof PrivacyRoute
   UploadRoute: typeof UploadRoute
+  ApiCurateRoute: typeof ApiCurateRoute
   ApiNotifyLeadRoute: typeof ApiNotifyLeadRoute
   GalleryIdRoute: typeof GalleryIdRoute
 }
@@ -108,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/curate': {
+      id: '/api/curate'
+      path: '/api/curate'
+      fullPath: '/api/curate'
+      preLoaderRoute: typeof ApiCurateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/notify-lead': {
       id: '/api/notify-lead'
       path: '/api/notify-lead'
@@ -129,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PrivacyRoute: PrivacyRoute,
   UploadRoute: UploadRoute,
+  ApiCurateRoute: ApiCurateRoute,
   ApiNotifyLeadRoute: ApiNotifyLeadRoute,
   GalleryIdRoute: GalleryIdRoute,
 }
