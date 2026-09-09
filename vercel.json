@@ -2,5 +2,8 @@
   "buildCommand": "NITRO_PRESET=vercel npm run build",
   "outputDirectory": ".vercel/output",
   "installCommand": "npm install",
-  "framework": null
+  "framework": null,
+  "env": {
+    "GEMINI_API_KEY": "@gemini-api-key"
+  }
 }

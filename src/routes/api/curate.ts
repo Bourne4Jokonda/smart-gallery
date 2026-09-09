@@ -4,7 +4,21 @@ export const Route = createFileRoute("/api/curate")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const GEMINI_KEY = process.env["GEMINI_API_KEY"] ?? process.env.VITE_GEMINI_API_KEY ?? "";
+        // Priority: Vercel env > .env fallback
+        let GEMINI_KEY = (process.env["GEMINI_API_KEY"] ?? process.env.VITE_GEMINI_API_KEY ?? "").trim();
+        if (!GEMINI_KEY || GEMINI_KEY.includes("REPLACE")) {
+          try {
+            const fs = await import("fs");
+            const envContent = fs.readFileSync(".env", "utf-8");
+            const match = envContent.match(/GEMINI_API_KEY\s*=\s*([^\n]+)/);
+            if (match && match[1] && !match[1].includes("REPLACE")) {
+              GEMINI_KEY = match[1].trim();
+            }
+          } catch {
+            // ignore .env read errors
+          }
+        }
+
         if (!GEMINI_KEY || GEMINI_KEY.includes("REPLACE")) {
           return Response.json(
             { ok: false, error: "GEMINI_API_KEY not configured" },
