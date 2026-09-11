@@ -63,6 +63,10 @@ export default function UploadPage() {
   const [shootId, setShootId] = useState<string>("");
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiResults, setAiResults] = useState<
+    { url: string; score: number | null; status: string; error?: string }[]
+  >([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
 
@@ -156,10 +160,12 @@ export default function UploadPage() {
       });
       setUploadedUrls(result.fileUrls);
       setShootId(newShootId);
+      setAiResults([]);
       setStatus("done");
       toast.success(`Загружено ${result.fileUrls.length} фото`, {
         description: "AI приступил к отбору — скоро покажем результат.",
       });
+      runAiCurate(newShootId, result.fileUrls);
     } catch (err) {
       setStatus("idle");
       const message =
@@ -167,6 +173,32 @@ export default function UploadPage() {
       toast.error("Не удалось загрузить фото", {
         description: message,
       });
+    }
+  };
+
+  const runAiCurate = async (shootIdToUse: string, fileUrls: string[]) => {
+    try {
+      setAiBusy(true);
+      const response = await fetch("/api/curate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shootId: shootIdToUse, fileUrls }),
+      });
+      const data = (await response.json()) as {
+        ok: boolean;
+        results?: typeof aiResults;
+        error?: string;
+      };
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || "AI не ответил");
+      }
+      setAiResults(data.results ?? []);
+      toast.success("AI-отбор готов");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Неизвестная ошибка";
+      toast.error("AI-отбор не удался", { description: message });
+    } finally {
+      setAiBusy(false);
     }
   };
 
@@ -458,6 +490,16 @@ export default function UploadPage() {
                     />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/80 to-transparent p-2 text-left">
                       <p className="text-xs font-medium">Кадр {i + 1}</p>
+                      {aiResults.length > 0 && (
+                        (() => {
+                          const match = aiResults.find((r: { url: string; score?: number }) => r.url === url);
+                          return (
+                            <p className="text-xs font-bold text-primary">
+                              {match?.score != null ? `AI: ${match.score}/10` : aiBusy ? "Оцениваем…" : "—"}
+                            </p>
+                          );
+                        })()
+                      )}
                     </div>
                   </div>
                 ))}

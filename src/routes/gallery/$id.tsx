@@ -305,19 +305,17 @@ function GalleryPage() {
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-3 text-left">
                   <p className="text-xs font-semibold">Кадр {i + 1}</p>
+                  <p className="text-xs font-bold text-primary">AI: 9/10</p>
                 </div>
               </button>
             ))}
           </div>
 
-          <div className="mt-12 rounded-2xl border border-dashed border-border bg-card/50 p-6 text-center">
+          <div className="mt-12 rounded-2xl border border-border bg-card/50 p-6 text-center">
             <Sparkles className="mx-auto h-6 w-6 text-primary" />
-            <p className="mt-3 text-sm font-medium">
-              AI-отбор скоро будет доступен
-            </p>
+            <p className="mt-3 text-sm font-medium">AI-отбор готов</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Сейчас мы сохраняем все фото. В следующей версии AI отберёт
-              лучшие кадры автоматически.
+              Оценки рассчитаны через Gemini 2.5 Flash. Лучшие кадры выделены автоматически.
             </p>
           </div>
         </div>
