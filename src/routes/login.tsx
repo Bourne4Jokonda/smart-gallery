@@ -7,18 +7,19 @@ import {
 } from "firebase/auth";
 import { toast } from "sonner";
 import { Camera, Loader2 } from "lucide-react";
-import { auth } from "@/lib/firebase";
+import { getAuthInstance } from "@/lib/firebase";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
   beforeLoad: () => {
-    if (typeof window !== "undefined" && auth.currentUser) {
+    if (typeof window !== "undefined" && getAuthInstance().currentUser) {
       throw redirect({ to: "/" });
     }
   },
 });
 
 function LoginPage() {
+  const auth = getAuthInstance();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
