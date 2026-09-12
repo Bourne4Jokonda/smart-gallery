@@ -118,7 +118,7 @@ async function downloadSinglePhoto(url: string, index: number) {
 
 export const Route = createFileRoute("/gallery/$id")({
   beforeLoad: () => {
-    if (typeof window !== "undefined" && !getAuthInstance().currentUser) {
+    if (typeof window !== "undefined" && !window.__SMART_GALLERY_USER__) {
       throw redirect({ to: "/login" });
     }
   },

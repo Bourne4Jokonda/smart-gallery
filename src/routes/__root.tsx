@@ -12,6 +12,7 @@ import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { signOutUser } from "@/lib/firebase";
 
 function NotFoundComponent() {
   return (
@@ -117,9 +118,46 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const user = typeof window !== "undefined" ? window.__SMART_GALLERY_USER__ : null;
 
   return (
     <QueryClientProvider client={queryClient}>
+      <header className="border-b border-border">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4 sm:px-8">
+          <Link to="/" className="inline-flex items-center gap-2 font-bold tracking-tight">
+            <span className="inline-flex rounded-lg bg-primary p-1.5 text-primary-foreground">SG</span>
+            Smart Gallery
+          </Link>
+          <nav className="flex items-center gap-3 text-sm">
+            {user ? (
+              <>
+                <span className="hidden sm:inline text-xs text-muted-foreground">{user.email}</span>
+                <Link to="/upload" className="rounded-lg bg-white px-3 py-2 text-black">Загрузить</Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await signOutUser();
+                    } catch {
+                      // ignore
+                    } finally {
+                      window.__SMART_GALLERY_USER__ = null;
+                      router.invalidate();
+                      window.location.href = "/login";
+                    }
+                  }}
+                  className="rounded-lg border border-border px-3 py-2"
+                >
+                  Выйти
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="rounded-lg bg-white px-3 py-2 text-black">Войти</Link>
+            )}
+          </nav>
+        </div>
+      </header>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster theme="dark" position="bottom-center" richColors />

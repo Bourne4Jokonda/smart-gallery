@@ -1,7 +1,6 @@
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, redirect, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { getAuthInstance } from "@/lib/firebase";
 import {
   AlertTriangle,
   Camera,
@@ -19,7 +18,6 @@ import {
   isCloudinaryConfigured,
   uploadShoot,
 } from "@/lib/uploads";
-import { saveShoot } from "@/routes/gallery/$id";
 
 function generateShootId(): string {
   if (
@@ -39,7 +37,7 @@ interface Item {
   progress: number;
 }
 
-function formatSize(bytes: number) {
+function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} Б`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} КБ`;
   return `${(bytes / 1024 / 1024).toFixed(1)} МБ`;
@@ -57,12 +55,14 @@ function validate(file: File): { valid: boolean; reason: string } {
 
 export const Route = createFileRoute("/upload")({
   beforeLoad: () => {
-    if (typeof window !== "undefined" && !getAuthInstance().currentUser) {
+    if (typeof window !== "undefined" && !window.__SMART_GALLERY_USER__) {
       throw redirect({ to: "/login" });
     }
   },
   component: UploadPage,
 });
+
+function UploadPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -126,448 +126,214 @@ export const Route = createFileRoute("/upload")({
       const rejected = next.filter((i) => !i.valid).length;
       if (rejected > 0) {
         toast.error(`${rejected} файл(ов) не подходят`, {
-          description: "Принимаем только изображения до 100 МБ.",
+          description: "Принимаем только изображения до 20 МБ.",
         });
       }
       return [...prev, ...next];
     });
   };
 
-  const removeItem = (index: number) => {
-    setItems((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const start = async () => {
-    if (validItems.length === 0 || !consent) return;
-    if (!isCloudinaryConfigured()) {
-      toast.error("Хранилище недоступно", {
-        description: "Попробуйте позже или напишите нам в Telegram.",
-      });
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragging(false);
+    if (!consent) {
+      toast.error("Предварительно включите согласие на загрузку");
       return;
     }
-    setStatus("uploading");
-    try {
-      const files = validItems.map((i) => i.file);
-      const result = await uploadShoot(files, {
-        email,
-        consent,
-        onProgress: (index, percent) => {
-          setItems((prev) => {
-            const target = prev.filter((i) => i.valid)[index];
-            if (!target) return prev;
-            return prev.map((i) => (i === target ? { ...i, progress: percent } : i));
-          });
-        },
-      });
-      const newShootId = generateShootId();
-      saveShoot({
-        shootId: newShootId,
-        fileUrls: result.fileUrls,
-        email,
-        createdAt: Date.now(),
-        aiResults: [],
-      });
-      setUploadedUrls(result.fileUrls);
-      setShootId(newShootId);
-      setAiResults([]);
-      setStatus("done");
-      toast.success(`Загружено ${result.fileUrls.length} фото`, {
-        description: "AI приступил к отбору — скоро покажем результат.",
-      });
-      runAiCurate(newShootId, result.fileUrls);
-    } catch (err) {
-      setStatus("idle");
-      const message =
-        err instanceof Error ? err.message : "Неизвестная ошибка";
-      toast.error("Не удалось загрузить фото", {
-        description: message,
-      });
-    }
+    addFiles(e.dataTransfer.files);
   };
 
-  const runAiCurate = async (shootIdToUse: string, fileUrls: string[]) => {
-    try {
-      setAiBusy(true);
-      const response = await fetch("/api/curate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shootId: shootIdToUse, fileUrls }),
-      });
-      const data = (await response.json()) as {
-        ok: boolean;
-        results?: typeof aiResults;
-        error?: string;
-      };
-      if (!response.ok || !data.ok) {
-        throw new Error(data.error || "AI не ответил");
-      }
-      const results = data.results ?? [];
-      setAiResults(results);
-      saveShoot({
-        shootId: shootIdToUse,
-        fileUrls,
-        email,
-        createdAt: Date.now(),
-        aiResults: results,
-      });
-      toast.success("AI-отбор готов");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Неизвестная ошибка";
-      toast.error("AI-отбор не удался", { description: message });
-    } finally {
-      setAiBusy(false);
+  const handleUpload = async () => {
+    if (!consent) {
+      toast.error("Включите согласие на обработку и загрузку");
+      return;
     }
+    const toUpload = validItems;
+    if (toUpload.length === 0) {
+      toast.error("Нет валидных файлов для загрузки");
+      return;
+    }
+    const id = generateShootId();
+    setStatus("uploading");
+    const urls: string[] = [];
+    for (let i = 0; i < toUpload.length; i++) {
+      setItems((prev) => {
+        const next = [...prev];
+        const target = next.find((it) => it.file === toUpload[i].file);
+        if (target) target.progress = 10;
+        return next;
+      });
+      const result = await uploadShoot(id, toUpload[i].file, (p) => {
+        setItems((prev) => {
+          const next = [...prev];
+          const target = next.find((it) => it.file === toUpload[i].file);
+          if (target) target.progress = p;
+          return next;
+        });
+      });
+      if (result?.secure_url) {
+        urls.push(result.secure_url);
+      }
+      setItems((prev) => {
+        const next = [...prev];
+        const target = next.find((it) => it.file === toUpload[i].file);
+        if (target) target.progress = 100;
+        return next;
+      });
+    }
+    setUploadedUrls(urls);
+    setShootId(id);
+    if (email) localStorage.setItem("smart-gallery-email", email);
+    setStatus("done");
+    toast.success("Загрузка завершена");
+  };
+
+  const copyLink = () => {
+    const link = `${window.location.origin}/gallery/${shootId}`;
+    navigator.clipboard.writeText(link).then(() => toast.success("Ссылка скопирована"));
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased">
-      <header className="border-b border-border px-5 py-4 sm:px-8">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <Link to="/" className="inline-flex items-center gap-2 font-bold tracking-tight">
-            <span className="inline-flex rounded-lg bg-primary p-1.5">
-              <Camera className="h-4 w-4 text-primary-foreground" />
-            </span>
-            Умная галерея
-          </Link>
-          <Link
-            to="/"
-            className="text-sm text-muted-foreground transition-colors hover:text-primary"
-          >
-            На главную
-          </Link>
-        </div>
-      </header>
-
-      <main className="px-5 py-12 sm:px-8 sm:py-16">
-        <div className="mx-auto max-w-3xl">
-          <h1 className="text-balance text-3xl font-extrabold tracking-tight sm:text-5xl">
-            Загрузите свою съёмку
-          </h1>
-          <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground">
-            Перетащите папку с фото (до 2000 файлов, JPG/PNG/RAW до 100MB). AI отберёт
-            лучшие за 10 минут. Мы сожмём фото автоматически.
+    <main className="mx-auto max-w-5xl px-4 py-10">
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Загрузка фотосессии</h1>
+          <p className="text-sm opacity-80">
+            Перетащите изображения или выберите файлы/папку.
           </p>
-
-          {/* DROPZONE */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragging(false);
-              addFiles(e.dataTransfer.files);
-            }}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
             onClick={() => fileInput.current?.click()}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") fileInput.current?.click();
-            }}
-            className={`mt-8 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed px-6 py-14 text-center transition-colors ${
-              dragging
-                ? "border-primary bg-primary/10"
-                : "border-border bg-card hover:border-primary/60"
-            }`}
+            className="inline-flex items-center gap-2 rounded-lg bg-black/80 px-4 py-2 text-white"
           >
-            <span className="inline-flex rounded-2xl bg-primary/15 p-4">
-              <UploadCloud className="h-8 w-8 text-primary" />
-            </span>
-            <p className="mt-5 text-base font-semibold sm:text-lg">
-              Перетащите файлы сюда или нажмите для выбора
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              JPG, PNG, RAW · до 100 МБ на файл (сжимаем автоматически)
-            </p>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                folderInput.current?.click();
-              }}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary"
-            >
-              <FolderOpen className="h-4 w-4 text-primary" />
-              Выбрать папку
-            </button>
-          </div>
+            <Images className="h-4 w-4" /> Файлы
+          </button>
+          <button
+            type="button"
+            onClick={() => folderInput.current?.click()}
+            className="inline-flex items-center gap-2 rounded-lg bg-black/80 px-4 py-2 text-white"
+          >
+            <FolderOpen className="h-4 w-4" /> Папка
+          </button>
+        </div>
+      </div>
 
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        className={`rounded-2xl border-2 border-dashed p-6 transition ${
+          dragging ? "border-white/60 bg-white/10" : "border-white/20"
+        }`}
+      >
+        <div className="flex flex-col items-center gap-3">
+          <UploadCloud className="h-10 w-10 opacity-80" />
+          <p className="text-sm opacity-80">
+            Перетащите сюда до {MAX_FILES} изображений
+          </p>
           <input
             ref={fileInput}
             type="file"
             accept="image/*"
             multiple
             className="hidden"
-            onChange={(e) => {
-              addFiles(e.target.files);
-              e.target.value = "";
-            }}
+            onChange={(e) => addFiles(e.target.files)}
           />
           <input
             ref={folderInput}
             type="file"
+            accept="image/*"
             multiple
+            // webkitdirectory не даёт полный путь, но позволяет выбрать папку
+            {...({ webkitdirectory: "true", directory: "true" } as any)}
             className="hidden"
-            // @ts-expect-error нестандартные атрибуты выбора папки
-            webkitdirectory=""
-            directory=""
-            onChange={(e) => {
-              addFiles(e.target.files);
-              e.target.value = "";
-            }}
+            onChange={(e) => addFiles(e.target.files)}
           />
-
-          {/* COUNTER + PROGRESS */}
-          {items.length > 0 && (
-            <div className="mt-8 rounded-2xl border border-border bg-card p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm font-semibold">
-                  Выбрано {items.length} / {MAX_FILES}
-                  {items.length !== validItems.length && (
-                    <span className="ml-2 text-destructive">
-                      · подходят {validItems.length}
-                    </span>
-                  )}
-                </p>
-                {status !== "done" && (
-                  <button
-                    onClick={() => setItems([])}
-                    className="text-sm text-muted-foreground hover:text-destructive"
-                  >
-                    Очистить список
-                  </button>
-                )}
-              </div>
-              <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-300"
-                  style={{ width: `${totalProgress}%` }}
-                />
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Общий прогресс: {totalProgress}%
-              </p>
-            </div>
-          )}
-
-          {/* FILE LIST */}
-          {items.length > 0 && (
-            <ul className="mt-5 max-h-96 space-y-2 overflow-y-auto pr-1">
-              {items.map((item, i) => (
-                <li
-                  key={`${item.file.name}-${i}`}
-                  className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
-                >
-                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
-                    {item.preview ? (
-                      <img
-                        src={item.preview}
-                        alt={item.file.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span className="flex h-full w-full items-center justify-center">
-                        <Images className="h-5 w-5 text-muted-foreground" />
-                      </span>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{item.file.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatSize(item.file.size)}
-                      {!item.valid && (
-                        <span className="ml-2 text-destructive">{item.reason}</span>
-                      )}
-                    </p>
-                    {item.valid && (
-                      <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all duration-300"
-                          style={{ width: `${item.progress}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  {item.valid ? (
-                    <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
-                  ) : (
-                    <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" />
-                  )}
-                  {status === "idle" && (
-                    <button
-                      onClick={() => removeItem(i)}
-                      aria-label={`Убрать ${item.file.name}`}
-                      className="shrink-0 rounded-lg p-1 text-muted-foreground hover:text-destructive"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* CONSENT */}
-          {validItems.length > 0 && status === "idle" && (
-            <label className="mt-8 flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-card p-4">
-              <input
-                type="checkbox"
-                required
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-                className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-border bg-background accent-primary text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <span className="text-sm leading-relaxed text-foreground">
-                Я получил согласие клиентов на обработку фото и согласен на трансграничную передачу фото в{" "}
-                <a
-                  href="https://cloudinary.com/terms"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Cloudinary
-                </a>{" "}
-                для отображения загруженных фото. Фото хранятся 7 дней и удаляются автоматически.
-              </span>
-            </label>
-          )}
-
-          {/* ACTION */}
-          <button
-            onClick={start}
-            disabled={validItems.length === 0 || status !== "idle" || !consent}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-base font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {status === "uploading" ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Загружаем… {totalProgress}%
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                Запустить AI-отбор
-              </>
-            )}
-          </button>
-          {status === "idle" && validItems.length > 0 && !consent && (
-            <p className="mt-3 text-center text-xs text-muted-foreground">
-              Отметьте согласие чтобы продолжить
-            </p>
-          )}
-
-          {/* RESULT */}
-          {status === "done" && (
-            <div className="mt-10 rounded-3xl border border-primary/40 bg-primary/10 p-6 sm:p-8">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-lg font-semibold">
-                    Загружено {uploadedUrls.length} фото
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {email ? `Личный кабинет: ${email}` : "Без привязки к email"}
-                    {" · "}
-                    {new Date().toLocaleString("ru-RU", {
-                      timeZone: "Europe/Moscow",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-primary/30 bg-background/60 px-4 py-3 text-sm">
-                  <p className="font-semibold text-primary">Ссылка на галерею</p>
-                  <Link
-                    to="/gallery/$id"
-                    params={{ id: shootId }}
-                    className="mt-1 block break-all text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    {typeof window !== "undefined"
-                      ? `${window.location.origin}/gallery/${shootId}`
-                      : `/gallery/${shootId}`}
-                  </Link>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-                {uploadedUrls.slice(0, 9).map((url, i) => (
-                  <div
-                    key={url}
-                    className="group relative aspect-square overflow-hidden rounded-xl border border-primary/30 bg-muted"
-                  >
-                    <img
-                      src={url}
-                      alt={`Загруженный кадр ${i + 1}`}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/80 to-transparent p-2 text-left">
-                      <p className="text-xs font-medium">Кадр {i + 1}</p>
-                      {aiResults.length > 0 && (
-                        (() => {
-                          const match = aiResults.find((r: { url: string; score?: number }) => r.url === url);
-                          return (
-                            <p className="text-xs font-bold text-primary">
-                              {match?.score != null ? `AI: ${match.score}/10` : aiBusy ? "Оцениваем…" : "—"}
-                            </p>
-                          );
-                        })()
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-between">
-                <p className="text-xs text-muted-foreground">
-                  Все файлы загружены в Cloudinary и будут доступны по прямой ссылке.
-                </p>
-                <button
-                  onClick={() => {
-                    setStatus("idle");
-                    setUploadedUrls([]);
-                    setItems([]);
-                  }}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary"
-                >
-                  Загрузить другую съёмку
-                </button>
-              </div>
-            </div>
-          )}
         </div>
-      </main>
+      </div>
 
-      <footer className="border-t border-border px-5 py-10 sm:px-8">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-          <div>
-            <Link
-              to="/privacy"
-              className="text-sm text-muted-foreground hover:text-primary hover:underline"
-            >
-              Политика конфиденциальности
-            </Link>
-            <p className="mt-2 text-xs text-muted-foreground/60">
-              © 2026 Умная галерея для фотографов
-            </p>
+      <div className="mt-4 flex items-center gap-3">
+        <label className="inline-flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+          />
+          Даю согласие на обработку и загрузку фото
+        </label>
+      </div>
+
+      {items.length > 0 && (
+        <div className="mt-6 space-y-2">
+          <div className="h-2 w-full rounded-full bg-white/10">
+            <div
+              className="h-2 rounded-full bg-white"
+              style={{ width: `${totalProgress}%` }}
+            />
           </div>
-          <p className="text-sm text-muted-foreground">
-            Остались вопросы?{" "}
-            <a
-              href="https://t.me/ai_gallery_helper"
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold text-primary hover:underline"
-            >
-              Напишите в Telegram: @ai_gallery_helper
-            </a>
-          </p>
+          <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+            {items.map((item, i) => (
+              <div
+                key={`${item.file.name}-${i}`}
+                className="rounded-xl border border-white/10 p-2"
+              >
+                <div className="flex items-center gap-2">
+                  <Camera className="h-4 w-4 opacity-80" />
+                  <div className="truncate text-sm">{item.file.name}</div>
+                </div>
+                <div className="mt-1 text-xs opacity-70">{formatSize(item.file.size)}</div>
+                {!item.valid && (
+                  <div className="mt-1 flex items-center gap-2 text-xs text-red-300">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    {item.reason}
+                  </div>
+                )}
+                <div className="mt-2 h-1.5 w-full rounded-full bg-white/10">
+                  <div
+                    className="h-1.5 rounded-full bg-white"
+                    style={{ width: `${item.progress}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </footer>
-    </div>
+      )}
+
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          disabled={validItems.length === 0 || !consent}
+          onClick={handleUpload}
+          className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-black disabled:opacity-50"
+        >
+          {status === "uploading" && <Loader2 className="h-4 w-4 animate-spin" />}
+          {status === "uploading" ? "Загружаю..." : "Загрузить"}
+        </button>
+        {status === "done" && (
+          <>
+            <button
+              type="button"
+              onClick={copyLink}
+              className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Копировать ссылку на галерею
+            </button>
+            <Link
+              to={`/gallery/${shootId}`}
+              className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-black"
+            >
+              Открыть галерею
+            </Link>
+          </>
+        )}
+      </div>
+    </main>
   );
 }

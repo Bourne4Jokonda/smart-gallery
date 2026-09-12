@@ -51,6 +51,19 @@ function LoginPage() {
     }
   };
 
+  const logout = async () => {
+    setBusy(true);
+    try {
+      await signOut(auth);
+      toast.success("Вы вышли");
+      window.location.href = "/login";
+    } catch (e) {
+      toast.error("Не удалось выйти");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       <header className="border-b border-border px-5 py-4 sm:px-8">
@@ -61,6 +74,7 @@ function LoginPage() {
           Умная галерея
         </div>
       </header>
+
       <main className="px-5 py-16 sm:px-8">
         <div className="mx-auto max-w-sm rounded-3xl border border-border bg-card p-6 sm:p-8">
           <h1 className="text-2xl font-extrabold">
