@@ -18,6 +18,12 @@ interface ShootRecord {
   fileUrls: string[];
   email?: string | null;
   createdAt: number;
+  aiResults?: Array<{
+    url: string;
+    score: number | null;
+    status: string;
+    error?: string;
+  }>;
 }
 
 const STORAGE_KEY = "smart-gallery:shoots";
@@ -91,6 +97,25 @@ async function downloadAsZip(
   setTimeout(() => URL.revokeObjectURL(archiveUrl), 1000);
 }
 
+async function downloadSinglePhoto(url: string, index: number) {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const blob = await resp.blob();
+    const downloadUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = `photo-${String(index + 1).padStart(3, "0")}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+  } catch (err) {
+    console.error("single photo download failed", url, err);
+    throw err;
+  }
+}
+
 export const Route = createFileRoute("/gallery/$id")({
   component: GalleryPage,
 });
@@ -108,6 +133,7 @@ function GalleryPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [zipping, setZipping] = useState(false);
   const [zipProgress, setZipProgress] = useState({ done: 0, total: 0 });
+  const [singleDownloading, setSingleDownloading] = useState(false);
 
   useEffect(() => {
     const shoots = readShoots();
@@ -163,6 +189,22 @@ function GalleryPage() {
       setZipping(false);
     }
   }, [record, zipping]);
+
+  const handleDownloadSingle = useCallback(async () => {
+    if (!record || lightboxIndex === null || singleDownloading) return;
+    const url = record.fileUrls[lightboxIndex];
+    if (!url) return;
+    try {
+      setSingleDownloading(true);
+      await downloadSinglePhoto(url, lightboxIndex);
+      toast.success("Фото сохранено");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Неизвестная ошибка";
+      toast.error("Не удалось скачать фото", { description: message });
+    } finally {
+      setSingleDownloading(false);
+    }
+  }, [record, lightboxIndex, singleDownloading, zipping]);
 
   if (loading) {
     return (
@@ -305,7 +347,13 @@ function GalleryPage() {
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-3 text-left">
                   <p className="text-xs font-semibold">Кадр {i + 1}</p>
-                  <p className="text-xs font-bold text-primary">AI: 9/10</p>
+                  {(() => {
+                    const match = record?.aiResults?.find((r) => r.url === url);
+                    if (match?.score != null) {
+                      return <p className="text-xs font-bold text-primary">AI: {match.score}/10</p>;
+                    }
+                    return <p className="text-xs font-bold text-muted-foreground">AI: —</p>;
+                  })()}
                 </div>
               </button>
             ))}
@@ -392,6 +440,16 @@ function GalleryPage() {
             className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
           />
 
+          {(() => {
+            const currentUrl = record.fileUrls[lightboxIndex];
+            const match = record.aiResults?.find((r) => r.url === currentUrl);
+            return (
+              <div className="absolute bottom-14 left-1/2 -translate-x-1/2 rounded-full border border-border bg-card/80 px-4 py-1.5 text-xs font-medium text-foreground">
+                {match?.score != null ? `AI: ${match.score}/10` : `Кадр ${lightboxIndex + 1}`}
+              </div>
+            );
+          })()}
+
           {record.fileUrls.length > 1 && (
             <button
               type="button"
@@ -406,8 +464,22 @@ function GalleryPage() {
             </button>
           )}
 
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-border bg-card/80 px-4 py-1.5 text-xs font-medium text-foreground">
-            {lightboxIndex + 1} / {record.fileUrls.length}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownloadSingle();
+              }}
+              disabled={singleDownloading}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              <Download className="h-4 w-4" />
+              {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
+            </button>
+            <div className="rounded-full border border-border bg-card/80 px-4 py-2 text-xs font-medium text-foreground">
+              {lightboxIndex + 1} / {record.fileUrls.length}
+            </div>
           </div>
         </div>
       )}

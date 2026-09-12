@@ -157,6 +157,7 @@ export default function UploadPage() {
         fileUrls: result.fileUrls,
         email,
         createdAt: Date.now(),
+        aiResults: [],
       });
       setUploadedUrls(result.fileUrls);
       setShootId(newShootId);
@@ -192,7 +193,15 @@ export default function UploadPage() {
       if (!response.ok || !data.ok) {
         throw new Error(data.error || "AI не ответил");
       }
-      setAiResults(data.results ?? []);
+      const results = data.results ?? [];
+      setAiResults(results);
+      saveShoot({
+        shootId: shootIdToUse,
+        fileUrls,
+        email,
+        createdAt: Date.now(),
+        aiResults: results,
+      });
       toast.success("AI-отбор готов");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Неизвестная ошибка";
