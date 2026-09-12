@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { getAuthInstance } from "@/lib/firebase";
 import {
   AlertTriangle,
   Camera,
@@ -54,7 +55,14 @@ function validate(file: File): { valid: boolean; reason: string } {
   return { valid: true, reason: "" };
 }
 
-export default function UploadPage() {
+export const Route = createFileRoute("/upload")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !getAuthInstance().currentUser) {
+      throw redirect({ to: "/login" });
+    }
+  },
+  component: UploadPage,
+});
   const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [dragging, setDragging] = useState(false);

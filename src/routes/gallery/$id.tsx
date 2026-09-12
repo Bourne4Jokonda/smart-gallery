@@ -117,6 +117,11 @@ async function downloadSinglePhoto(url: string, index: number) {
 }
 
 export const Route = createFileRoute("/gallery/$id")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !getAuthInstance().currentUser) {
+      throw redirect({ to: "/login" });
+    }
+  },
   component: GalleryPage,
 });
 
