@@ -33,10 +33,12 @@ function LoginPage() {
     setBusy(true);
     try {
       if (mode === "register") {
-        await createUserWithEmailAndPassword(auth, email.trim(), password);
+        const res = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        window.__SMART_GALLERY_USER__ = { uid: res.user.uid, email: res.user.email ?? email.trim() };
         toast.success("Аккаунт создан");
       } else {
-        await signInWithEmailAndPassword(auth, email.trim(), password);
+        const res = await signInWithEmailAndPassword(auth, email.trim(), password);
+        window.__SMART_GALLERY_USER__ = { uid: res.user.uid, email: res.user.email ?? email.trim() };
         toast.success("Вход выполнен");
       }
       window.location.href = "/";
