@@ -12,7 +12,7 @@ import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { signOutUser } from "@/lib/firebase";
+import { signOutUser, onUserChange } from "@/lib/firebase";
 
 function NotFoundComponent() {
   return (
@@ -120,6 +120,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const user = typeof window !== "undefined" ? window.__SMART_GALLERY_USER__ : null;
+
+  useEffect(() => {
+    const unsubscribe = onUserChange((u) => {
+      if (u?.email) {
+        window.__SMART_GALLERY_USER__ = { uid: u.uid, email: u.email };
+      } else {
+        window.__SMART_GALLERY_USER__ = null;
+      }
+      router.invalidate();
+    });
+    return unsubscribe;
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
