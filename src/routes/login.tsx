@@ -41,10 +41,26 @@ function LoginPage() {
       }
       window.location.href = "/";
     } catch (e) {
-      const message =
+      const raw =
         e instanceof FirebaseError
-          ? e.message || "Ошибка авторизации"
-          : "Неизвестная ошибка";
+          ? e.code || e.message || ""
+          : "";
+      let message = "Ошибка авторизации";
+      if (raw.includes("invalid-credential") || raw.includes("wrong-password")) {
+        message = "Неверный email или пароль";
+      } else if (raw.includes("user-not-found")) {
+        message = "Аккаунт не найден. Сначала зарегистрируйтесь";
+      } else if (raw.includes("email-already-in-use")) {
+        message = "Такой email уже зарегистрирован. Войдите в аккаунт";
+      } else if (raw.includes("weak-password")) {
+        message = "Пароль слишком слабый. Используйте минимум 6 символов";
+      } else if (raw.includes("invalid-email")) {
+        message = "Некорректный email";
+      } else if (raw.includes("too-many-requests")) {
+        message = "Слишком много попыток. Подождите немного и попробуйте снова";
+      } else if (raw.includes("network-request-failed")) {
+        message = "Нет подключения к интернету";
+      }
       toast.error(message);
     } finally {
       setBusy(false);
