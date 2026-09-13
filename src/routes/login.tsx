@@ -99,7 +99,13 @@ function LoginPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Войдите, чтобы видеть свои фотосессии с любого устройства.
           </p>
-          <div className="mt-6 space-y-4">
+          <form
+            className="mt-6 space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit();
+            }}
+          >
             <label className="block text-sm">
               <span className="mb-1 block text-xs text-muted-foreground">
                 Email
@@ -125,7 +131,7 @@ function LoginPage() {
               />
             </label>
             <button
-              onClick={submit}
+              type="submit"
               disabled={busy}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
             >
