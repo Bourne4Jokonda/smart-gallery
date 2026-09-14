@@ -26,28 +26,18 @@ export function validate(file: File): { valid: boolean; reason: string } {
 }
 
 export async function uploadShoot(
-  files: File[],
-  options: { email?: string | null; consent?: boolean; onProgress?: UploadProgressHandler } = {},
-): Promise<ShootUploadResult> {
+  shootId: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<{ secure_url?: string } | void> {
   if (!isCloudinaryConfigured()) {
     throw new Error("Cloudinary не настроен");
   }
 
-  const fileUrls: string[] = [];
+  const compressed = await compressImage(file);
+  const url = await uploadToCloudinary(compressed, (percent) => {
+    onProgress?.(percent);
+  });
 
-  for (let i = 0; i < files.length; i++) {
-    const original = files[i]!;
-    // Сжатие: 15 МБ → ~1.5 МБ, 25 МБ → ~2.5 МБ (всё уходит в Cloudinary)
-    const compressed = await compressImage(original);
-
-    const url = await uploadToCloudinary(compressed, (percent) => {
-      // Прогресс 0-90% — сжатие, 90-100% — загрузка
-      // Считаем долю сжатия как фиксированную часть ради простоты
-      options.onProgress?.(i, Math.min(90, Math.round((percent * 9) / 10)));
-    });
-    options.onProgress?.(i, 100);
-    fileUrls.push(url);
-  }
-
-  return { fileUrls, shootId: "" };
+  return { secure_url: url };
 }
