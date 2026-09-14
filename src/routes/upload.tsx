@@ -202,22 +202,6 @@ function UploadPage() {
             Перетащите изображения или выберите файлы/папку.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => fileInput.current?.click()}
-            className="inline-flex items-center gap-2 rounded-lg bg-black/80 px-4 py-2 text-white"
-          >
-            <Images className="h-4 w-4" /> Файлы
-          </button>
-          <button
-            type="button"
-            onClick={() => folderInput.current?.click()}
-            className="inline-flex items-center gap-2 rounded-lg bg-black/80 px-4 py-2 text-white"
-          >
-            <FolderOpen className="h-4 w-4" /> Папка
-          </button>
-        </div>
       </div>
 
       <div
@@ -236,6 +220,22 @@ function UploadPage() {
           <p className="text-sm opacity-80">
             Перетащите сюда до {MAX_FILES} изображений
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInput.current?.click()}
+              className="inline-flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm text-black"
+            >
+              <Images className="h-4 w-4" /> Файлы
+            </button>
+            <button
+              type="button"
+              onClick={() => folderInput.current?.click()}
+              className="inline-flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm text-black"
+            >
+              <FolderOpen className="h-4 w-4" /> Папка
+            </button>
+          </div>
           <input
             ref={fileInput}
             type="file"
@@ -249,7 +249,6 @@ function UploadPage() {
             type="file"
             accept="image/*"
             multiple
-            // webkitdirectory не даёт полный путь, но позволяет выбрать папку
             {...({ webkitdirectory: "true", directory: "true" } as any)}
             className="hidden"
             onChange={(e) => addFiles(e.target.files)}
