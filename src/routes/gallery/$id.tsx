@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import { toast } from "sonner";
-import { getAuthInstance } from "@/lib/firebase";
-import { getDb, collection, doc, getDoc, query, where, limit, orderBy } from "firebase/firestore";
+import { getAuthInstance, onUserChange, getDb } from "@/lib/firebase";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 interface ShootRecord {
   shootId: string;

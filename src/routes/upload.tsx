@@ -16,9 +16,9 @@ import {
   MAX_FILES,
   MAX_FILE_SIZE,
   isCloudinaryConfigured,
-  saveShootRecord,
   uploadShoot,
 } from "@/lib/uploads";
+import { saveShootRecord } from "@/lib/firebase";
 
 function generateShootId(): string {
   if (

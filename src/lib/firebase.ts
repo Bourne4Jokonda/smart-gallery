@@ -43,7 +43,7 @@ export function isFirebaseConfigured(): boolean {
   return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
 }
 
-function getDb(): Firestore {
+export function getDb(): Firestore {
   if (!db) db = getFirestore(getApp());
   return db;
 }
@@ -73,7 +73,6 @@ export async function signOutUser() {
   return signOut(auth);
 }
 
-/** Сохраняет email лида в коллекцию Firestore "leads". */
 export async function saveLead(email: string): Promise<void> {
   const source = "landing";
   await addDoc(collection(getDb(), "leads"), {
@@ -117,8 +116,6 @@ export async function getUserShoots(userId: string, maxDocs = 20) {
     orderBy("createdAt", "desc"),
     limit(maxDocs),
   );
-  // Внимание: для реального кода лучше вынести запросы в server action / API.
-  // Здесь упрощённый клиентский вариант.
   return { type: "client" as const, userId, maxDocs };
 }
 
