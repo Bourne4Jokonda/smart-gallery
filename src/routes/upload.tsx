@@ -16,6 +16,7 @@ import {
   MAX_FILES,
   MAX_FILE_SIZE,
   isCloudinaryConfigured,
+  saveShootRecord,
   uploadShoot,
 } from "@/lib/uploads";
 
@@ -184,6 +185,19 @@ function UploadPage() {
     setUploadedUrls(urls);
     setShootId(id);
     if (email) localStorage.setItem("smart-gallery-email", email);
+    const localRecord = {
+      shootId: id,
+      fileUrls: urls,
+      email,
+      createdAt: Date.now(),
+      aiResults: [],
+    };
+    saveShoot(localRecord);
+    try {
+      await saveShootRecord(localRecord as unknown as Record<string, unknown>);
+    } catch {
+      // оставляем локальную запись, если Firestore недоступен
+    }
     setStatus("done");
     toast.success("Загрузка завершена");
   };

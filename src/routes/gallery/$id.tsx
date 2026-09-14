@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import { toast } from "sonner";
+import { getAuthInstance } from "@/lib/firebase";
+import { getDb, collection, doc, getDoc, query, where, limit, orderBy } from "firebase/firestore";
 
 interface ShootRecord {
   shootId: string;
@@ -143,8 +145,49 @@ function GalleryPage() {
 
   useEffect(() => {
     const shoots = readShoots();
-    setRecord(shoots[id] ?? null);
-    setLoading(false);
+    const local = shoots[id] ?? null;
+    if (local) {
+      setRecord(local);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    const loadFromCloud = async () => {
+      try {
+        const auth = getAuthInstance();
+        const user = auth.currentUser;
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+        const db = getDb();
+        const shootRef = doc(db, "shoots", id);
+        const snap = await getDoc(shootRef);
+        if (!snap.exists() || cancelled) {
+          setLoading(false);
+          return;
+        }
+        const data = snap.data() as Record<string, unknown>;
+        const cloudRecord: ShootRecord = {
+          shootId: id,
+          fileUrls: (data.fileUrls as string[]) ?? [],
+          email: (data.email as string | undefined) ?? user.email ?? "",
+          createdAt: (data.createdAt as number) ?? Date.now(),
+          aiResults: (data.aiResults as ShootRecord["aiResults"]) ?? [],
+        };
+        setRecord(cloudRecord);
+      } catch {
+        // ignore cloud read errors
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadFromCloud();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   // Lightbox: lock body scroll + keyboard nav
