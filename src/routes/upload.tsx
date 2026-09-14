@@ -211,6 +211,7 @@ function UploadPage() {
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
+        onClick={() => fileInput.current?.click()}
         className={`rounded-2xl border-2 border-dashed p-6 transition ${
           dragging ? "border-white/60 bg-white/10" : "border-white/20"
         }`}
@@ -220,22 +221,7 @@ function UploadPage() {
           <p className="text-sm opacity-80">
             Перетащите сюда до {MAX_FILES} изображений
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => fileInput.current?.click()}
-              className="inline-flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm text-black"
-            >
-              <Images className="h-4 w-4" /> Файлы
-            </button>
-            <button
-              type="button"
-              onClick={() => folderInput.current?.click()}
-              className="inline-flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm text-black"
-            >
-              <FolderOpen className="h-4 w-4" /> Папка
-            </button>
-          </div>
+          <p className="text-xs opacity-60">или нажмите на это поле, чтобы выбрать файлы</p>
           <input
             ref={fileInput}
             type="file"
@@ -285,6 +271,13 @@ function UploadPage() {
                   <Camera className="h-4 w-4 opacity-80" />
                   <div className="truncate text-sm">{item.file.name}</div>
                 </div>
+                {item.preview && (
+                  <img
+                    src={item.preview}
+                    alt={item.file.name}
+                    className="mt-2 h-32 w-full rounded-lg object-cover"
+                  />
+                )}
                 <div className="mt-1 text-xs opacity-70">{formatSize(item.file.size)}</div>
                 {!item.valid && (
                   <div className="mt-1 flex items-center gap-2 text-xs text-red-300">
