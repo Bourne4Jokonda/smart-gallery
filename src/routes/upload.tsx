@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   AlertTriangle,
@@ -42,6 +42,15 @@ function validate(file: File): { valid: boolean; reason: string } {
   }
   return { valid: true, reason: "" };
 }
+
+export const Route = createFileRoute("/upload")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !window.__SMART_GALLERY_USER__) {
+      throw redirect({ to: "/login" });
+    }
+  },
+  component: UploadPage,
+});
 
 export default function UploadPage() {
   const [items, setItems] = useState<Item[]>([]);
