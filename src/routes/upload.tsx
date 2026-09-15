@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   AlertTriangle,
@@ -15,9 +15,9 @@ import {
 import {
   MAX_FILES,
   MAX_FILE_SIZE,
-  isFirebaseConfigured,
+  isCloudinaryConfigured,
   uploadShoot,
-} from "@/lib/firebase";
+} from "@/lib/uploads";
 
 interface Item {
   file: File;
@@ -43,15 +43,6 @@ function validate(file: File): { valid: boolean; reason: string } {
   return { valid: true, reason: "" };
 }
 
-export const Route = createFileRoute("/upload")({
-  beforeLoad: () => {
-    if (typeof window !== "undefined" && !window.__SMART_GALLERY_USER__) {
-      throw redirect({ to: "/login" });
-    }
-  },
-  component: UploadPage,
-});
-
 export default function UploadPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -66,12 +57,12 @@ export default function UploadPage() {
     const stored =
       localStorage.getItem("smart-gallery-email") ?? localStorage.getItem("email");
     if (stored) setEmail(stored);
-  }, []);
+  }); []);
 
   useEffect(
     () => () => {
       items.forEach((it) => URL.revokeObjectURL(it.preview));
-    },
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
@@ -82,7 +73,7 @@ export default function UploadPage() {
     return Math.round(
       validItems.reduce((sum, i) => sum + i.progress, 0) / validItems.length,
     );
-  }, [validItems]);
+  }); [validItems]);
 
   const addFiles = (list: FileList | null) => {
     if (!list || list.length === 0) return;
@@ -123,7 +114,7 @@ export default function UploadPage() {
 
   const start = async () => {
     if (validItems.length === 0 || !consent) return;
-    if (!isFirebaseConfigured()) {
+    if (!isCloudinaryConfigured()) {
       toast.error("Хранилище недоступно", {
         description: "Попробуйте позже или напишите нам в Telegram.",
       });
