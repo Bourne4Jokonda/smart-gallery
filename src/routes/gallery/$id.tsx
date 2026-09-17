@@ -115,6 +115,8 @@ function GalleryPage() {
   const [zipProgress, setZipProgress] = useState({ done: 0, total: 0 });
   const [singleDownloading, setSingleDownloading] = useState(false);
   const [filter, setFilter] = useState<"all" | "best">("all");
+  const [curating, setCurating] = useState(false);
+  const [curateProgress, setCurateProgress] = useState({ done: 0, total: 0 });
 
   useEffect(() => {
     const shoots = readShoots();
@@ -227,6 +229,49 @@ function GalleryPage() {
       setSingleDownloading(false);
     }
   }, [record, lightboxIndex, singleDownloading, zipping]);
+
+  const runCurate = useCallback(async () => {
+    if (!record || curating) return;
+    const urls = record.fileUrls;
+    if (!urls.length) {
+      toast.error("Нет фото для AI-отбора");
+      return;
+    }
+    setCurating(true);
+    setCurateProgress({ done: 0, total: urls.length });
+    const toastId = toast.loading("AI-отбор запущен…");
+    try {
+      const res = await fetch("/api/curate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shootId: record.shootId, fileUrls: urls }),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Ошибка отбора: ${res.status} ${text.slice(0, 200)}`);
+      }
+      const data = (await res.json()) as { ok: boolean; results?: Array<{ url: string; score: number | null; status: string; error?: string }> };
+      if (!data.ok || !Array.isArray(data.results)) {
+        throw new Error("AI не вернул результаты");
+      }
+      const aiResults = data.results.map((r) => ({
+        url: r.url,
+        score: r.score,
+        status: r.status,
+        error: r.error,
+      }));
+      const updated = { ...record, aiResults };
+      setRecord(updated);
+      saveShoot(updated);
+      toast.success("AI-отбор завершён", { id: toastId });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Неизвестная ошибка";
+      toast.error("Не удалось запустить AI-отбор", { id: toastId, description: message });
+    } finally {
+      setCurating(false);
+      setCurateProgress({ done: 0, total: 0 });
+    }
+  }, [record, curating, saveShoot]);
 
   if (loading) {
     return (
@@ -395,10 +440,51 @@ function GalleryPage() {
 
           <div className="mt-12 rounded-2xl border border-border bg-card/50 p-6 text-center">
             <Sparkles className="mx-auto h-6 w-6 text-primary" />
-            <p className="mt-3 text-sm font-medium">AI-отбор готов</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Оценки рассчитаны через Gemini 2.5 Flash. Лучшие кадры выделены автоматически.
+            <p className="mt-3 text-sm font-medium">
+              {curating ? "AI-отбор выполняется…" : "AI-отбор"}
             </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {curating
+                ? `Обрабатываем ${curateProgress.total} фото`
+                : record?.aiResults?.length
+                  ? `Оценки рассчитаны через Gemini 2.5 Flash. Лучшие кадры выделены автоматически.`
+                  : "Запустите отбор, чтобы получить оценки для каждого кадра."}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={runCurate}
+                disabled={curating || !record?.fileUrls?.length}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {curating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Оцениваем…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    {record?.aiResults?.length ? "Перезапустить AI-отбор" : "Запустить AI-отбор"}
+                  </>
+                )}
+              </button>
+            </div>
+            {curating && (
+              <div className="mt-4">
+                <div className="mx-auto h-2 w-full max-w-md overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-300"
+                    style={{
+                      width: `${curateProgress.total ? (curateProgress.done / curateProgress.total) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {curateProgress.done} / {curateProgress.total}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </main>
