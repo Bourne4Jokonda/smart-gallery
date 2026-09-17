@@ -18,6 +18,7 @@ import {
   isCloudinaryConfigured,
   uploadShoot,
 } from "@/lib/uploads";
+import { saveShoot } from "@/lib/storage";
 
 interface Item {
   file: File;
@@ -34,10 +35,10 @@ function formatSize(bytes: number) {
 }
 
 function validate(file: File): { valid: boolean; reason: string } {
-  if (!file.type.startsWith("image/")) {
+  if (!file || typeof file.type !== "string" || !file.type.startsWith("image/")) {
     return { valid: false, reason: "Не изображение" };
   }
-  if (file.size > MAX_FILE_SIZE) {
+  if (typeof file.size !== "number" || file.size > MAX_FILE_SIZE) {
     return { valid: false, reason: "Больше 20 МБ" };
   }
   return { valid: true, reason: "" };
@@ -45,7 +46,7 @@ function validate(file: File): { valid: boolean; reason: string } {
 
 export const Route = createFileRoute("/upload")({
   beforeLoad: () => {
-    if (typeof window !== "undefined" && !window.__SMART_GALLERY_USER__) {
+    if (typeof window !== "undefined" && !localStorage.getItem("smart-gallery-user")) {
       throw redirect({ to: "/login" });
     }
   },
@@ -57,6 +58,7 @@ export default function UploadPage() {
   const [dragging, setDragging] = useState(false);
   const [status, setStatus] = useState<"idle" | "uploading" | "done">("idle");
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
+  const [shootId, setShootId] = useState("");
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -101,7 +103,7 @@ export default function UploadPage() {
         const { valid, reason } = validate(file);
         return {
           file,
-          preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
+          preview: file?.type?.startsWith("image/") ? URL.createObjectURL(file) : "",
           valid,
           reason,
           progress: 0,
@@ -131,27 +133,42 @@ export default function UploadPage() {
     }
     setStatus("uploading");
     try {
-      const files = validItems.map((i) => i.file);
-      const result = await uploadShoot(files, {
-        email,
-        consent,
-        onProgress: (index, percent) => {
-          setItems((prev) => {
-            const target = prev.filter((i) => i.valid)[index];
-            if (!target) return prev;
-            return prev.map((i) => (i === target ? { ...i, progress: percent } : i));
-          });
-        },
+      const shootId = crypto.randomUUID();
+      setShootId(shootId);
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < validItems.length; i++) {
+        const item = validItems[i]!;
+        const result = await uploadShoot(shootId, item.file, (percent) => {
+          setItems((prev) =>
+            prev.map((it, idx) =>
+              idx === i ? { ...it, progress: percent } : it,
+            ),
+          );
+        });
+        if (result?.secure_url) {
+          uploadedUrls.push(result.secure_url);
+        }
+      }
+
+      const user = typeof window !== "undefined" ? window.__SMART_GALLERY_USER__ : null;
+      saveShoot({
+        shootId,
+        fileUrls: uploadedUrls,
+        email: user?.email ?? email,
+        createdAt: Date.now(),
+        aiResults: [],
       });
-      setUploadedUrls(result.fileUrls);
+
+      setUploadedUrls(uploadedUrls);
       setStatus("done");
-      toast.success(`Загружено ${result.fileUrls.length} фото`, {
+      toast.success(`Загружено ${uploadedUrls.length} фото`, {
         description: "AI приступил к отбору — скоро покажем результат.",
       });
-    } catch {
+    } catch (error) {
       setStatus("idle");
       toast.error("Не удалось загрузить фото", {
-        description: "Проверьте подключение и попробуйте ещё раз.",
+        description:
+          error instanceof Error ? error.message : "Проверьте подключение и попробуйте ещё раз.",
       });
     }
   };
@@ -426,6 +443,12 @@ export default function UploadPage() {
                   </div>
                 ))}
               </div>
+              <Link
+                to={`/gallery/${shootId}`}
+                className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
+              >
+                Перейти в галерею
+              </Link>
             </div>
           )}
         </div>

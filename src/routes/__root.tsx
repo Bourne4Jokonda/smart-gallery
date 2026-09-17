@@ -122,11 +122,23 @@ function RootComponent() {
   const user = typeof window !== "undefined" ? window.__SMART_GALLERY_USER__ : null;
 
   useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("smart-gallery-user") : null;
+    if (stored && !window.__SMART_GALLERY_USER__) {
+      try {
+        window.__SMART_GALLERY_USER__ = JSON.parse(stored);
+        router.invalidate();
+      } catch {
+        // ignore corrupted storage
+      }
+    }
+
     const unsubscribe = onUserChange((u) => {
       if (u?.email) {
         window.__SMART_GALLERY_USER__ = { uid: u.uid, email: u.email };
+        localStorage.setItem("smart-gallery-user", JSON.stringify({ uid: u.uid, email: u.email }));
       } else {
         window.__SMART_GALLERY_USER__ = null;
+        localStorage.removeItem("smart-gallery-user");
       }
       router.invalidate();
     });
@@ -154,6 +166,7 @@ function RootComponent() {
                     } catch {
                       // ignore
                     } finally {
+                      localStorage.removeItem("smart-gallery-user");
                       window.__SMART_GALLERY_USER__ = null;
                       router.invalidate();
                       window.location.href = "/login";

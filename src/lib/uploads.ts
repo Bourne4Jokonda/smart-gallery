@@ -16,10 +16,10 @@ export const MAX_FILE_SIZE = 100 * 1024 * 1024;
 export const MAX_FILES = 2000;
 
 export function validate(file: File): { valid: boolean; reason: string } {
-  if (!file.type.startsWith("image/")) {
+  if (!file || typeof file.type !== "string" || !file.type.startsWith("image/")) {
     return { valid: false, reason: "Не изображение" };
   }
-  if (file.size > MAX_FILE_SIZE) {
+  if (typeof file.size !== "number" || file.size > MAX_FILE_SIZE) {
     return { valid: false, reason: "Больше 100 МБ" };
   }
   return { valid: true, reason: "" };

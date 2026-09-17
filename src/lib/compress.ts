@@ -30,7 +30,7 @@ export async function compressImage(
   if (file.size < 500 * 1024) return file;
 
   // Только растровые изображения. RAW/HEIC браузер не декодирует в canvas — пропускаем.
-  if (!file.type.startsWith("image/")) return file;
+  if (!file || typeof file.type !== "string" || !file.type.startsWith("image/")) return file;
   if (file.type === "image/heic" || file.type === "image/heif") return file;
 
   try {

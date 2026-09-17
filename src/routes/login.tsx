@@ -12,7 +12,7 @@ import { getAuthInstance } from "@/lib/firebase";
 export const Route = createFileRoute("/login")({
   component: LoginPage,
   beforeLoad: () => {
-    if (typeof window !== "undefined" && getAuthInstance().currentUser) {
+    if (typeof window !== "undefined" && (window.__SMART_GALLERY_USER__ || localStorage.getItem("smart-gallery-user"))) {
       throw redirect({ to: "/" });
     }
   },
@@ -34,11 +34,15 @@ function LoginPage() {
     try {
       if (mode === "register") {
         const res = await createUserWithEmailAndPassword(auth, email.trim(), password);
-        window.__SMART_GALLERY_USER__ = { uid: res.user.uid, email: res.user.email ?? email.trim() };
+        const userPayload = { uid: res.user.uid, email: res.user.email ?? email.trim() };
+        window.__SMART_GALLERY_USER__ = userPayload;
+        localStorage.setItem("smart-gallery-user", JSON.stringify(userPayload));
         toast.success("Аккаунт создан");
       } else {
         const res = await signInWithEmailAndPassword(auth, email.trim(), password);
-        window.__SMART_GALLERY_USER__ = { uid: res.user.uid, email: res.user.email ?? email.trim() };
+        const userPayload = { uid: res.user.uid, email: res.user.email ?? email.trim() };
+        window.__SMART_GALLERY_USER__ = userPayload;
+        localStorage.setItem("smart-gallery-user", JSON.stringify(userPayload));
         toast.success("Вход выполнен");
       }
       window.location.href = "/";
@@ -73,6 +77,8 @@ function LoginPage() {
     setBusy(true);
     try {
       await signOut(auth);
+      localStorage.removeItem("smart-gallery-user");
+      window.__SMART_GALLERY_USER__ = null;
       toast.success("Вы вышли");
       window.location.href = "/login";
     } catch (e) {

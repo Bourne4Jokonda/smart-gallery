@@ -14,6 +14,7 @@ import JSZip from "jszip";
 import { toast } from "sonner";
 import { getAuthInstance, onUserChange, getDb } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { saveShoot, readShoots } from "@/lib/storage";
 
 interface ShootRecord {
   shootId: string;
@@ -26,28 +27,6 @@ interface ShootRecord {
     status: string;
     error?: string;
   }>;
-}
-
-const STORAGE_KEY = "smart-gallery:shoots";
-
-function readShoots(): Record<string, ShootRecord> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw) as Record<string, ShootRecord>;
-  } catch {
-    return {};
-  }
-}
-
-function writeShoots(shoots: Record<string, ShootRecord>) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(shoots));
-  } catch {
-    // localStorage может быть переполнен или заблокирован
-  }
 }
 
 function filenameFromUrl(url: string, index: number): string {
@@ -120,18 +99,12 @@ async function downloadSinglePhoto(url: string, index: number) {
 
 export const Route = createFileRoute("/gallery/$id")({
   beforeLoad: () => {
-    if (typeof window !== "undefined" && !window.__SMART_GALLERY_USER__) {
+    if (typeof window !== "undefined" && !localStorage.getItem("smart-gallery-user")) {
       throw redirect({ to: "/login" });
     }
   },
   component: GalleryPage,
 });
-
-export function saveShoot(record: ShootRecord) {
-  const shoots = readShoots();
-  shoots[record.shootId] = record;
-  writeShoots(shoots);
-}
 
 function GalleryPage() {
   const { id = "" } = useParams({ strict: false }) as { id?: string };
