@@ -69,3 +69,9 @@ export function saveShoot(record: {
   shoots[record.shootId] = record;
   writeShoots(shoots);
 }
+
+export function removeShoot(shootId: string) {
+  const shoots = readShoots();
+  delete shoots[shootId];
+  writeShoots(shoots);
+}

@@ -118,6 +118,23 @@ function GalleryPage() {
   const [curating, setCurating] = useState(false);
   const [curateProgress, setCurateProgress] = useState({ done: 0, total: 0 });
 
+  const bestUrls = useMemo(() => {
+    if (!record) return [];
+    if (filter !== "best") return [];
+    return record.aiResults
+      ?.filter((r) => r.status === "ok" && r.score != null && r.score >= 7)
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+      .map((r) => r.url) ?? [];
+  }, [record, filter]);
+
+  const visibleUrls = useMemo(() => {
+    if (!record) return [];
+    if (filter === "best" && bestUrls.length > 0) return bestUrls;
+    return record.fileUrls;
+  }, [record, filter, bestUrls]);
+
+  const isBest = (url: string) => bestUrls.includes(url);
+
   useEffect(() => {
     const shoots = readShoots();
     const local = shoots[id] ?? null;
@@ -398,44 +415,38 @@ function GalleryPage() {
           </div>
 
             <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {(() => {
-                const filteredUrls = (() => {
-                  if (!filter) return record.fileUrls;
-                  if (filter === 'best') {
-                    const best = record.aiResults
-                      ?.filter((r) => r.status === 'ok' && r.score != null && r.score >= 7)
-                      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-                    return best?.map((r) => r.url) ?? record.fileUrls;
-                  }
-                  return record.fileUrls;
-                })();
-                return filteredUrls.map((url, i) => (
-                  <button
-                    key={`${url}-${i}`}
-                    type="button"
-                    onClick={() => setLightboxIndex(i)}
-                    className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted transition-transform hover:scale-[1.02]"
-                    aria-label={`Открыть кадр ${i + 1}`}
-                  >
-                    <img
-                      src={url}
-                      alt={`Кадр ${i + 1}`}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-3 text-left">
-                      <p className="text-xs font-semibold">Кадр {i + 1}</p>
-                      {(() => {
-                        const match = record?.aiResults?.find((r) => r.url === url);
-                        if (match?.score != null) {
-                          return <p className="text-xs font-bold text-primary">AI: {match.score}/10</p>;
-                        }
-                        return <p className="text-xs font-bold text-muted-foreground">AI: —</p>;
-                      })()}
-                    </div>
-                  </button>
-                ));
-              })()}
+              {visibleUrls.map((url, i) => (
+                <button
+                  key={`${url}-${i}`}
+                  type="button"
+                  onClick={() => setLightboxIndex(i)}
+                  className={`group relative aspect-square overflow-hidden rounded-2xl border bg-muted transition-transform hover:scale-[1.02] ${
+                    isBest(url) ? "border-primary" : "border-border"
+                  }`}
+                  aria-label={`Открыть кадр ${i + 1}`}
+                >
+                  <img
+                    src={url}
+                    alt={`Кадр ${i + 1}`}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-3 text-left">
+                    <p className="text-xs font-semibold">Кадр {i + 1}</p>
+                    {(() => {
+                      const match = record?.aiResults?.find((r) => r.url === url);
+                      if (match?.score != null) {
+                        return (
+                          <p className={`text-xs font-bold ${isBest(url) ? "text-primary" : "text-muted-foreground"}`}>
+                            AI: {match.score}/10
+                          </p>
+                        );
+                      }
+                      return <p className="text-xs font-bold text-muted-foreground">AI: —</p>;
+                    })()}
+                  </div>
+                </button>
+              ))}
             </div>
 
           <div className="mt-12 rounded-2xl border border-border bg-card/50 p-6 text-center">

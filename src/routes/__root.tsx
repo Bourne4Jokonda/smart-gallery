@@ -158,6 +158,7 @@ function RootComponent() {
               <>
                 <span className="hidden sm:inline text-xs text-muted-foreground">{user.email}</span>
                 <Link to="/upload" className="rounded-lg bg-white px-3 py-2 text-black">Загрузить</Link>
+                <Link to="/profile" className="rounded-lg border border-border px-3 py-2">Кабинет</Link>
                 <button
                   type="button"
                   onClick={async () => {

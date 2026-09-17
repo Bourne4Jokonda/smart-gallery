@@ -12,10 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as ApiCurateRouteImport } from './routes/api/curate'
 import { Route as ApiNotifyLeadRouteImport } from './routes/api/notify-lead'
+import { Route as ApiShootRouteImport } from './routes/api/shoot'
 import { Route as GalleryIdRouteImport } from './routes/gallery/$id'
+import { Route as PublicGalleryIdRouteImport } from './routes/public-gallery/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,6 +33,11 @@ const LoginRoute = LoginRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UploadRoute = UploadRouteImport.update({
@@ -47,9 +55,19 @@ const ApiNotifyLeadRoute = ApiNotifyLeadRouteImport.update({
   path: '/api/notify-lead',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiShootRoute = ApiShootRouteImport.update({
+  id: '/api/shoot',
+  path: '/api/shoot',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GalleryIdRoute = GalleryIdRouteImport.update({
   id: '/gallery/$id',
   path: '/gallery/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicGalleryIdRoute = PublicGalleryIdRouteImport.update({
+  id: '/public-gallery/$id',
+  path: '/public-gallery/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -57,29 +75,38 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/upload': typeof UploadRoute
   '/api/curate': typeof ApiCurateRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
+  '/api/shoot': typeof ApiShootRoute
   '/gallery/$id': typeof GalleryIdRoute
+  '/public-gallery/$id': typeof PublicGalleryIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/upload': typeof UploadRoute
   '/api/curate': typeof ApiCurateRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
+  '/api/shoot': typeof ApiShootRoute
   '/gallery/$id': typeof GalleryIdRoute
+  '/public-gallery/$id': typeof PublicGalleryIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/upload': typeof UploadRoute
   '/api/curate': typeof ApiCurateRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
+  '/api/shoot': typeof ApiShootRoute
   '/gallery/$id': typeof GalleryIdRoute
+  '/public-gallery/$id': typeof PublicGalleryIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,38 +114,50 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/privacy'
+    | '/profile'
     | '/upload'
     | '/api/curate'
     | '/api/notify-lead'
+    | '/api/shoot'
     | '/gallery/$id'
+    | '/public-gallery/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/privacy'
+    | '/profile'
     | '/upload'
     | '/api/curate'
     | '/api/notify-lead'
+    | '/api/shoot'
     | '/gallery/$id'
+    | '/public-gallery/$id'
   id:
     | '__root__'
     | '/'
     | '/login'
     | '/privacy'
+    | '/profile'
     | '/upload'
     | '/api/curate'
     | '/api/notify-lead'
+    | '/api/shoot'
     | '/gallery/$id'
+    | '/public-gallery/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
   UploadRoute: typeof UploadRoute
   ApiCurateRoute: typeof ApiCurateRoute
   ApiNotifyLeadRoute: typeof ApiNotifyLeadRoute
+  ApiShootRoute: typeof ApiShootRoute
   GalleryIdRoute: typeof GalleryIdRoute
+  PublicGalleryIdRoute: typeof PublicGalleryIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -144,6 +183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/upload': {
       id: '/upload'
       path: '/upload'
@@ -165,11 +211,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotifyLeadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/shoot': {
+      id: '/api/shoot'
+      path: '/api/shoot'
+      fullPath: '/api/shoot'
+      preLoaderRoute: typeof ApiShootRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gallery/$id': {
       id: '/gallery/$id'
       path: '/gallery/$id'
       fullPath: '/gallery/$id'
       preLoaderRoute: typeof GalleryIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/public-gallery/$id': {
+      id: '/public-gallery/$id'
+      path: '/public-gallery/$id'
+      fullPath: '/public-gallery/$id'
+      preLoaderRoute: typeof PublicGalleryIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -179,10 +239,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
   UploadRoute: UploadRoute,
   ApiCurateRoute: ApiCurateRoute,
   ApiNotifyLeadRoute: ApiNotifyLeadRoute,
+  ApiShootRoute: ApiShootRoute,
   GalleryIdRoute: GalleryIdRoute,
+  PublicGalleryIdRoute: PublicGalleryIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
