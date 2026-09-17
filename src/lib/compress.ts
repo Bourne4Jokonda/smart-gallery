@@ -26,8 +26,9 @@ export async function compressImage(
   const maxDim = options.maxDimension ?? MAX_DIMENSION;
   const quality = options.quality ?? JPEG_QUALITY;
 
-  // Если это уже маленький файл (< 500 КБ) — не трогаем, экономим CPU
-  if (file.size < 500 * 1024) return file;
+  if (!file || typeof file !== "object") {
+    return file;
+  }
 
   // Только растровые изображения. RAW/HEIC браузер не декодирует в canvas — пропускаем.
   if (!file || typeof file.type !== "string" || !file.type.startsWith("image/")) return file;

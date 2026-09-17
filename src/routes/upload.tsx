@@ -124,6 +124,11 @@ export default function UploadPage() {
   };
 
   const start = async () => {
+    console.log("[smart-gallery] start called", {
+      validItems: validItems.length,
+      consent,
+      cloudinary: isCloudinaryConfigured(),
+    });
     if (validItems.length === 0 || !consent) return;
     if (!isCloudinaryConfigured()) {
       toast.error("Хранилище недоступно", {
@@ -138,6 +143,7 @@ export default function UploadPage() {
       const uploadedUrls: string[] = [];
       for (let i = 0; i < validItems.length; i++) {
         const item = validItems[i]!;
+        console.log("[smart-gallery] uploading file", i, item.file.name, item.file.type);
         const result = await uploadShoot(shootId, item.file, (percent) => {
           setItems((prev) =>
             prev.map((it, idx) =>
@@ -145,6 +151,7 @@ export default function UploadPage() {
             ),
           );
         });
+        console.log("[smart-gallery] upload result", i, result);
         if (result?.secure_url) {
           uploadedUrls.push(result.secure_url);
         }
@@ -165,6 +172,7 @@ export default function UploadPage() {
         description: "AI приступил к отбору — скоро покажем результат.",
       });
     } catch (error) {
+      console.error("[smart-gallery] upload failed", error);
       setStatus("idle");
       toast.error("Не удалось загрузить фото", {
         description:
