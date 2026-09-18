@@ -109,18 +109,26 @@ function PublicGalleryPage() {
               {dateStr} · {record.email ? record.email : "без email"} · {record.fileUrls.length} фото
             </p>
           </div>
+          <div className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+            Фото хранятся в Cloudinary
+          </div>
         </div>
 
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-          {record.fileUrls.map((url, i) => (
-            <div key={url} className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted">
-              <img src={url} alt={`Кадр ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-3 text-left">
-                <p className="text-xs font-semibold">Кадр {i + 1}</p>
-                <p className="text-xs font-bold text-muted-foreground">AI: —</p>
+          {record.fileUrls.map((url, i) => {
+            const match = record.aiResults?.find((r) => r.url === url);
+            return (
+              <div key={url} className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted">
+                <img src={url} alt={`Кадр ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-3 text-left">
+                  <p className="text-xs font-semibold">Кадр {i + 1}</p>
+                  <p className="text-xs font-bold text-muted-foreground">
+                    {match?.score != null ? `AI: ${match.score}/10` : "AI: —"}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-12 rounded-2xl border border-border bg-card/50 p-6 text-center">
