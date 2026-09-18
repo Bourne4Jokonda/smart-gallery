@@ -98,13 +98,21 @@ async function downloadSinglePhoto(url: string, index: number) {
 }
 
 export const Route = createFileRoute("/gallery/$id")({
-  beforeLoad: () => {
-    if (typeof window !== "undefined" && !localStorage.getItem("smart-gallery-user")) {
-      throw redirect({ to: "/login" });
-    }
-  },
   component: GalleryPage,
+  errorComponent: GalleryError,
 });
+
+function GalleryError({ error, reset }: { error: Error; reset: () => void }) {
+  return (
+    <div className="min-h-screen bg-background text-foreground antialiased">
+      <div className="mx-auto max-w-2xl px-5 py-20 text-center sm:px-8">
+        <h1 className="text-2xl font-bold sm:text-3xl">Галерея не загрузилась</h1>
+        <p className="mt-3 text-sm text-muted-foreground">Попробуйте обновить страницу или открыть съёмку из кабинета.</p>
+        <button onClick={reset} className="mt-6 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">Обновить</button>
+      </div>
+    </div>
+  );
+}
 
 function GalleryPage() {
   const { id = "" } = useParams({ strict: false }) as { id?: string };
@@ -356,26 +364,6 @@ function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
-      <header className="border-b border-border px-5 py-4 sm:px-8">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 font-bold tracking-tight"
-          >
-            <span className="inline-flex rounded-lg bg-primary p-1.5">
-              <Camera className="h-4 w-4 text-primary-foreground" />
-            </span>
-            Умная галерея
-          </Link>
-          <Link
-            to="/upload"
-            className="text-sm text-muted-foreground transition-colors hover:text-primary"
-          >
-            Загрузить ещё
-          </Link>
-        </div>
-      </header>
-
       <main className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-5xl">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
