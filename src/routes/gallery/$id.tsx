@@ -149,7 +149,10 @@ function GalleryPage() {
     return record.fileUrls;
   }, [record, filter, bestUrls]);
 
-  const isBest = (url: string) => bestUrls.includes(url);
+  const normalizeUrl = (url: string) =>
+    url.replace(/\/$/, "").split("?")[0];
+
+  const isBest = (url: string) => bestUrls.some((u) => normalizeUrl(u) === normalizeUrl(url));
 
   useEffect(() => {
     const shoots = readShoots();
@@ -465,16 +468,16 @@ function GalleryPage() {
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-3 text-left">
                     <p className="text-xs font-semibold">Кадр {i + 1}</p>
                     {(() => {
-                      const match = record?.aiResults?.find((r) => r.url === url);
-                      if (match?.score != null) {
-                        return (
-                          <p className={`text-xs font-bold ${isBest(url) ? "text-primary" : "text-muted-foreground"}`}>
-                            AI: {match.score}/10
-                          </p>
-                        );
-                      }
-                      return <p className="text-xs font-bold text-muted-foreground">AI: —</p>;
-                    })()}
+                        const match = record?.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(url));
+                        if (match?.score != null) {
+                          return (
+                            <p className={`text-xs font-bold ${isBest(url) ? "text-primary" : "text-muted-foreground"}`}>
+                              AI: {match.score}/10
+                            </p>
+                          );
+                        }
+                        return <p className="text-xs font-bold text-muted-foreground">AI: —</p>;
+                      })()}
                   </div>
                 </button>
               ))}
@@ -604,7 +607,7 @@ function GalleryPage() {
 
           {(() => {
             const currentUrl = record.fileUrls[lightboxIndex];
-            const match = record.aiResults?.find((r) => r.url === currentUrl);
+            const match = record.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(currentUrl));
             return (
               <div className="absolute bottom-14 left-1/2 -translate-x-1/2 rounded-full border border-border bg-card/80 px-4 py-1.5 text-xs font-medium text-foreground">
                 {match?.score != null ? `AI: ${match.score}/10` : `Кадр ${lightboxIndex + 1}`}

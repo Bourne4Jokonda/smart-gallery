@@ -153,6 +153,10 @@ export default function UploadPage() {
     try {
       const shootId = crypto.randomUUID();
       setShootId(shootId);
+      const safeEmail = (user?.email || email || "")
+        .replace(/@/g, "_at_")
+        .replace(/\./g, "_dot_")
+        .trim();
       const uploadedUrls: string[] = [];
       for (let i = 0; i < validItems.length; i++) {
         const item = validItems[i]!;
@@ -163,7 +167,7 @@ export default function UploadPage() {
               idx === i ? { ...it, progress: percent } : it,
             ),
           );
-        }, user?.email || email);
+        }, safeEmail || undefined);
         console.log("[smart-gallery] upload result", i, result);
         if (result?.secure_url) {
           uploadedUrls.push(result.secure_url);
@@ -173,7 +177,7 @@ export default function UploadPage() {
       saveShoot({
         shootId,
         fileUrls: uploadedUrls,
-        email: user?.email ?? email,
+        email: safeEmail || user?.email || email,
         createdAt: Date.now(),
         aiResults: [],
         public: publicShoot,

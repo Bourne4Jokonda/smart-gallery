@@ -36,8 +36,11 @@ export async function uploadShoot(
   }
 
   const compressed = await compressImage(file);
-  const folder = email
-    ? `smart-gallery/${email}/${shootId}`
+  const safeEmail = email
+    ? email.replace(/@/g, "_at_").replace(/\./g, "_dot_")
+    : undefined;
+  const folder = safeEmail
+    ? `smart-gallery/${safeEmail}/${shootId}`
     : `smart-gallery/${shootId}`;
   const url = await uploadToCloudinary(compressed, {
     onProgress,
