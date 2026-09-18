@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { Copy } from "lucide-react";
 import { getAuthInstance, onUserChange, getDb } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { saveShoot } from "@/lib/storage";
+import { saveShoot, readShoots } from "@/lib/storage";
 import { saveShootRecord, saveShootRecordById, updateShootRecord } from "@/lib/firebase";
 
 interface ShootRecord {
