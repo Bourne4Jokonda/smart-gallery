@@ -10,17 +10,30 @@ export function isCloudinaryConfigured(): boolean {
 
 export async function uploadToCloudinary(
   file: File,
-  onProgress?: (percent: number) => void,
+  options?: {
+    onProgress?: (percent: number) => void;
+    folder?: string;
+    publicId?: string;
+  },
 ): Promise<string> {
   if (!isCloudinaryConfigured()) {
     throw new Error("Cloudinary не настроен");
   }
+
+  const { onProgress, folder, publicId } = options || {};
 
   return new Promise<string>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const form = new FormData();
     form.append("file", file);
     form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+    if (folder) {
+      form.append("folder", folder);
+    }
+    if (publicId) {
+      form.append("public_id", publicId);
+    }
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable && onProgress) {

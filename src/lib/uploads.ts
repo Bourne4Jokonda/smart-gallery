@@ -29,14 +29,19 @@ export async function uploadShoot(
   shootId: string,
   file: File,
   onProgress?: (percent: number) => void,
+  email?: string,
 ): Promise<{ secure_url?: string } | void> {
   if (!isCloudinaryConfigured()) {
     throw new Error("Cloudinary не настроен");
   }
 
   const compressed = await compressImage(file);
-  const url = await uploadToCloudinary(compressed, (percent) => {
-    onProgress?.(percent);
+  const folder = email
+    ? `smart-gallery/${email}/${shootId}`
+    : `smart-gallery/${shootId}`;
+  const url = await uploadToCloudinary(compressed, {
+    onProgress,
+    folder,
   });
 
   return { secure_url: url };

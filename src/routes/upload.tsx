@@ -152,7 +152,7 @@ export default function UploadPage() {
               idx === i ? { ...it, progress: percent } : it,
             ),
           );
-        });
+        }, user?.email || email);
         console.log("[smart-gallery] upload result", i, result);
         if (result?.secure_url) {
           uploadedUrls.push(result.secure_url);
