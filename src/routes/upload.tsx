@@ -66,6 +66,17 @@ export default function UploadPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
 
+  const user =
+    typeof window !== "undefined"
+      ? (() => {
+          try {
+            return JSON.parse(localStorage.getItem("smart-gallery-user") || "null");
+          } catch {
+            return null;
+          }
+        })()
+      : null;
+
   useEffect(() => {
     const stored =
       localStorage.getItem("smart-gallery-email") ?? localStorage.getItem("email");
@@ -159,10 +170,6 @@ export default function UploadPage() {
         }
       }
 
-      const user =
-        typeof window !== "undefined"
-          ? JSON.parse(localStorage.getItem("smart-gallery-user") || "null")
-          : null;
       saveShoot({
         shootId,
         fileUrls: uploadedUrls,
