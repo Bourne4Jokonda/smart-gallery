@@ -19,6 +19,7 @@ import {
   uploadShoot,
 } from "@/lib/uploads";
 import { saveShoot } from "@/lib/storage";
+import { saveShootRecord, updateShootRecord } from "@/lib/firebase";
 
 interface Item {
   file: File;
@@ -61,6 +62,7 @@ export default function UploadPage() {
   const [shootId, setShootId] = useState("");
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
+  const [publicShoot, setPublicShoot] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
 
@@ -157,14 +159,30 @@ export default function UploadPage() {
         }
       }
 
-      const user = typeof window !== "undefined" ? window.__SMART_GALLERY_USER__ : null;
+      const user =
+        typeof window !== "undefined"
+          ? JSON.parse(localStorage.getItem("smart-gallery-user") || "null")
+          : null;
       saveShoot({
         shootId,
         fileUrls: uploadedUrls,
         email: user?.email ?? email,
         createdAt: Date.now(),
         aiResults: [],
+        public: publicShoot,
       });
+
+      if (publicShoot) {
+        try {
+          await saveShootRecordById(shootId, {
+            shootId,
+            fileUrls: uploadedUrls,
+            public: true,
+          });
+        } catch (e) {
+          console.warn("[smart-gallery] Firestore public save failed", e);
+        }
+      }
 
       setUploadedUrls(uploadedUrls);
       setStatus("done");
@@ -401,6 +419,20 @@ export default function UploadPage() {
                   Google Gemini
                 </a>{" "}
                 для AI-отбора. Фото хранятся 7 дней и удаляются автоматически.
+              </span>
+            </label>
+          )}
+
+          {validItems.length > 0 && status === "idle" && (
+            <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-card p-4">
+              <input
+                type="checkbox"
+                checked={publicShoot}
+                onChange={(e) => setPublicShoot(e.target.checked)}
+                className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-border bg-background accent-primary text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <span className="text-sm leading-relaxed text-foreground">
+                Сделать эту съёмку доступной по ссылке. По умолчанию она остаётся только в вашем кабинете. Ссылку можно будет скопировать после загрузки.
               </span>
             </label>
           )}

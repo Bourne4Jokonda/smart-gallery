@@ -12,9 +12,11 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import { toast } from "sonner";
+import { Copy } from "lucide-react";
 import { getAuthInstance, onUserChange, getDb } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { saveShoot, readShoots } from "@/lib/storage";
+import { saveShoot } from "@/lib/storage";
+import { saveShootRecord, updateShootRecord } from "@/lib/firebase";
 
 interface ShootRecord {
   shootId: string;
@@ -125,6 +127,12 @@ function GalleryPage() {
   const [filter, setFilter] = useState<"all" | "best">("all");
   const [curating, setCurating] = useState(false);
   const [curateProgress, setCurateProgress] = useState({ done: 0, total: 0 });
+  const [publicGallery, setPublicGallery] = useState(false);
+
+  const publicUrl = useMemo(() => {
+    if (!record || !publicGallery) return "";
+    return `${window.location.origin}/public-gallery/${record.shootId}`;
+  }, [record, publicGallery]);
 
   const bestUrls = useMemo(() => {
     if (!record) return [];
@@ -288,6 +296,11 @@ function GalleryPage() {
       const updated = { ...record, aiResults };
       setRecord(updated);
       saveShoot(updated);
+      try {
+        await updateShootRecord(record.shootId, { aiResults });
+      } catch {
+        // ignore cloud write errors
+      }
       toast.success("AI-отбор завершён", { id: toastId });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Неизвестная ошибка";
@@ -400,9 +413,39 @@ function GalleryPage() {
                 </>
               )}
             </button>
+
+            <button
+              type="button"
+              onClick={() => setPublicGallery((v) => !v)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {publicGallery ? "Сделать приватной" : "Сделать публичной"}
+            </button>
           </div>
 
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+          {publicGallery && publicUrl && (
+            <div className="mt-4 rounded-2xl border border-primary/40 bg-primary/10 p-4 text-center">
+              <p className="text-sm font-semibold">Публичная ссылка</p>
+              <p className="mt-2 break-all text-xs text-muted-foreground">{publicUrl}</p>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(publicUrl);
+                    toast.success("Ссылка скопирована");
+                  } catch {
+                    toast.error("Не удалось скопировать ссылку");
+                  }
+                }}
+                className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
+              >
+                <Copy className="h-4 w-4" />
+                Скопировать ссылку
+              </button>
+            </div>
+          )}
+
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {visibleUrls.map((url, i) => (
                 <button
                   key={`${url}-${i}`}

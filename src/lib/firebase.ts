@@ -109,6 +109,40 @@ export async function saveShootRecord(record: Record<string, unknown>) {
   await addDoc(collection(getDb(), "shoots"), payload as Record<string, unknown>);
 }
 
+export async function saveShootRecordById(
+  shootId: string,
+  record: Record<string, unknown>,
+) {
+  const auth = getAuthInstance();
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("Требуется авторизация");
+  }
+  const ref = doc(getDb(), "shoots", shootId);
+  await import("firebase/firestore").then(({ setDoc }) =>
+    setDoc(
+      ref,
+      {
+        ...record,
+        userId: user.uid,
+        createdAt: serverTimestamp(),
+      },
+      { merge: true },
+    ),
+  );
+}
+
+export async function updateShootRecord(
+  shootId: string,
+  patch: Record<string, unknown>,
+) {
+  const db = getDb();
+  const ref = doc(db, "shoots", shootId);
+  await import("firebase/firestore").then(({ setDoc }) =>
+    setDoc(ref, patch, { merge: true }),
+  );
+}
+
 export async function getUserShoots(userId: string, maxDocs = 20) {
   const db = getDb();
   const q = query(

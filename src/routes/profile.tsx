@@ -35,6 +35,7 @@ type ShootItem = {
     status: string;
     error?: string;
   }>;
+  public?: boolean;
 };
 
 function ProfilePage() {
@@ -164,9 +165,18 @@ function ProfilePage() {
                     >
                       Открыть <ChevronRight className="h-3 w-3" />
                     </Link>
+                    {s.public && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopyLink(`${window.location.origin}/public-gallery/${s.shootId}`)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-medium text-primary transition-colors hover:border-primary"
+                      >
+                        <ExternalLink className="h-3 w-3" /> Публичная ссылка
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => handleCopyLink(s.shootId)}
+                      onClick={() => handleCopyLink(`${window.location.origin}/gallery/${s.shootId}`)}
                       className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium transition-colors hover:border-primary"
                     >
                       <Copy className="h-3 w-3" /> Ссылка

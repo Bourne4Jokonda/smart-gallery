@@ -29,6 +29,12 @@ export const Route = createFileRoute("/api/shoot")({
           fileUrls = (data.fileUrls as string[]) ?? [];
           email = (data.email as string | undefined) ?? user?.email ?? "";
           createdAt = (data.createdAt as number) ?? Date.now();
+          const aiResults = (data.aiResults as Array<{
+            url: string;
+            score: number | null;
+            status: string;
+            error?: string;
+          }>) ?? [];
         } catch {
           // ignore cloud read errors
         }
@@ -39,7 +45,7 @@ export const Route = createFileRoute("/api/shoot")({
           fileUrls,
           email,
           createdAt,
-          aiResults: [],
+          aiResults,
         });
       },
     },

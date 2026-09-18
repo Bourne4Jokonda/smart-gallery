@@ -11,6 +11,7 @@ export function readShoots(): Record<string, {
     status: string;
     error?: string;
   }>;
+  public?: boolean;
 }> {
   if (typeof window === "undefined") return {};
   try {
@@ -64,6 +65,7 @@ export function saveShoot(record: {
     status: string;
     error?: string;
   }>;
+  public?: boolean;
 }) {
   const shoots = readShoots();
   shoots[record.shootId] = record;
