@@ -19,7 +19,7 @@ import {
   uploadShoot,
 } from "@/lib/uploads";
 import { saveShoot } from "@/lib/storage";
-import { saveShootRecord, updateShootRecord } from "@/lib/firebase";
+import { saveShootRecord, saveShootRecordById, updateShootRecord } from "@/lib/firebase";
 
 interface Item {
   file: File;
@@ -183,16 +183,17 @@ export default function UploadPage() {
         public: publicShoot,
       });
 
-      if (publicShoot) {
-        try {
-          await saveShootRecordById(shootId, {
-            shootId,
-            fileUrls: uploadedUrls,
-            public: true,
-          });
-        } catch (e) {
-          console.warn("[smart-gallery] Firestore public save failed", e);
-        }
+      // Save to Firestore for cross-browser sync (all shoots, not just public)
+      try {
+        await saveShootRecordById(shootId, {
+          shootId,
+          fileUrls: uploadedUrls,
+          email: safeEmail || user?.email || email,
+          aiResults: [],
+          public: publicShoot,
+        });
+      } catch (e) {
+        console.warn("[smart-gallery] Firestore save failed", e);
       }
 
       setUploadedUrls(uploadedUrls);
