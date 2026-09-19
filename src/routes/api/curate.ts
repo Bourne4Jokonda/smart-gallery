@@ -55,8 +55,8 @@ export const Route = createFileRoute("/api/curate")({
           );
         }
 
-        const MAX_IMAGES = 10;
-        const urls = fileUrls.slice(0, MAX_IMAGES);
+        const MAX_IMAGES = 20;
+                const urls = fileUrls.slice(0, MAX_IMAGES);
 
         const results = await Promise.all(
           urls.map(async (url) => {

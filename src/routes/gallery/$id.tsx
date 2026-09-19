@@ -277,25 +277,51 @@ function GalleryPage() {
     setCurateProgress({ done: 0, total: urls.length });
     const toastId = toast.loading("AI-отбор запущен…");
     try {
-      const res = await fetch("/api/curate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shootId: record.shootId, fileUrls: urls }),
+      const MAX_IMAGES = 30;
+            const batch = urls.slice(0, MAX_IMAGES);
+      const results = await Promise.all(
+        batch.map(async (url, idx) => {
+          try {
+            const res = await fetch("/api/curate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ shootId: record.shootId, fileUrls: [url] }),
+            });
+            if (!res.ok) {
+              const text = await res.text().catch(() => "");
+              throw new Error(`Ошибка отбора: ${res.status} ${text.slice(0, 200)}`);
+            }
+            const data = (await res.json()) as { ok: boolean; results?: Array<{ url: string; score: number | null; status: string; error?: string }> };
+            if (!data.ok || !Array.isArray(data.results)) {
+              throw new Error("AI не вернул результаты");
+            }
+            setCurateProgress((prev) => ({ ...prev, done: prev.done + 1 }));
+            return data.results[0] ?? { url, score: null as number | null, status: "error" as const, error: "Пустой результат" };
+          } catch (error) {
+            setCurateProgress((prev) => ({ ...prev, done: prev.done + 1 }));
+            return {
+              url,
+              score: null,
+              status: "error" as const,
+              error: error instanceof Error ? error.message : "Ошибка оценки",
+            };
+          }
+        }),
+      );
+      const incoming = new Map(
+        results.map((r) => [r.url, { url: r.url, score: r.score, status: r.status, error: r.error }]),
+      );
+      const merged = (record.aiResults ?? []).map((old) => {
+        const next = incoming.get(old.url);
+        if (!next) return old;
+        return next.status === "error" && old.status === "ok" ? old : next;
       });
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(`Ошибка отбора: ${res.status} ${text.slice(0, 200)}`);
+      for (const [url, result] of incoming) {
+        if (!merged.some((item) => item.url === url)) {
+          merged.push(result);
+        }
       }
-      const data = (await res.json()) as { ok: boolean; results?: Array<{ url: string; score: number | null; status: string; error?: string }> };
-      if (!data.ok || !Array.isArray(data.results)) {
-        throw new Error("AI не вернул результаты");
-      }
-      const aiResults = data.results.map((r) => ({
-        url: r.url,
-        score: r.score,
-        status: r.status,
-        error: r.error,
-      }));
+      const aiResults = merged;
       const updated = { ...record, aiResults };
       setRecord(updated);
       saveShoot(updated);
@@ -449,6 +475,33 @@ function GalleryPage() {
           )}
 
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+              <div className="col-span-full flex items-center justify-between gap-3">
+                <div className="inline-flex rounded-xl border border-border bg-card p-1">
+                  <button
+                    type="button"
+                    onClick={() => setFilter("all")}
+                    className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      filter === "all" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Все
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilter("best")}
+                    className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      filter === "best" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Лучшие
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {filter === "best"
+                    ? `Показано лучших: ${visibleUrls.length}`
+                    : `Показано: ${visibleUrls.length} / ${record.fileUrls.length}`}
+                </p>
+              </div>
               {visibleUrls.map((url, i) => (
                 <button
                   key={`${url}-${i}`}
