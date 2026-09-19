@@ -15,6 +15,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as ApiCurateRouteImport } from './routes/api/curate'
+import { Route as ApiDeleteImageRouteImport } from './routes/api/delete-image'
 import { Route as ApiNotifyLeadRouteImport } from './routes/api/notify-lead'
 import { Route as ApiShootRouteImport } from './routes/api/shoot'
 import { Route as GalleryIdRouteImport } from './routes/gallery/$id'
@@ -50,6 +51,11 @@ const ApiCurateRoute = ApiCurateRouteImport.update({
   path: '/api/curate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDeleteImageRoute = ApiDeleteImageRouteImport.update({
+  id: '/api/delete-image',
+  path: '/api/delete-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNotifyLeadRoute = ApiNotifyLeadRouteImport.update({
   id: '/api/notify-lead',
   path: '/api/notify-lead',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/upload': typeof UploadRoute
   '/api/curate': typeof ApiCurateRoute
+  '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
   '/api/shoot': typeof ApiShootRoute
   '/gallery/$id': typeof GalleryIdRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/upload': typeof UploadRoute
   '/api/curate': typeof ApiCurateRoute
+  '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
   '/api/shoot': typeof ApiShootRoute
   '/gallery/$id': typeof GalleryIdRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/upload': typeof UploadRoute
   '/api/curate': typeof ApiCurateRoute
+  '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
   '/api/shoot': typeof ApiShootRoute
   '/gallery/$id': typeof GalleryIdRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/upload'
     | '/api/curate'
+    | '/api/delete-image'
     | '/api/notify-lead'
     | '/api/shoot'
     | '/gallery/$id'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/upload'
     | '/api/curate'
+    | '/api/delete-image'
     | '/api/notify-lead'
     | '/api/shoot'
     | '/gallery/$id'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/upload'
     | '/api/curate'
+    | '/api/delete-image'
     | '/api/notify-lead'
     | '/api/shoot'
     | '/gallery/$id'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   UploadRoute: typeof UploadRoute
   ApiCurateRoute: typeof ApiCurateRoute
+  ApiDeleteImageRoute: typeof ApiDeleteImageRoute
   ApiNotifyLeadRoute: typeof ApiNotifyLeadRoute
   ApiShootRoute: typeof ApiShootRoute
   GalleryIdRoute: typeof GalleryIdRoute
@@ -204,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCurateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/delete-image': {
+      id: '/api/delete-image'
+      path: '/api/delete-image'
+      fullPath: '/api/delete-image'
+      preLoaderRoute: typeof ApiDeleteImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/notify-lead': {
       id: '/api/notify-lead'
       path: '/api/notify-lead'
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   UploadRoute: UploadRoute,
   ApiCurateRoute: ApiCurateRoute,
+  ApiDeleteImageRoute: ApiDeleteImageRoute,
   ApiNotifyLeadRoute: ApiNotifyLeadRoute,
   ApiShootRoute: ApiShootRoute,
   GalleryIdRoute: GalleryIdRoute,

@@ -9,6 +9,7 @@ import {
   Loader2,
   Sparkles,
   X,
+  Trash2,
 } from "lucide-react";
 import JSZip from "jszip";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ import { getAuthInstance, onUserChange, getDb } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { saveShoot, readShoots } from "@/lib/storage";
 import { saveShootRecord, saveShootRecordById, updateShootRecord } from "@/lib/firebase";
+import { getPublicIdFromUrl } from "@/lib/cloudinary";
 
 interface ShootRecord {
   shootId: string;
@@ -124,6 +126,7 @@ function GalleryPage() {
   const [zipping, setZipping] = useState(false);
   const [zipProgress, setZipProgress] = useState({ done: 0, total: 0 });
   const [singleDownloading, setSingleDownloading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [filter, setFilter] = useState<"all" | "best">("all");
   const [curating, setCurating] = useState(false);
   const [curateProgress, setCurateProgress] = useState({ done: 0, total: 0 });
@@ -266,6 +269,59 @@ function GalleryPage() {
     }
   }, [record, lightboxIndex, singleDownloading, zipping]);
 
+  const deleteCurrentImage = useCallback(async () => {
+    if (!record || lightboxIndex === null || deleting) return;
+    const url = record.fileUrls[lightboxIndex];
+    if (!url) return;
+    const publicId = getPublicIdFromUrl(url);
+    if (!publicId) {
+      toast.error("Не удалось определить идентификатор файла для удаления");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/delete-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publicId }),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Ошибка удаления: ${res.status} ${text.slice(0,200)}`);
+      }
+      const data = await res.json();
+      if (!data.ok) {
+        throw new Error(data.error || "Неизвестная ошибка");
+      }
+      // Remove from fileUrls and aiResults
+      const newFileUrls = record.fileUrls.filter((u, idx) => idx !== lightboxIndex);
+      const newAiResults = (record.aiResults ?? []).filter((r) => r.url !== url);
+      const updated = { ...record, fileUrls: newFileUrls, aiResults: newAiResults };
+      setRecord(updated);
+      saveShoot(updated);
+      try {
+        await updateShootRecord(record.shootId, {
+          fileUrls: newFileUrls,
+          aiResults: newAiResults,
+        });
+      } catch {
+        // ignore cloud write errors
+      }
+      toast.success("Фото удалено");
+      if (newFileUrls.length === 0) {
+        setLightboxIndex(null);
+      } else {
+        if (lightboxIndex >= newFileUrls.length) {
+          setLightboxIndex(newFileUrls.length - 1);
+        }
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Неизвестная ошибка";
+      toast.error("Не удалось удалить фото", { description: message });
+    } finally {
+      setDeleting(false);
+    }
+  }, [record, lightboxIndex, deleting, saveShoot, updateShootRecord]);
   const runCurate = useCallback(async () => {
     if (!record || curating) return;
     const urls = record.fileUrls;
@@ -683,22 +739,34 @@ function GalleryPage() {
           )}
 
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDownloadSingle();
-              }}
-              disabled={singleDownloading}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <Download className="h-4 w-4" />
-              {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
-            </button>
-            <div className="rounded-full border border-border bg-card/80 px-4 py-2 text-xs font-medium text-foreground">
-              {lightboxIndex + 1} / {record.fileUrls.length}
-            </div>
-          </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteCurrentImage();
+                        }}
+                        disabled={deleting || !record || lightboxIndex === null}
+                        className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {deleting ? "Удаляем…" : "Удалить это фото"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadSingle();
+                        }}
+                        disabled={singleDownloading}
+                        className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        <Download className="h-4 w-4" />
+                        {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
+                      </button>
+                      <div className="rounded-full border border-border bg-card/80 px-4 py-2 text-xs font-medium text-foreground">
+                        {lightboxIndex + 1} / {record.fileUrls.length}
+                      </div>
+                    </div>
         </div>
       )}
     </div>

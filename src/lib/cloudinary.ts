@@ -8,6 +8,31 @@ export function isCloudinaryConfigured(): boolean {
   return Boolean(CLOUDINARY_CLOUD_NAME);
 }
 
+export function getPublicIdFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname; // e.g., /v1234567890/folder/publicId.jpg
+    const segments = pathname.split('/');
+    // Find index of 'upload'
+    const uploadIdx = segments.indexOf('upload');
+    if (uploadIdx === -1) return null;
+    // The publicId with extension is everything after 'upload'
+    const partsAfterUpload = segments.slice(uploadIdx + 1);
+    // The first part may be version like 'v1234567890' (starts with v followed by digits)
+    let startIdx = 0;
+    if (partsAfterUpload.length > 0 && /^v\d+$/.test(partsAfterUpload[0])) {
+      startIdx = 1;
+    }
+    // Join the rest with '/' to rebuild folder path
+    const withExt = partsAfterUpload.slice(startIdx).join('/');
+    // Remove extension (everything after last dot)
+    const publicId = withExt.split('.').slice(0, -1).join('.');
+    return publicId || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function uploadToCloudinary(
   file: File,
   options?: {
