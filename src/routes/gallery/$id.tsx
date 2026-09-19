@@ -322,6 +322,53 @@ function GalleryPage() {
       setDeleting(false);
     }
   }, [record, lightboxIndex, deleting, saveShoot, updateShootRecord]);
+
+  const deleteImageAt = useCallback(async (idx: number) => {
+    if (!record || deleting) return;
+    const url = record.fileUrls[idx];
+    if (!url) return;
+    const publicId = getPublicIdFromUrl(url);
+    if (!publicId) {
+      toast.error("Не удалось определить файл для удаления");
+      return;
+    }
+    if (!confirm("Точно удалить это фото?")) return;
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/delete-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publicId }),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Ошибка: ${res.status} ${text.slice(0, 200)}`);
+      }
+      const data = await res.json();
+      if (!data.ok) {
+        throw new Error(data.error || "Не удалось удалить фото");
+      }
+      const newFileUrls = record.fileUrls.filter((u, i) => i !== idx);
+      const newAiResults = (record.aiResults ?? []).filter((r) => r.url !== url);
+      const updated = { ...record, fileUrls: newFileUrls, aiResults: newAiResults };
+      setRecord(updated);
+      saveShoot(updated);
+      try {
+        await updateShootRecord(record.shootId, { fileUrls: newFileUrls, aiResults: newAiResults });
+      } catch {
+        // ignore
+      }
+      toast.success("Фото удалено");
+      setLightboxIndex((lb) =>
+        lb !== null && lb >= newFileUrls.length ? newFileUrls.length - 1 : lb,
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка удаления";
+      toast.error(message);
+    } finally {
+      setDeleting(false);
+    }
+  }, [record, deleting, saveShoot, updateShootRecord]);
   const runCurate = useCallback(async () => {
     if (!record || curating) return;
     const urls = record.fileUrls;
@@ -331,41 +378,33 @@ function GalleryPage() {
     }
     setCurating(true);
     setCurateProgress({ done: 0, total: urls.length });
-    const toastId = toast.loading("AI-отбор запущен…");
+    const toastId = toast.loading(`AI-отбор: ${urls.length} фото…`);
+    console.log("[runCurate] starting", { urls, recordId: record.shootId });
     try {
-      const MAX_IMAGES = 30;
-            const batch = urls.slice(0, MAX_IMAGES);
-      const results = await Promise.all(
-        batch.map(async (url, idx) => {
-          try {
-            const res = await fetch("/api/curate", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ shootId: record.shootId, fileUrls: [url] }),
-            });
-            if (!res.ok) {
-              const text = await res.text().catch(() => "");
-              throw new Error(`Ошибка отбора: ${res.status} ${text.slice(0, 200)}`);
-            }
-            const data = (await res.json()) as { ok: boolean; results?: Array<{ url: string; score: number | null; status: string; error?: string }> };
-            if (!data.ok || !Array.isArray(data.results)) {
-              throw new Error("AI не вернул результаты");
-            }
-            setCurateProgress((prev) => ({ ...prev, done: prev.done + 1 }));
-            return data.results[0] ?? { url, score: null as number | null, status: "error" as const, error: "Пустой результат" };
-          } catch (error) {
-            setCurateProgress((prev) => ({ ...prev, done: prev.done + 1 }));
-            return {
-              url,
-              score: null,
-              status: "error" as const,
-              error: error instanceof Error ? error.message : "Ошибка оценки",
-            };
-          }
-        }),
-      );
+      const res = await fetch("/api/curate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shootId: record.shootId, fileUrls: urls }),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Ошибка: ${res.status} ${text.slice(0, 200)}`);
+      }
+      const data = (await res.json()) as { ok: boolean; results?: Array<{ url: string; score: number | null; status: string; error?: string }> };
+      console.log("[runCurate] response data:", data);
+      if (!data.ok || !Array.isArray(data.results)) {
+        throw new Error(data?.error || "AI не вернул результаты");
+      }
       const incoming = new Map(
-        results.map((r) => [r.url, { url: r.url, score: r.score, status: r.status, error: r.error }]),
+        data.results.map((r) => [
+          r.url,
+          {
+            url: r.url,
+            score: r.score,
+            status: r.status,
+            ...(r.error ? { error: r.error } : {}),
+          },
+        ]),
       );
       const merged = (record.aiResults ?? []).map((old) => {
         const next = incoming.get(old.url);
@@ -386,7 +425,14 @@ function GalleryPage() {
       } catch {
         // ignore cloud write errors
       }
-      toast.success("AI-отбор завершён", { id: toastId });
+      setCurateProgress({ done: aiResults.filter((a) => a.score != null).length, total: urls.length });
+      const okCount = aiResults.filter((a) => a.score != null).length;
+      const errCount = aiResults.filter((a) => a.status === "error").length;
+      if (errCount > 0) {
+        toast.warning(`AI-отбор завершён: ${okCount} оценено, ${errCount} ошибок`, { id: toastId });
+      } else {
+        toast.success(`AI-отбор завершён: ${okCount}/${urls.length} фото оценены`, { id: toastId });
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Неизвестная ошибка";
       toast.error("Не удалось запустить AI-отбор", { id: toastId, description: message });
@@ -394,7 +440,53 @@ function GalleryPage() {
       setCurating(false);
       setCurateProgress({ done: 0, total: 0 });
     }
-  }, [record, curating, saveShoot]);
+  }, [record, curating, saveShoot, updateShootRecord]);
+
+  const clearCloudinaryFolder = useCallback(async () => {
+    if (!record) return;
+    if (!record.email) {
+      toast.error(
+        "Невозможно очистить папку: email не сохранён в этой сессии. Загрузите съёмку заново, авторизовавшись."
+      );
+      return;
+    }
+    if (
+      !confirm(
+        `Удалить ВСЕ файлы этой сесси из Cloudinary?\nПапка: smart-gallery/${record.email}/${record.shootId}\nЭто необратимо. Продолжить?`
+      )
+    )
+      return;
+    setDeleting(true);
+    const toastId = toast.loading("Очищаем папку Cloudinary…");
+    try {
+      const res = await fetch("/api/delete-shoot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: record.email, shootId: record.shootId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data?.error || `Ошибка: ${res.status}`);
+      }
+      toast.success(
+        `Удалено из Cloudinary: ${data.deleted ?? "?"} файлов. Папка: ${data.folderDeleted ? "удалена" : "(осталась — не пустая)"}`.trim(),
+        { id: toastId }
+      );
+      // Remove all fileUrls from the shoot record (local + Firestore)
+      const updated = { ...record, fileUrls: [], aiResults: [] };
+      setRecord(updated);
+      saveShoot(updated);
+      try {
+        await updateShootRecord(record.shootId, { fileUrls: [], aiResults: [] });
+      } catch {}
+      setLightboxIndex(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка очистки";
+      toast.error("Не удалось очистить папку", { id: toastId, description: message });
+    } finally {
+      setDeleting(false);
+    }
+  }, [record, deleting, saveShoot, updateShootRecord]);
 
   if (loading) {
     return (
@@ -466,6 +558,13 @@ function GalleryPage() {
         <div className="mx-auto max-w-5xl">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
+              <Link
+                to="/profile"
+                className="inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-primary"
+              >
+                <ChevronLeft className="h-3 w-3" />
+                Назад к сессиям
+              </Link>
               <p className="text-xs font-medium uppercase tracking-wider text-primary">
                 Съёмка #{record.shootId.slice(-6)}
               </p>
@@ -505,6 +604,15 @@ function GalleryPage() {
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
             >
               {publicGallery ? "Сделать приватной" : "Сделать публичной"}
+            </button>
+            <button
+              type="button"
+              onClick={clearCloudinaryFolder}
+              disabled={deleting || !record.email}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-card px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Trash2 className="h-4 w-4" />
+              Очистить папку Cloudinary
             </button>
           </div>
 
@@ -574,6 +682,18 @@ function GalleryPage() {
                     loading="lazy"
                     className="h-full w-full object-cover"
                   />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteImageAt(i);
+                    }}
+                    disabled={deleting}
+                    className="absolute top-1.5 right-1.5 rounded-full bg-background/80 p-1 opacity-0 transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed"
+                    aria-label={`Удалить кадр ${i + 1}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </button>
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-3 text-left">
                     <p className="text-xs font-semibold">Кадр {i + 1}</p>
                     {(() => {
