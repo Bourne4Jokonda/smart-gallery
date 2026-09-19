@@ -7,6 +7,10 @@ import {
   query,
   orderBy,
   limit,
+  getDocs,
+  where,
+  doc,
+  getDoc,
   type Firestore,
 } from "firebase/firestore";
 import {
@@ -143,14 +147,44 @@ export async function updateShootRecord(
   );
 }
 
-export async function getUserShoots(userId: string, maxDocs = 20) {
+export async function getUserShoots(userId: string, maxDocs = 50) {
   const db = getDb();
   const q = query(
     collection(db, "shoots"),
+    where("userId", "==", userId),
     orderBy("createdAt", "desc"),
     limit(maxDocs),
   );
-  return { type: "client" as const, userId, maxDocs };
+  const snapshot = await getDocs(q);
+  const shoots: Array<{
+    shootId: string;
+    fileUrls: string[];
+    email?: string | null;
+    createdAt: number;
+    aiResults?: Array<{ url: string; score: number | null; status: string; error?: string }>;
+    public?: boolean;
+  }> = [];
+  snapshot.forEach((d) => {
+    const data = d.data();
+    const rawTs = data["createdAt"];
+    let createdAt: number;
+    if (rawTs && typeof (rawTs as { toMillis?: () => number }).toMillis === "function") {
+      createdAt = (rawTs as { toMillis: () => number }).toMillis();
+    } else if (typeof rawTs === "number") {
+      createdAt = rawTs;
+    } else {
+      createdAt = Date.now();
+    }
+    shoots.push({
+      shootId: d.id,
+      fileUrls: (data["fileUrls"] as string[]) ?? [],
+      email: (data["email"] as string | undefined) ?? null,
+      createdAt,
+      aiResults: (data["aiResults"] as Array<{ url: string; score: number | null; status: string; error?: string }>) ?? [],
+      public: Boolean(data["public"]),
+    });
+  });
+  return shoots;
 }
 
 export const MAX_FILE_SIZE = 20 * 1024 * 1024;

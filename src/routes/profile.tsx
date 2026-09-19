@@ -14,6 +14,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { readShoots, removeShoot, saveShoot } from "@/lib/storage";
+import { getAuthInstance, getUserShoots } from "@/lib/firebase";
 
 export const Route = createFileRoute("/profile")({
   beforeLoad: () => {
@@ -43,9 +44,42 @@ function ProfilePage() {
   const [removing, setRemoving] = useState<string | null>(null);
 
   useEffect(() => {
-    const all = readShoots();
-    const list = Object.values(all).sort((a, b) => b.createdAt - a.createdAt);
-    setShoots(list);
+    // 1. Load from localStorage first (instant feedback)
+    const local = readShoots();
+    const localList = Object.values(local).sort((a, b) => b.createdAt - a.createdAt);
+    setShoots(localList);
+
+    // 2. Load from Firestore (source of truth)
+    let cancelled = false;
+    const loadFromCloud = async () => {
+      try {
+        const auth = getAuthInstance();
+        const user = auth.currentUser;
+        if (!user) return;
+        const cloudShoots = await getUserShoots(user.uid);
+        // Merge Firestore data over localStorage (Firestore is source of truth)
+        const merged: Record<string, ShootItem> = { ...local };
+        for (const s of cloudShoots) {
+          merged[s.shootId] = s;
+        }
+        // Save cloud data to localStorage for offline use
+        for (const s of cloudShoots) {
+          saveShoot(s);
+        }
+        if (!cancelled) {
+          const list = Object.values(merged).sort((a, b) => b.createdAt - a.createdAt);
+          setShoots(list);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.warn("[profile] failed to load from cloud:", err);
+        }
+      }
+    };
+    loadFromCloud();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const bestCount = useMemo(
@@ -65,6 +99,33 @@ function ProfilePage() {
       toast.success("Съёмка удалена из кабинета");
     } catch {
       toast.error("Не удалось удалить съёмку");
+    } finally {
+      setRemoving(null);
+    }
+  };
+
+  const handleDeleteFromCloudinary = async (shootId: string, email?: string | null) => {
+    if (!confirm("Удалить папку этой сессии из Cloudinary? Файлы исчезнут навсегда.")) return;
+    if (!email) {
+      toast.error("Email не сохранён — загрузите съёмку заново, авторизовавшись.");
+      return;
+    }
+    setRemoving(shootId);
+    const toastId = toast.loading("Удаляем из Cloudinary…");
+    try {
+      const res = await fetch("/api/delete-shoot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, shootId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data?.error || `Ошибка: ${res.status}`);
+      }
+      toast.success(`Удалено ${data.deleted ?? "?"} файлов из Cloudinary`, { id: toastId });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка удаления";
+      toast.error(message, { id: toastId });
     } finally {
       setRemoving(null);
     }
@@ -189,6 +250,15 @@ function ProfilePage() {
                     >
                       {removing === s.shootId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                       Удалить
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteFromCloudinary(s.shootId, s.email)}
+                      disabled={removing === s.shootId || !s.email}
+                      className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Очистить Cloudinary
                     </button>
                   </div>
                 </div>
