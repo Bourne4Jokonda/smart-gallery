@@ -460,6 +460,51 @@ function GalleryPage() {
     }
   }, [record, curating, saveShoot, updateShootRecord]);
 
+  const reindexSingleImage = useCallback(async (url: string) => {
+    if (!record || curating) return;
+    const toastId = toast.loading("Переоценка фото…");
+    setCurating(true);
+    try {
+      const res = await fetch("/api/curate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shootId: record.shootId, fileUrls: [url] }),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Ошибка: ${res.status} ${text.slice(0, 200)}`);
+      }
+      const data = (await res.json()) as { ok: boolean; results?: Array<{ url: string; score: number | null; status: string; error?: string }> };
+      if (!data.ok || !Array.isArray(data.results) || !data.results[0]) {
+        throw new Error(data?.error || "AI не вернул результат");
+      }
+      const result = data.results[0];
+      const updated = {
+        ...record,
+        aiResults: (record.aiResults ?? []).map((item) =>
+          item.url === url ? { url, score: result.score, status: result.status, ...(result.error ? { error: result.error } : {}) } : item,
+        ),
+      };
+      setRecord(updated);
+      saveShoot(updated);
+      try {
+        await updateShootRecord(record.shootId, { aiResults: updated.aiResults });
+      } catch {
+        // ignore
+      }
+      if (result.status === "ok" && result.score != null) {
+        toast.success(`Оценка: ${result.score}/10`, { id: toastId });
+      } else {
+        toast.error(result.error || "Не удалось переоценить фото", { id: toastId });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка переоценки";
+      toast.error(message, { id: toastId });
+    } finally {
+      setCurating(false);
+    }
+  }, [record, curating, saveShoot, updateShootRecord]);
+
   const clearCloudinaryFolder = useCallback(async () => {
     if (!record) return;
     if (!record.email) {
@@ -678,11 +723,33 @@ function GalleryPage() {
                     Лучшие
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {filter === "best"
-                    ? `Показано лучших: ${visibleUrls.length}`
-                    : `Показано: ${visibleUrls.length} / ${record.fileUrls.length}`}
-                </p>
+                <div className="flex items-center gap-3">
+                  {(() => {
+                    const total = record.fileUrls.length;
+                    const scored = (record.aiResults ?? []).filter((a) => a.score != null).length;
+                    const errored = (record.aiResults ?? []).filter((a) => a.status === "error").length;
+                    const unscored = total - scored - errored;
+                    const scoredPct = total ? Math.round((scored / total) * 100) : 0;
+                    const errorPct = total ? Math.round((errored / total) * 100) : 0;
+                    const unscoredPct = total ? Math.round((unscored / total) * 100) : 0;
+                    return (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="flex h-2 w-32 overflow-hidden rounded-full bg-muted">
+                          {scoredPct > 0 && <div className="bg-primary" style={{ width: `${scoredPct}%` }} />}
+                          {errorPct > 0 && <div className="bg-destructive" style={{ width: `${errorPct}%` }} />}
+                          {unscoredPct > 0 && <div className="bg-muted-foreground/40" style={{ width: `${unscoredPct}%` }} />}
+                        </div>
+                        <span>
+                          {scored > 0 && `${scoredPct}% оценено`}
+                          {scored > 0 && (errored > 0 || unscored > 0) && " · "}
+                          {errored > 0 && `${errorPct}% ошибок`}
+                          {(scored > 0 || errored > 0) && unscored > 0 && " · "}
+                          {unscored > 0 && `${unscoredPct}% не оценено`}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
               {visibleUrls.map((url, i) => (
                 <button
@@ -723,9 +790,33 @@ function GalleryPage() {
                             </p>
                           );
                         }
+                        if (match?.status === "error") {
+                          return (
+                            <p className="text-xs font-bold text-destructive">Ошибка оценки</p>
+                          );
+                        }
                         return <p className="text-xs font-bold text-muted-foreground">AI: —</p>;
                       })()}
                   </div>
+                  {(() => {
+                    const match = record?.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(url));
+                    const needsRetry = !match || match.status === "error" || (match.score == null && match.status !== "ok");
+                    if (!needsRetry) return null;
+                    return (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          reindexSingleImage(url);
+                        }}
+                        disabled={curating}
+                        className="absolute top-1.5 left-1.5 rounded-full bg-background/80 p-1 opacity-0 transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed"
+                        aria-label={`Переоценить кадр ${i + 1}`}
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      </button>
+                    );
+                  })()}
                 </button>
               ))}
             </div>
