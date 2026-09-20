@@ -278,6 +278,12 @@ function GalleryPage() {
       toast.error("Не удалось определить идентификатор файла для удаления");
       return;
     }
+    if (
+      !confirm(
+        "Удалить это фото из Cloudinary?\n\nЭто необратимо: файл исчезнет из облака и из этой съёмки."
+      )
+    )
+      return;
     setDeleting(true);
     try {
       const res = await fetch("/api/delete-image", {
@@ -332,7 +338,12 @@ function GalleryPage() {
       toast.error("Не удалось определить файл для удаления");
       return;
     }
-    if (!confirm("Точно удалить это фото?")) return;
+    if (
+      !confirm(
+        "Удалить это фото из Cloudinary?\n\nЭто необратимо: файл исчезнет из облака и из этой съёмки."
+      )
+    )
+      return;
     setDeleting(true);
     try {
       const res = await fetch("/api/delete-image", {
@@ -409,7 +420,11 @@ function GalleryPage() {
       const merged = (record.aiResults ?? []).map((old) => {
         const next = incoming.get(old.url);
         if (!next) return old;
-        return next.status === "error" && old.status === "ok" ? old : next;
+        // Keep existing ok scores; replace errors or empty statuses
+        if (old.status === "ok" && old.score != null) {
+          return old;
+        }
+        return next;
       });
       for (const [url, result] of incoming) {
         if (!merged.some((item) => item.url === url)) {
@@ -425,13 +440,16 @@ function GalleryPage() {
       } catch {
         // ignore cloud write errors
       }
-      setCurateProgress({ done: aiResults.filter((a) => a.score != null).length, total: urls.length });
-      const okCount = aiResults.filter((a) => a.score != null).length;
-      const errCount = aiResults.filter((a) => a.status === "error").length;
-      if (errCount > 0) {
-        toast.warning(`AI-отбор завершён: ${okCount} оценено, ${errCount} ошибок`, { id: toastId });
+      const scored = aiResults.filter((a) => a.score != null).length;
+      const errored = aiResults.filter((a) => a.status === "error").length;
+      const unscored = urls.length - scored - errored;
+      setCurateProgress({ done: scored, total: urls.length });
+      if (errored > 0) {
+        toast.warning(`AI-отбор: ${scored} оценено, ${errored} ошибок, ${unscored} без оценки`, { id: toastId });
+      } else if (unscored > 0) {
+        toast.warning(`AI-отбор: ${scored} оценено, ${unscored} не оценено`, { id: toastId });
       } else {
-        toast.success(`AI-отбор завершён: ${okCount}/${urls.length} фото оценены`, { id: toastId });
+        toast.success(`AI-отбор завершён: ${scored}/${urls.length} фото оценены`, { id: toastId });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Неизвестная ошибка";
@@ -866,10 +884,10 @@ function GalleryPage() {
                           deleteCurrentImage();
                         }}
                         disabled={deleting || !record || lightboxIndex === null}
-                        className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-70"
+                        className="inline-flex items-center justify-center rounded-full border border-border bg-card/80 p-2 text-xs text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-70"
+                        aria-label="Удалить из Cloudinary"
                       >
                         <Trash2 className="h-4 w-4" />
-                        {deleting ? "Удаляем…" : "Удалить это фото"}
                       </button>
                       <button
                         type="button"

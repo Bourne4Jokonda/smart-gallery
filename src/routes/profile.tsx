@@ -105,7 +105,12 @@ function ProfilePage() {
   };
 
   const handleDeleteFromCloudinary = async (shootId: string, email?: string | null) => {
-    if (!confirm("Удалить папку этой сессии из Cloudinary? Файлы исчезнут навсегда.")) return;
+    if (
+      !confirm(
+        `Удалить файлы этой сессии из Cloudinary?\n\nПапка: smart-gallery/${email ?? ""}/${shootId}\nЭто необратимо: файлы исчезнут и из облака, и из кабинета. Продолжить?`
+      )
+    )
+      return;
     if (!email) {
       toast.error("Email не сохранён — загрузите съёмку заново, авторизовавшись.");
       return;
@@ -122,7 +127,20 @@ function ProfilePage() {
       if (!res.ok || !data.ok) {
         throw new Error(data?.error || `Ошибка: ${res.status}`);
       }
-      toast.success(`Удалено ${data.deleted ?? "?"} файлов из Cloudinary`, { id: toastId });
+
+      // Remove from UI + localStorage + Firestore
+      setShoots((prev) => prev.filter((s) => s.shootId !== shootId));
+      removeShoot(shootId);
+      try {
+        await updateShootRecord(shootId, { fileUrls: [], aiResults: [] });
+      } catch {
+        // ignore
+      }
+
+      toast.success(
+        `Удалено из Cloudinary: ${data.deleted ?? "?"} файлов. Запись удалена из кабинета.`,
+        { id: toastId }
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ошибка удаления";
       toast.error(message, { id: toastId });
@@ -244,21 +262,12 @@ function ProfilePage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(s.shootId)}
-                      disabled={removing === s.shootId}
-                      className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-destructive transition-colors hover:border-destructive disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {removing === s.shootId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                      Удалить
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => handleDeleteFromCloudinary(s.shootId, s.email)}
                       disabled={removing === s.shootId || !s.email}
-                      className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center justify-center rounded-lg border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      aria-label="Удалить из Cloudinary"
                     >
-                      <Trash2 className="h-3 w-3" />
-                      Очистить Cloudinary
+                      {removing === s.shootId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
