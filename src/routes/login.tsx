@@ -4,6 +4,7 @@ import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signOut,
 } from "firebase/auth";
 import { toast } from "sonner";
 import { Camera, Loader2 } from "lucide-react";
@@ -12,7 +13,7 @@ import { getAuthInstance } from "@/lib/firebase";
 export const Route = createFileRoute("/login")({
   component: LoginPage,
   beforeLoad: () => {
-    if (typeof window !== "undefined" && (window.__SMART_GALLERY_USER__ || localStorage.getItem("smart-gallery-user"))) {
+    if (typeof window !== "undefined" && localStorage.getItem("smart-gallery-user")) {
       throw redirect({ to: "/" });
     }
   },
@@ -35,13 +36,11 @@ function LoginPage() {
       if (mode === "register") {
         const res = await createUserWithEmailAndPassword(auth, email.trim(), password);
         const userPayload = { uid: res.user.uid, email: res.user.email ?? email.trim() };
-        window.__SMART_GALLERY_USER__ = userPayload;
         localStorage.setItem("smart-gallery-user", JSON.stringify(userPayload));
         toast.success("Аккаунт создан");
       } else {
         const res = await signInWithEmailAndPassword(auth, email.trim(), password);
         const userPayload = { uid: res.user.uid, email: res.user.email ?? email.trim() };
-        window.__SMART_GALLERY_USER__ = userPayload;
         localStorage.setItem("smart-gallery-user", JSON.stringify(userPayload));
         toast.success("Вход выполнен");
       }
@@ -78,7 +77,6 @@ function LoginPage() {
     try {
       await signOut(auth);
       localStorage.removeItem("smart-gallery-user");
-      window.__SMART_GALLERY_USER__ = null;
       toast.success("Вы вышли");
       window.location.href = "/login";
     } catch (e) {

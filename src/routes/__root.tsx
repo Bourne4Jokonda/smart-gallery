@@ -7,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
@@ -119,14 +119,13 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
-  const user = typeof window !== "undefined" ? window.__SMART_GALLERY_USER__ : null;
+  const [user, setUser] = useState<{ uid: string; email: string } | null>(null);
 
   useEffect(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem("smart-gallery-user") : null;
-    if (stored && !window.__SMART_GALLERY_USER__) {
+    if (stored) {
       try {
-        window.__SMART_GALLERY_USER__ = JSON.parse(stored);
-        router.invalidate();
+        setUser(JSON.parse(stored));
       } catch {
         // ignore corrupted storage
       }
@@ -134,11 +133,12 @@ function RootComponent() {
 
     const unsubscribe = onUserChange((u) => {
       if (u?.email) {
-        window.__SMART_GALLERY_USER__ = { uid: u.uid, email: u.email };
-        localStorage.setItem("smart-gallery-user", JSON.stringify({ uid: u.uid, email: u.email }));
+        const userData = { uid: u.uid, email: u.email };
+        localStorage.setItem("smart-gallery-user", JSON.stringify(userData));
+        setUser(userData);
       } else {
-        window.__SMART_GALLERY_USER__ = null;
         localStorage.removeItem("smart-gallery-user");
+        setUser(null);
       }
       router.invalidate();
     });
