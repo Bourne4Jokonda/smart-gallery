@@ -134,34 +134,49 @@ async function scoreImageWithGemini(imageUrl: string, apiKey: string): Promise<n
     },
   };
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`Gemini error ${response.status}: ${text.slice(0, 200)}`);
-  }
-
-  const data = (await response.json()) as {
-    candidates?: Array<{
-      content?: {
-        parts?: Array<{ text?: string }>;
+    if (response.ok) {
+      const data = (await response.json()) as {
+        candidates?: Array<{
+          content?: {
+            parts?: Array<{ text?: string }>;
+          };
+        }>;
       };
-    }>;
-  };
 
-  const text =
-    data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+      const text =
+        data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
 
-  const parsed = Number(text);
-  if (!Number.isFinite(parsed)) {
-    throw new Error(`AI вернул не оценку: ${text || "пустой ответ"}`);
+      const parsed = Number(text);
+      if (!Number.isFinite(parsed)) {
+        throw new Error(`AI вернул не оценку: ${text || "пустой ответ"}`);
+      }
+
+      return Math.round(Math.min(10, Math.max(1, parsed)));
+    }
+
+    const errorText = await response.text().catch(() => "");
+    const isQuota = response.status === 429;
+    const isLast = attempt === maxAttempts;
+
+    if (isQuota && !isLast) {
+      const delayMs = 1500 * attempt;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      continue;
+    }
+
+    const prefix = isQuota ? "Превышен лимит Gemini" : `Gemini error ${response.status}`;
+    throw new Error(`${prefix}: ${errorText.slice(0, 200)}`);
   }
 
-  return Math.round(Math.min(10, Math.max(1, parsed)));
+  throw new Error("Превышен лимит Gemini после повторных попыток");
 }
