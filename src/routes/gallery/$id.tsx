@@ -634,111 +634,107 @@ function GalleryPage() {
       <main className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-5xl">
           <div className="sticky top-0 z-30 -mx-5 bg-background/90 px-5 py-4 backdrop-blur sm:-mx-8 sm:px-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <Link
-                  to="/profile"
-                  className="inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-primary"
-                >
-                  <ChevronLeft className="h-3 w-3" />
-                  Назад к сессиям
-                </Link>
-                <p className="text-xs font-medium uppercase tracking-wider text-primary">
-                  Съёмка #{record.shootId.slice(-6)}
-                </p>
-                <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
-                  Загружено {record.fileUrls.length}{" "}
-                  {record.fileUrls.length === 1 ? "фото" : "фото"}
-                </h1>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {dateStr}
-                  {record.email ? ` · ${record.email}` : " · без email"}
-                </p>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <Link
+                    to="/profile"
+                    className="inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                    Назад к сессиям
+                  </Link>
+                  <p className="text-xs font-medium uppercase tracking-wider text-primary">
+                    Съёмка #{record.shootId.slice(-6)}
+                  </p>
+                  <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
+                    Загружено {record.fileUrls.length}{" "}
+                    {record.fileUrls.length === 1 ? "фото" : "фото"}
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {dateStr}
+                    {record.email ? ` · ${record.email}` : " · без email"}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDownloadZip}
+                    disabled={zipping || record.fileUrls.length === 0}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {zipping ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        {zipProgress.total > 0
+                          ? `Скачиваем ${zipProgress.done} / ${zipProgress.total}`
+                          : "Собираем…"}
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4 text-primary" />
+                        Скачать всё (ZIP)
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPublicGallery((v) => !v)}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {publicGallery ? "Сделать приватной" : "Сделать публичной"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearCloudinaryFolder}
+                    disabled={deleting || !record.email}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-card px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Очистить папку Cloudinary
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={handleDownloadZip}
-                disabled={zipping || record.fileUrls.length === 0}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {zipping ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    {zipProgress.total > 0
-                      ? `Скачиваем ${zipProgress.done} / ${zipProgress.total}`
-                      : "Собираем…"}
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4 text-primary" />
-                    Скачать всё (ZIP)
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPublicGallery((v) => !v)}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {publicGallery ? "Сделать приватной" : "Сделать публичной"}
-              </button>
-              <button
-                              type="button"
-                              onClick={clearCloudinaryFolder}
-                              disabled={deleting || !record.email}
-                              className="inline-flex items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-card px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Очистить папку Cloudinary
-                            </button>
-                          </div>
-                        </div>
-
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="inline-flex rounded-xl border border-border bg-card p-1">
-              <button
-                type="button"
-                onClick={() => setFilter("all")}
-                disabled={filter === "all"}
-                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                  filter === "all"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Все
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter("best")}
-                disabled={filter === "best"}
-                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                  filter === "best"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Лучшие
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="inline-flex rounded-full border border-border bg-card p-1">
+                  <button
+                    type="button"
+                    onClick={() => setFilter("all")}
+                    disabled={filter === "all"}
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                      filter === "all"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Все
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilter("best")}
+                    disabled={filter === "best"}
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                      filter === "best"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Лучшие
+                  </button>
+                </div>
+                {record && record.fileUrls.length > 0 && (() => {
+                  const scored = record.aiResults?.filter((a) => a.score != null).length ?? 0;
+                  const errored = record.aiResults?.filter((a) => a.status === "error").length ?? 0;
+                  const unscored = record.fileUrls.length - scored - errored;
+                  const pct = Math.round((scored / record.fileUrls.length) * 100);
+                  return (
+                    <div className="text-sm text-muted-foreground">
+                      {pct}% оценено · {record.fileUrls.length > 0 ? Math.round((errored / record.fileUrls.length) * 100) : 0}% ошибок · {record.fileUrls.length > 0 ? Math.round((unscored / record.fileUrls.length) * 100) : 0}% не оценено
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
-            {curating && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span>AI-отбор: {curateProgress.done}/{curateProgress.total}</span>
-              </div>
-            )}
-            {!curating && record?.aiResults?.length > 0 && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span>Оценено: {record.aiResults.length} фото</span>
-              </div>
-            )}
-            {record && (
-              <div className="text-sm text-muted-foreground">
-                Прогресс сессии: {record.aiResults?.length ?? 0}/{record.fileUrls.length} — {record.fileUrls.length ? Math.round(((record.aiResults?.length ?? 0) / record.fileUrls.length) * 100) : 0}%
-              </div>
-            )}
           </div>
 
           {publicGallery && publicUrl && (
