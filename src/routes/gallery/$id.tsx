@@ -695,43 +695,48 @@ function GalleryPage() {
                           </div>
                         </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setFilter("all")}
-              disabled={filter === "all"}
-              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
-                filter === "all"
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-card text-muted-foreground hover:border-primary/60 hover:text-primary"
-              }`}
-            >
-              <Images className="h-4 w-4" />
-              Все
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter("best")}
-              disabled={filter === "best"}
-              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
-                filter === "best"
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-card text-muted-foreground hover:border-primary/60 hover:text-primary"
-              }`}
-            >
-              <Sparkles className="h-4 w-4" />
-              Лучшие
-            </button>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="inline-flex rounded-xl border border-border bg-card p-1">
+              <button
+                type="button"
+                onClick={() => setFilter("all")}
+                disabled={filter === "all"}
+                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  filter === "all"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Все
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilter("best")}
+                disabled={filter === "best"}
+                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  filter === "best"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Лучшие
+              </button>
+            </div>
             {curating && (
-              <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 <span>AI-отбор: {curateProgress.done}/{curateProgress.total}</span>
               </div>
             )}
             {!curating && record?.aiResults?.length > 0 && (
-              <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span>Оценено: {record.aiResults.length} фото</span>
+              </div>
+            )}
+            {record && (
+              <div className="text-sm text-muted-foreground">
+                Прогресс сессии: {record.aiResults?.length ?? 0}/{record.fileUrls.length} — {record.fileUrls.length ? Math.round(((record.aiResults?.length ?? 0) / record.fileUrls.length) * 100) : 0}%
               </div>
             )}
           </div>
