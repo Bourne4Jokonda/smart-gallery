@@ -55,24 +55,31 @@ export const Route = createFileRoute("/api/curate")({
           );
         }
 
-        const MAX_IMAGES = 20;
-                const urls = fileUrls.slice(0, MAX_IMAGES);
-
-        const results = await Promise.all(
-          urls.map(async (url) => {
-            try {
-              const score = await scoreImageWithGemini(url, GEMINI_KEY);
-              return { url, score, status: "ok" as const };
-            } catch (error) {
-              return {
-                url,
-                score: null,
-                status: "error" as const,
-                error: error instanceof Error ? error.message : "Ошибка оценки",
-              };
-            }
-          })
-        );
+        const results: Array<{ url: string; score: number | null; status: string; error?: string }> = [];
+        const BATCH_SIZE = 10;
+        const DELAY_MS = 1500;
+        for (let i = 0; i < fileUrls.length; i += BATCH_SIZE) {
+          const batch = fileUrls.slice(i, i + BATCH_SIZE);
+          const batchResults = await Promise.all(
+            batch.map(async (url) => {
+              try {
+                const score = await scoreImageWithGemini(url, GEMINI_KEY);
+                return { url, score, status: "ok" as const };
+              } catch (error) {
+                return {
+                  url,
+                  score: null,
+                  status: "error" as const,
+                  error: error instanceof Error ? error.message : "Ошибка оценки",
+                };
+              }
+            }),
+          );
+          results.push(...batchResults);
+          if (i + BATCH_SIZE < fileUrls.length) {
+            await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+          }
+        }
 
         return Response.json({
           ok: true,
