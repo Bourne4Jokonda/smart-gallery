@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Images,
   Loader2,
+  RefreshCcw,
   Sparkles,
   Trash2,
   UploadCloud,
@@ -183,13 +184,38 @@ function ProfilePage() {
               Всего съёмок: {shoots.length} · Лучших кадров по AI: {bestCount}
             </p>
           </div>
-          <Link
-            to="/upload"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
-          >
-            <UploadCloud className="h-4 w-4" />
-            Загрузить новую съёмку
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/upload"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
+            >
+              <UploadCloud className="h-4 w-4" />
+              Загрузить новую съёмку
+            </Link>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const auth = getAuthInstance();
+                  const user = auth.currentUser;
+                  if (!user) return;
+                  const cloudShoots = await getUserShoots(user.uid);
+                  const merged: Record<string, ShootItem> = { ...readShoots() };
+                  for (const s of cloudShoots) merged[s.shootId] = s;
+                  for (const s of cloudShoots) saveShoot(s);
+                  const list = Object.values(merged).sort((a, b) => b.createdAt - a.createdAt);
+                  setShoots(list);
+                  toast.success("Синхронизировано с облаком");
+                } catch {
+                  toast.error("Не удалось обновить съёмки");
+                }
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary"
+            >
+              <RefreshCcw className="h-4 w-4 text-primary" />
+              Обновить из облака
+            </button>
+          </div>
         </div>
 
         {shoots.length === 0 ? (

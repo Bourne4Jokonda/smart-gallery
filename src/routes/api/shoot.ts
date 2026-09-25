@@ -26,6 +26,13 @@ export const Route = createFileRoute("/api/shoot")({
             return Response.json({ ok: false, error: "not found" }, { status: 404 });
           }
           const data = snap.data() as Record<string, unknown>;
+          const isPublic = Boolean(data.public);
+          if (!isPublic) {
+            const ownerId = data.userId as string | undefined;
+            if (!user || user.uid !== ownerId) {
+              return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+            }
+          }
           fileUrls = (data.fileUrls as string[]) ?? [];
           email = (data.email as string | undefined) ?? user?.email ?? "";
           createdAt = (data.createdAt as number) ?? Date.now();

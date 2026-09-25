@@ -576,25 +576,6 @@ function GalleryPage() {
   if (!record) {
     return (
       <div className="min-h-screen bg-background text-foreground antialiased">
-        <header className="border-b border-border px-5 py-4 sm:px-8">
-          <div className="mx-auto flex max-w-5xl items-center justify-between">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 font-bold tracking-tight"
-            >
-              <span className="inline-flex rounded-lg bg-primary p-1.5">
-                <Camera className="h-4 w-4 text-primary-foreground" />
-              </span>
-              Умная галерея
-            </Link>
-            <Link
-              to="/upload"
-              className="text-sm text-muted-foreground transition-colors hover:text-primary"
-            >
-              Загрузить ещё
-            </Link>
-          </div>
-        </header>
         <main className="px-5 py-20 sm:px-8">
           <div className="mx-auto max-w-2xl rounded-3xl border border-border bg-card p-10 text-center">
             <Images className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -679,7 +660,18 @@ function GalleryPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPublicGallery((v) => !v)}
+                    onClick={async () => {
+                      setPublicGallery((v) => !v);
+                      if (!record) return;
+                      try {
+                        await updateShootRecord(record.shootId, {
+                          public: !publicGallery,
+                        });
+                        toast.success(publicGallery ? "Публичная ссылка отключена" : "Публичная ссылка обновлена");
+                      } catch {
+                        toast.error("Не удалось обновить статус съёмки");
+                      }
+                    }}
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {publicGallery ? "Сделать приватной" : "Сделать публичной"}
