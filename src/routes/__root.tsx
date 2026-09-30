@@ -120,26 +120,16 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const [user, setUser] = useState<{ uid: string; email: string } | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("smart-gallery-user") : null;
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        // ignore corrupted storage
-      }
-    }
-
     const unsubscribe = onUserChange((u) => {
       if (u?.email) {
-        const userData = { uid: u.uid, email: u.email };
-        localStorage.setItem("smart-gallery-user", JSON.stringify(userData));
-        setUser(userData);
+        setUser({ uid: u.uid, email: u.email });
       } else {
-        localStorage.removeItem("smart-gallery-user");
         setUser(null);
       }
+      setAuthReady(true);
       router.invalidate();
     });
     return unsubscribe;
@@ -167,8 +157,7 @@ function RootComponent() {
                     } catch {
                       // ignore
                     } finally {
-                      localStorage.removeItem("smart-gallery-user");
-                      window.__SMART_GALLERY_USER__ = null;
+                      setUser(null);
                       router.invalidate();
                       window.location.href = "/login";
                     }

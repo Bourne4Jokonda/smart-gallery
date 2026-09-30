@@ -15,14 +15,11 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { readShoots, removeShoot, saveShoot } from "@/lib/storage";
-import { getAuthInstance, getUserShoots } from "@/lib/firebase";
+import { getAuthInstance, getUserShoots, signOutUser, updateShootRecord } from "@/lib/firebase";
+import { onAuthStateChanged, type User } from "firebase/auth";
 
 export const Route = createFileRoute("/profile")({
-  beforeLoad: () => {
-    if (typeof window !== "undefined" && !localStorage.getItem("smart-gallery-user")) {
-      throw redirect({ to: "/login" });
-    }
-  },
+  beforeLoad: () => {},
   component: ProfilePage,
 });
 
@@ -41,47 +38,57 @@ type ShootItem = {
 };
 
 function ProfilePage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [shoots, setShoots] = useState<ShootItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
 
   useEffect(() => {
-    // 1. Load from localStorage first (instant feedback)
-    const local = readShoots();
-    const localList = Object.values(local).sort((a, b) => b.createdAt - a.createdAt);
-    setShoots(localList);
+    const auth = getAuthInstance();
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthChecked(true);
+      if (!u) {
+        setLoading(false);
+        setShoots([]);
+        window.location.href = "/login";
+      }
+    });
+    return () => unsub();
+  }, []);
 
-    // 2. Load from Firestore (source of truth)
+  useEffect(() => {
+    if (!user) return;
     let cancelled = false;
-    const loadFromCloud = async () => {
+    const load = async () => {
+      setLoading(true);
       try {
-        const auth = getAuthInstance();
-        const user = auth.currentUser;
-        if (!user) return;
         const cloudShoots = await getUserShoots(user.uid);
-        // Merge Firestore data over localStorage (Firestore is source of truth)
+        if (cancelled) return;
+        const local = readShoots();
         const merged: Record<string, ShootItem> = { ...local };
-        for (const s of cloudShoots) {
-          merged[s.shootId] = s;
-        }
-        // Save cloud data to localStorage for offline use
-        for (const s of cloudShoots) {
-          saveShoot(s);
-        }
+        for (const s of cloudShoots) merged[s.shootId] = s;
+        for (const s of cloudShoots) saveShoot(s);
+        const list = Object.values(merged).sort((a, b) => b.createdAt - a.createdAt);
         if (!cancelled) {
-          const list = Object.values(merged).sort((a, b) => b.createdAt - a.createdAt);
           setShoots(list);
         }
       } catch (err) {
         if (!cancelled) {
           console.warn("[profile] failed to load from cloud:", err);
+          toast.error("Не удалось загрузить съёмки из облака");
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
-    loadFromCloud();
+    load();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user?.uid]);
 
   const bestCount = useMemo(
     () =>
@@ -160,6 +167,16 @@ function ProfilePage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOutUser();
+      toast.success("Вы вышли");
+      window.location.href = "/login";
+    } catch {
+      toast.error("Не удалось выйти");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       <header className="border-b border-border px-5 py-4 sm:px-8">
@@ -170,7 +187,13 @@ function ProfilePage() {
           </Link>
           <nav className="flex items-center gap-3 text-sm">
             <Link to="/upload" className="rounded-lg bg-white px-3 py-2 text-black">Загрузить</Link>
-            <Link to="/profile" className="rounded-lg border border-border px-3 py-2">Кабинет</Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-lg border border-border px-3 py-2"
+            >
+              Выйти
+            </button>
           </nav>
         </div>
       </header>
@@ -181,7 +204,10 @@ function ProfilePage() {
             <p className="text-xs font-medium uppercase tracking-wider text-primary">Личный кабинет</p>
             <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">Мои съёмки</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Всего съёмок: {shoots.length} · Лучших кадров по AI: {bestCount}
+              {user?.email ? `Аккаунт: ${user.email}` : "Загрузка аккаунта…"}
+              <span className="ml-2">
+                Всего съёмок: {shoots.length} · Лучших кадров по AI: {bestCount}
+              </span>
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -194,26 +220,16 @@ function ProfilePage() {
             </Link>
             <button
               type="button"
-              onClick={async () => {
-                try {
-                  const auth = getAuthInstance();
-                  const user = auth.currentUser;
-                  if (!user) return;
-                  const cloudShoots = await getUserShoots(user.uid);
-                  const merged: Record<string, ShootItem> = { ...readShoots() };
-                  for (const s of cloudShoots) merged[s.shootId] = s;
-                  for (const s of cloudShoots) saveShoot(s);
-                  const list = Object.values(merged).sort((a, b) => b.createdAt - a.createdAt);
-                  setShoots(list);
-                  toast.success("Синхронизировано с облаком");
-                } catch {
-                  toast.error("Не удалось обновить съёмки");
-                }
-              }}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-70"
             >
-              <RefreshCcw className="h-4 w-4 text-primary" />
-              Обновить из облака
+              {refreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              ) : (
+                <RefreshCcw className="h-4 w-4 text-primary" />
+              )}
+              {refreshing ? "Синхронизация…" : "Обновить из облака"}
             </button>
           </div>
         </div>

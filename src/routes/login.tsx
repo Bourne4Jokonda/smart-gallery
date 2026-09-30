@@ -13,7 +13,7 @@ import { getAuthInstance } from "@/lib/firebase";
 export const Route = createFileRoute("/login")({
   component: LoginPage,
   beforeLoad: () => {
-    if (typeof window !== "undefined" && localStorage.getItem("smart-gallery-user")) {
+    if (typeof window !== "undefined" && getAuthInstance().currentUser) {
       throw redirect({ to: "/" });
     }
   },
@@ -35,13 +35,9 @@ function LoginPage() {
     try {
       if (mode === "register") {
         const res = await createUserWithEmailAndPassword(auth, email.trim(), password);
-        const userPayload = { uid: res.user.uid, email: res.user.email ?? email.trim() };
-        localStorage.setItem("smart-gallery-user", JSON.stringify(userPayload));
         toast.success("Аккаунт создан");
       } else {
         const res = await signInWithEmailAndPassword(auth, email.trim(), password);
-        const userPayload = { uid: res.user.uid, email: res.user.email ?? email.trim() };
-        localStorage.setItem("smart-gallery-user", JSON.stringify(userPayload));
         toast.success("Вход выполнен");
       }
       window.location.href = "/";
@@ -76,7 +72,6 @@ function LoginPage() {
     setBusy(true);
     try {
       await signOut(auth);
-      localStorage.removeItem("smart-gallery-user");
       toast.success("Вы вышли");
       window.location.href = "/login";
     } catch (e) {

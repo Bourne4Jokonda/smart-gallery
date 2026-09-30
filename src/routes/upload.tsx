@@ -19,7 +19,8 @@ import {
   uploadShoot,
 } from "@/lib/uploads";
 import { saveShoot } from "@/lib/storage";
-import { saveShootRecord, saveShootRecordById, updateShootRecord } from "@/lib/firebase";
+import { saveShootRecord, saveShootRecordById, updateShootRecord, getAuthInstance } from "@/lib/firebase";
+import { onUserChange } from "@/lib/firebase";
 
 interface Item {
   file: File;
@@ -47,7 +48,7 @@ function validate(file: File): { valid: boolean; reason: string } {
 
 export const Route = createFileRoute("/upload")({
   beforeLoad: () => {
-    if (typeof window !== "undefined" && !localStorage.getItem("smart-gallery-user")) {
+    if (typeof window !== "undefined" && !getAuthInstance().currentUser) {
       throw redirect({ to: "/login" });
     }
   },
@@ -63,25 +64,27 @@ export default function UploadPage() {
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [publicShoot, setPublicShoot] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [authUser, setAuthUser] = useState<{ uid: string; email: string | null } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
 
-  const user =
-    typeof window !== "undefined"
-      ? (() => {
-          try {
-            return JSON.parse(localStorage.getItem("smart-gallery-user") || "null");
-          } catch {
-            return null;
-          }
-        })()
-      : null;
+  useEffect(() => {
+    const unsub = onUserChange((u) => {
+      setAuthUser(u ? { uid: u.uid, email: u.email } : null);
+      if (!u) {
+        window.location.href = "/login";
+      }
+    });
+    return unsub;
+  }, []);
+
+  const resolvedEmail = authUser?.email || email;
 
   useEffect(() => {
-    const stored =
-      localStorage.getItem("smart-gallery-email") ?? localStorage.getItem("email");
-    if (stored) setEmail(stored);
-  }, []);
+    const stored = typeof window !== "undefined" ? localStorage.getItem("smart-gallery-email") ?? localStorage.getItem("email") : null;
+    if (stored && !resolvedEmail) setEmail(stored);
+  }, [resolvedEmail]);
 
   useEffect(
     () => () => {
@@ -90,6 +93,8 @@ export default function UploadPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
+
+  const resolvedEmail = authUser?.email || email;
 
   const validItems = useMemo(() => items.filter((i) => i.valid), [items]);
   const totalProgress = useMemo(() => {
@@ -142,7 +147,7 @@ export default function UploadPage() {
       consent,
       cloudinary: isCloudinaryConfigured(),
     });
-    if (validItems.length === 0 || !consent) return;
+    if (validItems.length === 0 || !consent || !resolvedEmail.trim()) return;
     if (!isCloudinaryConfigured()) {
       toast.error("Хранилище недоступно", {
         description: "Попробуйте позже или напишите нам в Telegram.",
@@ -150,64 +155,54 @@ export default function UploadPage() {
       return;
     }
     setStatus("uploading");
+    setUploadError(null);
+    const toastId = toast.loading(`Загружаем ${validItems.length} фото…`);
     try {
+      const auth = getAuthInstance();
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("Сессия истекла. Войдите снова.");
+      }
       const shootId = crypto.randomUUID();
       setShootId(shootId);
-      const safeEmail = (user?.email || email || "")
-        .replace(/@/g, "_at_")
-        .replace(/\./g, "_dot_")
-        .trim();
       const uploadedUrls: string[] = [];
       for (let i = 0; i < validItems.length; i++) {
         const item = validItems[i]!;
-        console.log("[smart-gallery] uploading file", i, item.file.name, item.file.type);
         const result = await uploadShoot(shootId, item.file, (percent) => {
           setItems((prev) =>
             prev.map((it, idx) =>
               idx === i ? { ...it, progress: percent } : it,
             ),
           );
-        }, safeEmail || undefined);
-        console.log("[smart-gallery] upload result", i, result);
+        }, resolvedEmail.trim());
         if (result?.secure_url) {
           uploadedUrls.push(result.secure_url);
         }
       }
 
-      saveShoot({
+      const record = {
         shootId,
         fileUrls: uploadedUrls,
-        email: safeEmail || user?.email || email,
+        email: resolvedEmail.trim(),
         createdAt: Date.now(),
         aiResults: [],
         public: publicShoot,
-      });
-
-      // Save to Firestore for cross-browser sync (all shoots, not just public)
+      };
+      saveShoot(record);
       try {
-        await saveShootRecordById(shootId, {
-          shootId,
-          fileUrls: uploadedUrls,
-          email: safeEmail || user?.email || email,
-          aiResults: [],
-          public: publicShoot,
-        });
+        await saveShootRecord(record);
       } catch (e) {
         console.warn("[smart-gallery] Firestore save failed", e);
       }
 
       setUploadedUrls(uploadedUrls);
       setStatus("done");
-      toast.success(`Загружено ${uploadedUrls.length} фото`, {
-        description: "AI приступил к отбору — скоро покажем результат.",
-      });
+      toast.success(`Загружено ${uploadedUrls.length} фото`, { id: toastId });
     } catch (error) {
-      console.error("[smart-gallery] upload failed", error);
+      const message = error instanceof Error ? error.message : "Неизвестная ошибка";
+      setUploadError(message);
+      toast.error("Загрузка прервана", { id: toastId, description: message });
       setStatus("idle");
-      toast.error("Не удалось загрузить фото", {
-        description:
-          error instanceof Error ? error.message : "Проверьте подключение и попробуйте ещё раз.",
-      });
     }
   };
 
