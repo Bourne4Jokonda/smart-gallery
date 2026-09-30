@@ -661,13 +661,14 @@ function GalleryPage() {
                   <button
                     type="button"
                     onClick={async () => {
-                      setPublicGallery((v) => !v);
                       if (!record) return;
+                      const nextPublic = !publicGallery;
+                      setPublicGallery(nextPublic);
                       try {
                         await updateShootRecord(record.shootId, {
-                          public: !publicGallery,
+                          public: nextPublic,
                         });
-                        toast.success(publicGallery ? "Публичная ссылка отключена" : "Публичная ссылка обновлена");
+                        toast.success(nextPublic ? "Публичная ссылка обновлена" : "Публичная ссылка отключена");
                       } catch {
                         toast.error("Не удалось обновить статус съёмки");
                       }
