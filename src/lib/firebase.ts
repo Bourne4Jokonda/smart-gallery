@@ -110,7 +110,12 @@ export async function saveShootRecord(record: Record<string, unknown>) {
     userId: user.uid,
     createdAt: serverTimestamp(),
   };
-  await addDoc(collection(getDb(), "shoots"), payload as Record<string, unknown>);
+  try {
+    await addDoc(collection(getDb(), "shoots"), payload as Record<string, unknown>);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Не удалось сохранить запись в Firestore: ${message}`);
+  }
 }
 
 export async function saveShootRecordById(

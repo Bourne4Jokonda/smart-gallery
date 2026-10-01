@@ -190,7 +190,9 @@ export default function UploadPage() {
       try {
         await saveShootRecord(record);
       } catch (e) {
-        console.warn("[smart-gallery] Firestore save failed", e);
+        const message = e instanceof Error ? e.message : String(e);
+        console.warn("[smart-gallery] Firestore save failed", message);
+        toast.error("Не удалось сохранить запись в кабинете", { description: message });
       }
 
       setUploadedUrls(uploadedUrls);

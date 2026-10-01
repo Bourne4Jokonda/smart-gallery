@@ -194,8 +194,9 @@ function ProfilePage() {
       const list = Object.values(merged).sort((a, b) => b.createdAt - a.createdAt);
       setShoots(list);
       toast.success("Синхронизировано с облаком");
-    } catch {
-      toast.error("Не удалось обновить съёмки");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Не удалось обновить съёмки";
+      toast.error(message);
     } finally {
       setRefreshing(false);
     }
