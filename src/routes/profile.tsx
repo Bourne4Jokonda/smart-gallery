@@ -20,6 +20,7 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 
 export const Route = createFileRoute("/profile")({
   beforeLoad: () => {},
+  errorComponent: ProfileError,
   component: ProfilePage,
 });
 
@@ -37,6 +38,22 @@ type ShootItem = {
   public?: boolean;
 };
 
+function ProfileError({ error, reset }: { error: Error; reset: () => void }) {
+  return (
+    <div className="min-h-screen bg-background text-foreground antialiased">
+      <div className="mx-auto max-w-2xl px-5 py-20 text-center sm:px-8">
+        <h1 className="text-2xl font-bold sm:text-3xl">Кабинет не загрузился</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {error?.message || "Неизвестная ошибка"}
+        </p>
+        <button onClick={reset} className="mt-6 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+          Обновить
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
@@ -44,10 +61,13 @@ function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
     const auth = getAuthInstance();
+    let cancelled = false;
     const unsub = onAuthStateChanged(auth, (u) => {
+      if (cancelled) return;
       setUser(u);
       setAuthChecked(true);
       if (!u) {
@@ -56,7 +76,10 @@ function ProfilePage() {
         window.location.href = "/login";
       }
     });
-    return () => unsub();
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, []);
 
   useEffect(() => {
@@ -64,6 +87,7 @@ function ProfilePage() {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
+      setProfileError(null);
       try {
         const cloudShoots = await getUserShoots(user.uid);
         if (cancelled) return;
@@ -78,6 +102,8 @@ function ProfilePage() {
       } catch (err) {
         if (!cancelled) {
           console.warn("[profile] failed to load from cloud:", err);
+          const message = err instanceof Error ? err.message : "Неизвестная ошибка";
+          setProfileError(message);
           toast.error("Не удалось загрузить съёмки из облака");
         }
       } finally {

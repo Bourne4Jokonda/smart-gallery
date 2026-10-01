@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
+import { Loader2 } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -121,19 +122,60 @@ function RootComponent() {
   const router = useRouter();
   const [user, setUser] = useState<{ uid: string; email: string } | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onUserChange((u) => {
-      if (u?.email) {
-        setUser({ uid: u.uid, email: u.email });
-      } else {
-        setUser(null);
-      }
+    try {
+      const unsubscribe = onUserChange((u) => {
+        if (u?.email) {
+          setUser({ uid: u.uid, email: u.email });
+        } else {
+          setUser(null);
+        }
+        setAuthReady(true);
+        setAuthError(null);
+        router.invalidate();
+      });
+      return unsubscribe;
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Ошибка инициализации авторизации";
+      console.error("[root] auth init failed:", e);
+      setAuthError(message);
       setAuthReady(true);
-      router.invalidate();
-    });
-    return unsubscribe;
+    }
   }, [router]);
+
+  if (authError) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <div className="flex min-h-screen items-center justify-center bg-background px-4">
+          <div className="max-w-md text-center">
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">Не удалось загрузить авторизацию</h1>
+            <p className="mt-2 text-sm text-muted-foreground">{authError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-6 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Обновить страницу
+            </button>
+          </div>
+        </div>
+      </QueryClientProvider>
+    );
+  }
+
+  if (!authReady) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <div className="flex min-h-screen items-center justify-center bg-background px-4">
+          <div className="max-w-md text-center">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="mt-3 text-sm text-muted-foreground">Проверяем авторизацию…</p>
+          </div>
+        </div>
+      </QueryClientProvider>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
