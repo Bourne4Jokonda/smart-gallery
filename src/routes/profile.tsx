@@ -223,25 +223,6 @@ function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
-      <header className="border-b border-border px-5 py-4 sm:px-8">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <Link to="/" className="inline-flex items-center gap-2 font-bold tracking-tight">
-            <span className="inline-flex rounded-lg bg-primary p-1.5 text-primary-foreground">SG</span>
-            Smart Gallery
-          </Link>
-          <nav className="flex items-center gap-3 text-sm">
-            <Link to="/upload" className="rounded-lg bg-white px-3 py-2 text-black">Загрузить</Link>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-lg border border-border px-3 py-2"
-            >
-              Выйти
-            </button>
-          </nav>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>

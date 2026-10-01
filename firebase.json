@@ -6,5 +6,8 @@
       "runtime": "nodejs22",
       "ignore": ["node_modules", ".git", "*.local", "firebase-debug.log"]
     }
-  ]
+  ],
+  "firestore": {
+    "rules": "firestore.rules"
+  }
 }
