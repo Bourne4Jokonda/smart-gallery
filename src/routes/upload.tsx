@@ -94,8 +94,6 @@ export default function UploadPage() {
     [],
   );
 
-  const resolvedEmail = authUser?.email || email;
-
   const validItems = useMemo(() => items.filter((i) => i.valid), [items]);
   const totalProgress = useMemo(() => {
     if (validItems.length === 0) return 0;
