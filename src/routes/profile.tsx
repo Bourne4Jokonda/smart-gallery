@@ -141,7 +141,7 @@ function ProfilePage() {
   const handleDeleteFromCloudinary = async (shootId: string, email?: string | null) => {
     if (
       !confirm(
-        `Удалить файлы этой сессии из Cloudinary?\n\nПапка: smart-gallery/${email ?? ""}/${shootId}\nЭто необратимо: файлы исчезнут и из облака, и из кабинета. Продолжить?`
+        `Удалить файлы этой сессии из Cloudinary?\n\nПапка: smart-gallery/${email ?? ""}/${shootId}\nЭто необратимо: файлы исчезнут и из облака, и из кабинета. Продолжить?`,
       )
     )
       return;
@@ -173,7 +173,7 @@ function ProfilePage() {
 
       toast.success(
         `Удалено из Cloudinary: ${data.deleted ?? "?"} файлов. Запись удалена из кабинета.`,
-        { id: toastId }
+        { id: toastId },
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ошибка удаления";
@@ -183,13 +183,21 @@ function ProfilePage() {
     }
   };
 
-  const handleCopyLink = async (shootId: string) => {
-    const url = `${window.location.origin}/gallery/${shootId}`;
+  const handleRefresh = async () => {
+    if (!user || refreshing) return;
+    setRefreshing(true);
     try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Ссылка скопирована");
+      const cloudShoots = await getUserShoots(user.uid);
+      const merged: Record<string, ShootItem> = { ...readShoots() };
+      for (const s of cloudShoots) merged[s.shootId] = s;
+      for (const s of cloudShoots) saveShoot(s);
+      const list = Object.values(merged).sort((a, b) => b.createdAt - a.createdAt);
+      setShoots(list);
+      toast.success("Синхронизировано с облаком");
     } catch {
-      toast.error("Не удалось скопировать ссылку");
+      toast.error("Не удалось обновить съёмки");
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -200,6 +208,16 @@ function ProfilePage() {
       window.location.href = "/login";
     } catch {
       toast.error("Не удалось выйти");
+    }
+  };
+
+  const handleCopyLink = async (shootId: string) => {
+    const url = `${window.location.origin}/gallery/${shootId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Ссылка скопирована");
+    } catch {
+      toast.error("Не удалось скопировать ссылку");
     }
   };
 
