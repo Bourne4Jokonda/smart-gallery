@@ -186,7 +186,11 @@ export async function getUserShoots(userId: string, maxDocs = 50) {
     });
   });
 
-  const filtered = shoots.filter((s) => s.userId === userId);
+  const filtered = shoots.filter((s) => {
+    const ownerId = s.userId;
+    const localOwner = readShoots()[s.shootId]?.userId;
+    return !ownerId || ownerId === userId || localOwner === userId;
+  });
   filtered.sort((a, b) => b.createdAt - a.createdAt);
   return filtered.slice(0, maxDocs);
 }
