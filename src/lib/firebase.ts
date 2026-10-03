@@ -11,6 +11,8 @@ import {
   where,
   doc,
   getDoc,
+  setDoc,
+  deleteDoc,
   type Firestore,
 } from "firebase/firestore";
 import {
@@ -105,23 +107,23 @@ export async function saveShootRecord(record: Record<string, unknown>) {
   if (!user) {
     throw new Error("Требуется авторизация");
   }
+  const shootId = typeof record.shootId === "string" ? record.shootId : "";
+  if (!shootId) {
+    throw new Error("saveShootRecord: record.shootId is required");
+  }
   const payload = {
     ...record,
     userId: user.uid,
     createdAt: serverTimestamp(),
   };
   console.warn("[smart-gallery] saveShootRecord", {
-    shootId: record.shootId,
+    shootId,
     email: record.email,
     files: Array.isArray(record.fileUrls) ? record.fileUrls.length : null,
     stack: new Error().stack,
   });
-  try {
-    await addDoc(collection(getDb(), "shoots"), payload as Record<string, unknown>);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Не удалось сохранить запись в Firestore: ${message}`);
-  }
+  const ref = doc(getDb(), "shoots", shootId);
+  await setDoc(ref, payload as Record<string, unknown>);
 }
 
 export async function saveShootRecordById(
