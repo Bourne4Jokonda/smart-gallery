@@ -34,12 +34,12 @@ export const Route = createFileRoute("/api/delete-shoot")({
           });
 
           // Delete all resources under the given folder prefix
-          const deleted = await cloudinary.api.deleteResourcesByPrefix(targetFolder);
+          const deleted = await cloudinary.api.delete_resources_by_prefix(targetFolder);
 
           // Try to delete the folder itself (works when empty after deletion above)
           let folderDeleted = false;
           try {
-            await cloudinary.api.deleteFolder(targetFolder);
+            await cloudinary.api.delete_folder(targetFolder);
             folderDeleted = true;
           } catch {
             // Folder may not be empty or not exist — ignore

@@ -125,44 +125,20 @@ function ProfilePage() {
     [shoots],
   );
 
-  const handleDelete = async (shootId: string) => {
-    setRemoving(shootId);
-    try {
-      removeShoot(shootId);
-      setShoots((prev) => prev.filter((s) => s.shootId !== shootId));
-      toast.success("Съёмка удалена из кабинета");
-    } catch {
-      toast.error("Не удалось удалить съёмку");
-    } finally {
-      setRemoving(null);
-    }
-  };
+  const handleDelete = async (shootId: string, email?: string | null) => {
+    const confirmed = confirm(
+      `Удалить съёмку "${shootId}"?\n\nЭто необратимо: запись исчезнет из кабинета и локального кэша.`,
+    );
+    if (!confirmed) return;
 
-  const handleDeleteFromCloudinary = async (shootId: string, email?: string | null) => {
-    if (
-      !confirm(
-        `Удалить файлы этой сессии из Cloudinary?\n\nПапка: smart-gallery/${email ?? ""}/${shootId}\nЭто необратимо: файлы исчезнут и из облака, и из кабинета. Продолжить?`,
-      )
-    )
-      return;
-    if (!email) {
-      toast.error("Email не сохранён — загрузите съёмку заново, авторизовавшись.");
-      return;
-    }
-    setRemoving(shootId);
-    const toastId = toast.loading("Удаляем из Cloudinary…");
-    try {
-      const res = await fetch("/api/delete-shoot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, shootId }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        throw new Error(data?.error || `Ошибка: ${res.status}`);
-      }
+    const finalConfirm = confirm(
+      `Последнее подтверждение: удалить "${shootId}" из кабинета?`,
+    );
+    if (!finalConfirm) return;
 
-      // Remove from UI + localStorage + Firestore
+    setRemoving(shootId);
+    const toastId = toast.loading("Удаляем…");
+    try {
       setShoots((prev) => prev.filter((s) => s.shootId !== shootId));
       removeShoot(shootId);
       try {
@@ -170,11 +146,7 @@ function ProfilePage() {
       } catch {
         // ignore
       }
-
-      toast.success(
-        `Удалено из Cloudinary: ${data.deleted ?? "?"} файлов. Запись удалена из кабинета.`,
-        { id: toastId },
-      );
+      toast.success("Съёмка удалена из кабинета", { id: toastId });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ошибка удаления";
       toast.error(message, { id: toastId });
@@ -317,10 +289,10 @@ function ProfilePage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteFromCloudinary(s.shootId, s.email)}
-                      disabled={removing === s.shootId || !s.email}
+                      onClick={() => handleDelete(s.shootId, s.email)}
+                      disabled={removing === s.shootId}
                       className="inline-flex items-center justify-center rounded-lg border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
-                      aria-label="Удалить из Cloudinary"
+                      aria-label="Удалить съёмку"
                     >
                       {removing === s.shootId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                     </button>

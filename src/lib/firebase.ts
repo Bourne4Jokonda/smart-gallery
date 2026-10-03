@@ -21,7 +21,6 @@ import {
   signOut,
   type User,
 } from "firebase/auth";
-import { readShoots } from "@/lib/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env["VITE_FIREBASE_API_KEY"],
@@ -187,11 +186,7 @@ export async function getUserShoots(userId: string, maxDocs = 50) {
     });
   });
 
-  const filtered = shoots.filter((s) => {
-    const ownerId = s.userId;
-    const localOwner = readShoots()[s.shootId]?.userId;
-    return !ownerId || ownerId === userId || localOwner === userId;
-  });
+  const filtered = shoots.filter((s) => s.userId === userId);
   filtered.sort((a, b) => b.createdAt - a.createdAt);
   return filtered.slice(0, maxDocs);
 }
