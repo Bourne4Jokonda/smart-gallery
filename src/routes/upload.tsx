@@ -68,6 +68,7 @@ export default function UploadPage() {
   const [authUser, setAuthUser] = useState<{ uid: string; email: string | null } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
+  const uploadRunningRef = useRef(false);
 
   useEffect(() => {
     const unsub = onUserChange((u) => {
@@ -146,12 +147,14 @@ export default function UploadPage() {
       cloudinary: isCloudinaryConfigured(),
     });
     if (validItems.length === 0 || !consent || !resolvedEmail.trim()) return;
+    if (uploadRunningRef.current) return;
     if (!isCloudinaryConfigured()) {
       toast.error("Хранилище недоступно", {
         description: "Попробуйте позже или напишите нам в Telegram.",
       });
       return;
     }
+    uploadRunningRef.current = true;
     setStatus("uploading");
     setUploadError(null);
     const toastId = toast.loading(`Загружаем ${validItems.length} фото…`);
@@ -203,6 +206,8 @@ export default function UploadPage() {
       setUploadError(message);
       toast.error("Загрузка прервана", { id: toastId, description: message });
       setStatus("idle");
+    } finally {
+      uploadRunningRef.current = false;
     }
   };
 
