@@ -146,6 +146,22 @@ function ProfilePage() {
       } catch {
         // ignore
       }
+
+      try {
+        const res = await fetch("/api/delete-shoot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email ?? null, shootId }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) {
+          const reason = typeof data?.error === "string" ? data.error : "Не удалось очистить Cloudinary";
+          toast.error(reason, { id: toastId });
+        }
+      } catch {
+        // ignore cloud cleanup error
+      }
+
       toast.success("Съёмка удалена из кабинета", { id: toastId });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ошибка удаления";
