@@ -110,6 +110,12 @@ export async function saveShootRecord(record: Record<string, unknown>) {
     userId: user.uid,
     createdAt: serverTimestamp(),
   };
+  console.warn("[smart-gallery] saveShootRecord", {
+    shootId: record.shootId,
+    email: record.email,
+    files: Array.isArray(record.fileUrls) ? record.fileUrls.length : null,
+    stack: new Error().stack,
+  });
   try {
     await addDoc(collection(getDb(), "shoots"), payload as Record<string, unknown>);
   } catch (err) {
@@ -127,6 +133,12 @@ export async function saveShootRecordById(
   if (!user) {
     throw new Error("Требуется авторизация");
   }
+  console.warn("[smart-gallery] saveShootRecordById", {
+    shootId,
+    email: record.email,
+    files: Array.isArray(record.fileUrls) ? record.fileUrls.length : null,
+    stack: new Error().stack,
+  });
   const ref = doc(getDb(), "shoots", shootId);
   await import("firebase/firestore").then(({ setDoc }) =>
     setDoc(

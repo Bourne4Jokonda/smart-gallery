@@ -147,7 +147,10 @@ export default function UploadPage() {
       cloudinary: isCloudinaryConfigured(),
     });
     if (validItems.length === 0 || !consent || !resolvedEmail.trim()) return;
-    if (uploadRunningRef.current) return;
+    if (uploadRunningRef.current) {
+      console.warn("[smart-gallery] start skipped: upload already running");
+      return;
+    }
     if (!isCloudinaryConfigured()) {
       toast.error("Хранилище недоступно", {
         description: "Попробуйте позже или напишите нам в Telegram.",
@@ -190,6 +193,12 @@ export default function UploadPage() {
         public: publicShoot,
       };
       saveShoot(record);
+      console.warn("[smart-gallery] before saveShootRecord", {
+        shootId: record.shootId,
+        email: record.email,
+        files: record.fileUrls.length,
+        stack: new Error().stack,
+      });
       try {
         await saveShootRecord(record);
       } catch (e) {
