@@ -244,19 +244,6 @@ function ProfilePage() {
               <UploadCloud className="h-4 w-4" />
               Загрузить новую съёмку
             </Link>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {refreshing ? (
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              ) : (
-                <RefreshCcw className="h-4 w-4 text-primary" />
-              )}
-              {refreshing ? "Синхронизация…" : "Обновить из облака"}
-            </button>
           </div>
         </div>
 

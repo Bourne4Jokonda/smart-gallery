@@ -21,6 +21,7 @@ import {
   signOut,
   type User,
 } from "firebase/auth";
+import { readShoots } from "@/lib/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env["VITE_FIREBASE_API_KEY"],
