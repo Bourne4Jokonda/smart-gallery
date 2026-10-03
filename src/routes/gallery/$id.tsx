@@ -125,7 +125,6 @@ function GalleryPage() {
   const [record, setRecord] = useState<ShootRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const currentLightboxIndex = useMemo(() => {
     if (lightboxUrl === null || !record) return null;
