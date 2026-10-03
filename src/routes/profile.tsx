@@ -104,7 +104,7 @@ function ProfilePage() {
           console.warn("[profile] failed to load from cloud:", err);
           const message = err instanceof Error ? err.message : "Неизвестная ошибка";
           setProfileError(message);
-          toast.error("Не удалось загрузить съёмки из облака");
+          toast.error(message);
         }
       } finally {
         if (!cancelled) setLoading(false);

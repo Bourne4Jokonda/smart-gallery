@@ -154,13 +154,7 @@ export async function updateShootRecord(
 
 export async function getUserShoots(userId: string, maxDocs = 50) {
   const db = getDb();
-  const q = query(
-    collection(db, "shoots"),
-    where("userId", "==", userId),
-    orderBy("createdAt", "desc"),
-    limit(maxDocs),
-  );
-  const snapshot = await getDocs(q);
+  const snapshot = await getDocs(collection(db, "shoots"));
   const shoots: Array<{
     shootId: string;
     fileUrls: string[];
@@ -168,6 +162,7 @@ export async function getUserShoots(userId: string, maxDocs = 50) {
     createdAt: number;
     aiResults?: Array<{ url: string; score: number | null; status: string; error?: string }>;
     public?: boolean;
+    userId?: string;
   }> = [];
   snapshot.forEach((d) => {
     const data = d.data();
@@ -187,9 +182,13 @@ export async function getUserShoots(userId: string, maxDocs = 50) {
       createdAt,
       aiResults: (data["aiResults"] as Array<{ url: string; score: number | null; status: string; error?: string }>) ?? [],
       public: Boolean(data["public"]),
+      userId: (data["userId"] as string | undefined),
     });
   });
-  return shoots;
+
+  const filtered = shoots.filter((s) => s.userId === userId);
+  filtered.sort((a, b) => b.createdAt - a.createdAt);
+  return filtered.slice(0, maxDocs);
 }
 
 export const MAX_FILE_SIZE = 20 * 1024 * 1024;
