@@ -973,11 +973,11 @@ function GalleryPage() {
             />
 
             {(() => {
-                          const currentUrl = record.fileUrls[lightboxIndex];
+                          const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
                           const match = record.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(currentUrl));
                           return (
                             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-border bg-card/80 px-4 py-1.5 text-xs font-medium text-foreground pointer-events-none">
-                              {match?.score != null ? `AI: ${match.score}/10` : `Кадр ${lightboxIndex + 1}`}
+                              {match?.score != null ? `AI: ${match.score}/10` : `Кадр ${(currentLightboxIndex ?? 0) + 1}`}
                             </div>
                           );
                         })()}
@@ -989,7 +989,7 @@ function GalleryPage() {
                   e.stopPropagation();
                   deleteCurrentImage();
                 }}
-                disabled={deleting || !record || lightboxIndex === null}
+                disabled={deleting || !record || currentLightboxIndex === null}
                 className="inline-flex items-center justify-center rounded-full p-1.5 text-xs text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-70"
                 aria-label="Удалить из Cloudinary"
               >
@@ -1008,7 +1008,7 @@ function GalleryPage() {
                 {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
               </button>
               <div className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium text-foreground">
-                {lightboxIndex + 1} / {record.fileUrls.length}
+                {currentLightboxIndex + 1} / {record.fileUrls.length}
               </div>
             </div>
           </div>
