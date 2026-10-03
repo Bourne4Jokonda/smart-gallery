@@ -15,7 +15,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { readShoots, removeShoot, saveShoot } from "@/lib/storage";
-import { getAuthInstance, getUserShoots, signOutUser, updateShootRecord } from "@/lib/firebase";
+import { getAuthInstance, getUserShoots, signOutUser, updateShootRecord, deleteShootRecord } from "@/lib/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
 
 export const Route = createFileRoute("/profile")({
@@ -142,7 +142,7 @@ function ProfilePage() {
       setShoots((prev) => prev.filter((s) => s.shootId !== shootId));
       removeShoot(shootId);
       try {
-        await updateShootRecord(shootId, { fileUrls: [], aiResults: [] });
+        await deleteShootRecord(shootId);
       } catch {
         // ignore
       }

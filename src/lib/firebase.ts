@@ -152,6 +152,12 @@ export async function updateShootRecord(
   );
 }
 
+export async function deleteShootRecord(shootId: string) {
+  const db = getDb();
+  const ref = doc(db, "shoots", shootId);
+  await import("firebase/firestore").then(({ deleteDoc }) => deleteDoc(ref));
+}
+
 export async function getUserShoots(userId: string, maxDocs = 50) {
   const db = getDb();
   const snapshot = await getDocs(collection(db, "shoots"));
