@@ -124,7 +124,28 @@ function GalleryPage() {
   const { id = "" } = useParams({ strict: false }) as { id?: string };
   const [record, setRecord] = useState<ShootRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  const currentLightboxIndex = useMemo(() => {
+    if (lightboxUrl === null || !record) return null;
+    return record.fileUrls.findIndex((u) => u === lightboxUrl);
+  }, [lightboxUrl, record]);
+
+  const openLightbox = (url: string) => setLightboxUrl(url);
+  const closeLightbox = () => setLightboxUrl(null);
+
+  const lightboxNext = () => {
+    if (!record || currentLightboxIndex == null) return;
+    const next = (currentLightboxIndex + 1) % record.fileUrls.length;
+    setLightboxUrl(record.fileUrls[next] ?? null);
+  };
+
+  const lightboxPrev = () => {
+    if (!record || currentLightboxIndex == null) return;
+    const prev = (currentLightboxIndex - 1 + record.fileUrls.length) % record.fileUrls.length;
+    setLightboxUrl(record.fileUrls[prev] ?? null);
+  };
   const [zipping, setZipping] = useState(false);
   const [zipProgress, setZipProgress] = useState({ done: 0, total: 0 });
   const [singleDownloading, setSingleDownloading] = useState(false);
@@ -219,31 +240,21 @@ function GalleryPage() {
 
   // Lightbox: lock body scroll + keyboard nav
   useEffect(() => {
-    if (lightboxIndex === null) return;
+    if (currentLightboxIndex === null) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (!record) return;
-      if (e.key === "Escape") setLightboxIndex(null);
-      if (e.key === "ArrowRight") {
-        setLightboxIndex((i) =>
-          i === null ? null : (i + 1) % record.fileUrls.length,
-        );
-      }
-      if (e.key === "ArrowLeft") {
-        setLightboxIndex((i) =>
-          i === null
-            ? null
-            : (i - 1 + record.fileUrls.length) % record.fileUrls.length,
-        );
-      }
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") lightboxNext();
+      if (e.key === "ArrowLeft") lightboxPrev();
     };
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
     };
-  }, [lightboxIndex, record]);
+  }, [currentLightboxIndex, record, closeLightbox, lightboxNext, lightboxPrev]);
 
   const handleDownloadZip = useCallback(async () => {
     if (!record || zipping) return;
@@ -267,12 +278,12 @@ function GalleryPage() {
   }, [record, zipping]);
 
   const handleDownloadSingle = useCallback(async () => {
-    if (!record || lightboxIndex === null || singleDownloading) return;
-    const url = record.fileUrls[lightboxIndex];
+    if (!record || currentLightboxIndex === null || singleDownloading) return;
+    const url = record.fileUrls[currentLightboxIndex];
     if (!url) return;
     try {
       setSingleDownloading(true);
-      await downloadSinglePhoto(url, lightboxIndex);
+      await downloadSinglePhoto(url, currentLightboxIndex);
       toast.success("Фото сохранено");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Неизвестная ошибка";
@@ -280,11 +291,11 @@ function GalleryPage() {
     } finally {
       setSingleDownloading(false);
     }
-  }, [record, lightboxIndex, singleDownloading, zipping]);
+  }, [record, currentLightboxIndex, singleDownloading, zipping]);
 
   const deleteCurrentImage = useCallback(async () => {
-    if (!record || lightboxIndex === null || deleting) return;
-    const url = record.fileUrls[lightboxIndex];
+    if (!record || currentLightboxIndex === null || deleting) return;
+    const url = record.fileUrls[currentLightboxIndex];
     if (!url) return;
     const publicId = getPublicIdFromUrl(url);
     if (!publicId) {
@@ -293,7 +304,7 @@ function GalleryPage() {
     }
     if (
       !confirm(
-        "Удалить это фото из Cloudinary?\n\nЭто необратимо: файл исчезнет из облака и из этой съёмки."
+        "Удалить это фото из Cloudinary?\n\nЭто необратимо: файл исчезнет из облака и из этой съёмки.",
       )
     )
       return;
@@ -313,7 +324,7 @@ function GalleryPage() {
         throw new Error(data.error || "Неизвестная ошибка");
       }
       // Remove from fileUrls and aiResults
-      const newFileUrls = record.fileUrls.filter((u, idx) => idx !== lightboxIndex);
+      const newFileUrls = record.fileUrls.filter((u, idx) => idx !== currentLightboxIndex);
       const newAiResults = (record.aiResults ?? []).filter((r) => r.url !== url);
       const updated = { ...record, fileUrls: newFileUrls, aiResults: newAiResults };
       setRecord(updated);
@@ -328,10 +339,10 @@ function GalleryPage() {
       }
       toast.success("Фото удалено");
       if (newFileUrls.length === 0) {
-        setLightboxIndex(null);
+        setLightboxUrl(null);
       } else {
-        if (lightboxIndex >= newFileUrls.length) {
-          setLightboxIndex(newFileUrls.length - 1);
+        if (currentLightboxIndex >= newFileUrls.length) {
+          setLightboxUrl(newFileUrls[newFileUrls.length - 1]);
         }
       }
     } catch (err) {
@@ -340,7 +351,7 @@ function GalleryPage() {
     } finally {
       setDeleting(false);
     }
-  }, [record, lightboxIndex, deleting, saveShoot, updateShootRecord]);
+  }, [record, currentLightboxIndex, deleting, saveShoot, updateShootRecord]);
 
   const deleteImageAt = useCallback(async (idx: number) => {
     if (!record || deleting) return;
@@ -383,8 +394,8 @@ function GalleryPage() {
         // ignore
       }
       toast.success("Фото удалено");
-      setLightboxIndex((lb) =>
-        lb !== null && lb >= newFileUrls.length ? newFileUrls.length - 1 : lb,
+      setLightboxUrl((lb) =>
+        lb !== null && currentLightboxIndex >= newFileUrls.length ? newFileUrls[newFileUrls.length - 1] : lb,
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ошибка удаления";
@@ -556,7 +567,7 @@ function GalleryPage() {
       try {
         await updateShootRecord(record.shootId, { fileUrls: [], aiResults: [] });
       } catch {}
-      setLightboxIndex(null);
+      setLightboxUrl(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ошибка очистки";
       toast.error("Не удалось очистить папку", { id: toastId, description: message });
@@ -693,11 +704,10 @@ function GalleryPage() {
                   <button
                     type="button"
                     onClick={() => setFilter("all")}
-                    disabled={filter === "all"}
-                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                    className={`px-4 py-1.5 text-sm font-medium transition-colors ${
                       filter === "all"
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "rounded-full bg-primary text-primary-foreground"
+                        : "rounded-full text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Все
@@ -705,11 +715,10 @@ function GalleryPage() {
                   <button
                     type="button"
                     onClick={() => setFilter("best")}
-                    disabled={filter === "best"}
-                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                    className={`px-4 py-1.5 text-sm font-medium transition-colors ${
                       filter === "best"
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "rounded-full bg-primary text-primary-foreground"
+                        : "rounded-full text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Лучшие
@@ -757,7 +766,7 @@ function GalleryPage() {
                 <button
                   key={`${url}-${i}`}
                   type="button"
-                  onClick={() => setLightboxIndex(i)}
+                  onClick={() => setLightboxUrl(url)}
                   className={`group relative aspect-square overflow-hidden rounded-2xl border bg-muted transition-transform hover:scale-[1.02] ${
                     isBest(url) ? "border-primary" : "border-border"
                   }`}
@@ -893,10 +902,10 @@ function GalleryPage() {
       </footer>
 
       {/* LIGHTBOX */}
-      {lightboxIndex !== null && record.fileUrls[lightboxIndex] && (
+      {lightboxUrl !== null && record.fileUrls[currentLightboxIndex ?? 0] && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
-          onClick={() => setLightboxIndex(null)}
+          onClick={() => setLightboxUrl(null)}
           role="dialog"
           aria-modal="true"
         >
@@ -920,7 +929,7 @@ function GalleryPage() {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setLightboxIndex(null);
+                  setLightboxUrl(null);
                 }}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-colors hover:border-primary hover:text-primary"
                 aria-label="Закрыть"
@@ -935,10 +944,7 @@ function GalleryPage() {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxIndex(
-                      (lightboxIndex - 1 + record.fileUrls.length) %
-                        record.fileUrls.length,
-                    );
+                    lightboxPrev();
                   }}
                   className="absolute -left-10 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-colors hover:border-primary hover:text-primary"
                   aria-label="Предыдущее фото"
@@ -949,7 +955,7 @@ function GalleryPage() {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxIndex((lightboxIndex + 1) % record.fileUrls.length);
+                    lightboxNext();
                   }}
                   className="absolute -right-10 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-colors hover:border-primary hover:text-primary"
                   aria-label="Следующее фото"
@@ -960,8 +966,8 @@ function GalleryPage() {
             )}
 
             <img
-              src={record.fileUrls[lightboxIndex]}
-              alt={`Кадр ${lightboxIndex + 1}`}
+              src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
+              alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
               onClick={(e) => e.stopPropagation()}
               className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
             />
