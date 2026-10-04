@@ -174,7 +174,14 @@ export async function deleteShootRecord(shootId: string) {
 
 export async function getUserShoots(userId: string, maxDocs = 50) {
   const db = getDb();
-  const snapshot = await getDocs(collection(db, "shoots"));
+  // Фильтрованный запрос: правила Firestore разрешают read только владельцу.
+  // bulk-read всей коллекции без where() блокируется правилами.
+  const q = query(
+    collection(db, "shoots"),
+    where("userId", "==", userId),
+    limit(maxDocs),
+  );
+  const snapshot = await getDocs(q);
   const shoots: Array<{
     shootId: string;
     fileUrls: string[];
@@ -206,9 +213,8 @@ export async function getUserShoots(userId: string, maxDocs = 50) {
     });
   });
 
-  const filtered = shoots.filter((s) => s.userId === userId);
-  filtered.sort((a, b) => b.createdAt - a.createdAt);
-  return filtered.slice(0, maxDocs);
+  shoots.sort((a, b) => b.createdAt - a.createdAt);
+  return shoots;
 }
 
 export const MAX_FILE_SIZE = 20 * 1024 * 1024;
