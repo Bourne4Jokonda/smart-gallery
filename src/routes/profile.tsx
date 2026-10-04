@@ -4,8 +4,6 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   Camera,
-  ChevronRight,
-  Copy,
   ExternalLink,
   Images,
   KeyRound,
@@ -313,15 +311,23 @@ function ProfilePage() {
               const cover = s.fileUrls[0] ?? "";
               return (
                 <div key={s.shootId} className="rounded-2xl border border-border bg-card p-4">
-                  <div className="aspect-video overflow-hidden rounded-xl bg-muted">
-                    {cover ? (
-                      <img src={cover} alt={s.shootId} className="h-full w-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Нет превью</div>
-                    )}
-                  </div>
+                  <Link
+                    to={`/gallery/${s.shootId}`}
+                    className="block overflow-hidden rounded-xl bg-muted transition-transform hover:scale-[1.01]"
+                    title="Открыть съёмку"
+                  >
+                    <div className="aspect-video">
+                      {cover ? (
+                        <img src={cover} alt={s.shootId} className="h-full w-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Нет превью</div>
+                      )}
+                    </div>
+                  </Link>
                   <div className="mt-3 space-y-1">
-                    <p className="text-sm font-semibold">Съёмка #{s.shootId.slice(-6)}</p>
+                    <Link to={`/gallery/${s.shootId}`} className="text-sm font-semibold hover:text-primary">
+                      Съёмка #{s.shootId.slice(-6)}
+                    </Link>
                     <p className="text-xs text-muted-foreground">{dateStr}</p>
                     <p className="text-xs text-muted-foreground">
                       {s.fileUrls.length} фото · лучших: {bests}
@@ -360,12 +366,6 @@ function ProfilePage() {
                       </span>
                     </button>
                     <div className="flex flex-wrap gap-2">
-                    <Link
-                      to={`/gallery/${s.shootId}`}
-                      className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium transition-colors hover:border-primary"
-                    >
-                      Открыть <ChevronRight className="h-3 w-3" />
-                    </Link>
                     {s.public && (
                       <button
                         type="button"
@@ -386,13 +386,7 @@ function ProfilePage() {
                         {hasPassword[s.shootId] ? "Пароль: да" : "Пароль"}
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => handleCopyLink(`${window.location.origin}/gallery/${s.shootId}`)}
-                      className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium transition-colors hover:border-primary"
-                    >
-                      <Copy className="h-3 w-3" /> Ссылка
-                    </button>
+
                     <button
                       type="button"
                       onClick={() => handleDelete(s.shootId, s.email)}
