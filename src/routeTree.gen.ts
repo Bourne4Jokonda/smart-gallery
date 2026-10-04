@@ -18,6 +18,8 @@ import { Route as ApiCurateRouteImport } from './routes/api/curate'
 import { Route as ApiDeleteImageRouteImport } from './routes/api/delete-image'
 import { Route as ApiDeleteShootRouteImport } from './routes/api/delete-shoot'
 import { Route as ApiNotifyLeadRouteImport } from './routes/api/notify-lead'
+import { Route as ApiPublicShootRouteImport } from './routes/api/public-shoot'
+import { Route as ApiSetShootPasswordRouteImport } from './routes/api/set-shoot-password'
 import { Route as ApiShootRouteImport } from './routes/api/shoot'
 import { Route as GalleryIdRouteImport } from './routes/gallery/$id'
 import { Route as PublicGalleryIdRouteImport } from './routes/public-gallery/$id'
@@ -67,6 +69,16 @@ const ApiNotifyLeadRoute = ApiNotifyLeadRouteImport.update({
   path: '/api/notify-lead',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicShootRoute = ApiPublicShootRouteImport.update({
+  id: '/api/public-shoot',
+  path: '/api/public-shoot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSetShootPasswordRoute = ApiSetShootPasswordRouteImport.update({
+  id: '/api/set-shoot-password',
+  path: '/api/set-shoot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiShootRoute = ApiShootRouteImport.update({
   id: '/api/shoot',
   path: '/api/shoot',
@@ -93,6 +105,8 @@ export interface FileRoutesByFullPath {
   '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/delete-shoot': typeof ApiDeleteShootRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
+  '/api/public-shoot': typeof ApiPublicShootRoute
+  '/api/set-shoot-password': typeof ApiSetShootPasswordRoute
   '/api/shoot': typeof ApiShootRoute
   '/gallery/$id': typeof GalleryIdRoute
   '/public-gallery/$id': typeof PublicGalleryIdRoute
@@ -107,6 +121,8 @@ export interface FileRoutesByTo {
   '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/delete-shoot': typeof ApiDeleteShootRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
+  '/api/public-shoot': typeof ApiPublicShootRoute
+  '/api/set-shoot-password': typeof ApiSetShootPasswordRoute
   '/api/shoot': typeof ApiShootRoute
   '/gallery/$id': typeof GalleryIdRoute
   '/public-gallery/$id': typeof PublicGalleryIdRoute
@@ -122,6 +138,8 @@ export interface FileRoutesById {
   '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/delete-shoot': typeof ApiDeleteShootRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
+  '/api/public-shoot': typeof ApiPublicShootRoute
+  '/api/set-shoot-password': typeof ApiSetShootPasswordRoute
   '/api/shoot': typeof ApiShootRoute
   '/gallery/$id': typeof GalleryIdRoute
   '/public-gallery/$id': typeof PublicGalleryIdRoute
@@ -138,6 +156,8 @@ export interface FileRouteTypes {
     | '/api/delete-image'
     | '/api/delete-shoot'
     | '/api/notify-lead'
+    | '/api/public-shoot'
+    | '/api/set-shoot-password'
     | '/api/shoot'
     | '/gallery/$id'
     | '/public-gallery/$id'
@@ -152,6 +172,8 @@ export interface FileRouteTypes {
     | '/api/delete-image'
     | '/api/delete-shoot'
     | '/api/notify-lead'
+    | '/api/public-shoot'
+    | '/api/set-shoot-password'
     | '/api/shoot'
     | '/gallery/$id'
     | '/public-gallery/$id'
@@ -166,6 +188,8 @@ export interface FileRouteTypes {
     | '/api/delete-image'
     | '/api/delete-shoot'
     | '/api/notify-lead'
+    | '/api/public-shoot'
+    | '/api/set-shoot-password'
     | '/api/shoot'
     | '/gallery/$id'
     | '/public-gallery/$id'
@@ -181,6 +205,8 @@ export interface RootRouteChildren {
   ApiDeleteImageRoute: typeof ApiDeleteImageRoute
   ApiDeleteShootRoute: typeof ApiDeleteShootRoute
   ApiNotifyLeadRoute: typeof ApiNotifyLeadRoute
+  ApiPublicShootRoute: typeof ApiPublicShootRoute
+  ApiSetShootPasswordRoute: typeof ApiSetShootPasswordRoute
   ApiShootRoute: typeof ApiShootRoute
   GalleryIdRoute: typeof GalleryIdRoute
   PublicGalleryIdRoute: typeof PublicGalleryIdRoute
@@ -251,6 +277,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotifyLeadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public-shoot': {
+      id: '/api/public-shoot'
+      path: '/api/public-shoot'
+      fullPath: '/api/public-shoot'
+      preLoaderRoute: typeof ApiPublicShootRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/set-shoot-password': {
+      id: '/api/set-shoot-password'
+      path: '/api/set-shoot-password'
+      fullPath: '/api/set-shoot-password'
+      preLoaderRoute: typeof ApiSetShootPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/shoot': {
       id: '/api/shoot'
       path: '/api/shoot'
@@ -285,6 +325,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDeleteImageRoute: ApiDeleteImageRoute,
   ApiDeleteShootRoute: ApiDeleteShootRoute,
   ApiNotifyLeadRoute: ApiNotifyLeadRoute,
+  ApiPublicShootRoute: ApiPublicShootRoute,
+  ApiSetShootPasswordRoute: ApiSetShootPasswordRoute,
   ApiShootRoute: ApiShootRoute,
   GalleryIdRoute: GalleryIdRoute,
   PublicGalleryIdRoute: PublicGalleryIdRoute,

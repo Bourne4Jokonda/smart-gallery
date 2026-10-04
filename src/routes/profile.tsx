@@ -8,6 +8,7 @@ import {
   Copy,
   ExternalLink,
   Images,
+  KeyRound,
   Loader2,
   RefreshCcw,
   Sparkles,
@@ -62,6 +63,10 @@ function ProfilePage() {
   const [refreshing, setRefreshing] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [passwordShootId, setPasswordShootId] = useState<string | null>(null);
+  const [passwordValue, setPasswordValue] = useState("");
+  const [passwordBusy, setPasswordBusy] = useState(false);
+  const [hasPassword, setHasPassword] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -200,6 +205,50 @@ function ProfilePage() {
     }
   };
 
+  const openPasswordDialog = (shootId: string, current: boolean) => {
+    setPasswordShootId(shootId);
+    setHasPassword((prev) => ({ ...prev, [shootId]: current }));
+    setPasswordValue("");
+  };
+
+  const savePassword = async () => {
+    if (!passwordShootId) return;
+    const pw = passwordValue.trim();
+    setPasswordBusy(true);
+    try {
+      if (pw.length === 0) {
+        const res = await fetch(`/api/set-shoot-password?id=${encodeURIComponent(passwordShootId)}`, {
+          method: "DELETE",
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) {
+          throw new Error(data?.error || "Не удалось снять пароль");
+        }
+        setHasPassword((prev) => ({ ...prev, [passwordShootId]: false }));
+        toast.success("Пароль снят, галерея открыта");
+      } else {
+        const res = await fetch("/api/set-shoot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: passwordShootId, password: pw }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) {
+          throw new Error(data?.error || "Не удалось сохранить пароль");
+        }
+        setHasPassword((prev) => ({ ...prev, [passwordShootId]: true }));
+        toast.success("Пароль установлен");
+      }
+      setPasswordShootId(null);
+      setPasswordValue("");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка пароля";
+      toast.error(message);
+    } finally {
+      setPasswordBusy(false);
+    }
+  };
+
   const handleCopyLink = async (shootId: string) => {
     const url = `${window.location.origin}/gallery/${shootId}`;
     try {
@@ -296,6 +345,17 @@ function ProfilePage() {
                         <ExternalLink className="h-3 w-3" /> Публичная ссылка
                       </button>
                     )}
+                    {s.public && (
+                      <button
+                        type="button"
+                        onClick={() => openPasswordDialog(s.shootId, Boolean(hasPassword[s.shootId]))}
+                        className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium transition-colors hover:border-primary"
+                        title={hasPassword[s.shootId] ? "Сменить/снять пароль" : "Поставить пароль"}
+                      >
+                        <KeyRound className="h-3 w-3" />
+                        {hasPassword[s.shootId] ? "Пароль: да" : "Пароль"}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => handleCopyLink(`${window.location.origin}/gallery/${s.shootId}`)}
@@ -318,6 +378,51 @@ function ProfilePage() {
             })}
           </div>
         )}
+      {passwordShootId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-5 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex rounded-xl bg-primary/15 p-2">
+                <KeyRound className="h-5 w-5 text-primary" />
+              </span>
+              <div>
+                <h3 className="text-base font-bold">Пароль съёмки #{passwordShootId.slice(-6)}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {hasPassword[passwordShootId]
+                    ? "Пароль уже установлен. Введите новый или оставьте пустым, чтобы снять."
+                    : "Введите пароль для доступа клиента к галерее."}
+                </p>
+              </div>
+            </div>
+            <input
+              type="password"
+              value={passwordValue}
+              onChange={(e) => setPasswordValue(e.target.value)}
+              placeholder="Пароль (минимум 4 символа, пусто = снять)"
+              className="mt-4 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/60 focus:border-primary"
+              autoFocus
+            />
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={savePassword}
+                disabled={passwordBusy}
+                className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+              >
+                {passwordBusy ? "Сохраняем…" : "Сохранить"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPasswordShootId(null)}
+                className="rounded-xl border border-border px-4 py-3 text-sm font-medium transition-colors hover:border-primary"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       </main>
 
       <footer className="border-t border-border px-5 py-10 sm:px-8">
