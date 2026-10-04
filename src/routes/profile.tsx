@@ -216,9 +216,16 @@ function ProfilePage() {
     const pw = passwordValue.trim();
     setPasswordBusy(true);
     try {
+      const auth = getAuthInstance();
+      const token = await auth.currentUser?.getIdToken().catch(() => null);
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
       if (pw.length === 0) {
         const res = await fetch(`/api/set-shoot-password?id=${encodeURIComponent(passwordShootId)}`, {
           method: "DELETE",
+          headers,
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data.ok === false) {
@@ -229,7 +236,7 @@ function ProfilePage() {
       } else {
         const res = await fetch("/api/set-shoot-password", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ id: passwordShootId, password: pw }),
         });
         const data = await res.json().catch(() => ({}));
@@ -249,8 +256,7 @@ function ProfilePage() {
     }
   };
 
-  const handleCopyLink = async (shootId: string) => {
-    const url = `${window.location.origin}/gallery/${shootId}`;
+  const handleCopyLink = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Ссылка скопирована");
