@@ -67,6 +67,7 @@ function ProfilePage() {
   const [passwordValue, setPasswordValue] = useState("");
   const [passwordBusy, setPasswordBusy] = useState(false);
   const [hasPassword, setHasPassword] = useState<Record<string, boolean>>({});
+  const [togglingPublic, setTogglingPublic] = useState<string | null>(null);
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -231,6 +232,22 @@ function ProfilePage() {
     }
   };
 
+  const togglePublic = async (shootId: string, current: boolean) => {
+    setTogglingPublic(shootId);
+    try {
+      await updateShootRecord(shootId, { public: !current });
+      setShoots((prev) =>
+        prev.map((s) => (s.shootId === shootId ? { ...s, public: !current } : s)),
+      );
+      toast.success(!current ? "Съёмка открыта для клиента" : "Съёмка закрыта, доступ прекращён");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка переключения";
+      toast.error(message);
+    } finally {
+      setTogglingPublic(null);
+    }
+  };
+
   const handleCopyLink = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
@@ -310,7 +327,39 @@ function ProfilePage() {
                       {s.fileUrls.length} фото · лучших: {bests}
                     </p>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => togglePublic(s.shootId, Boolean(s.public))}
+                      disabled={togglingPublic === s.shootId}
+                      className={`inline-flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                        s.public
+                          ? "border-primary/40 bg-primary/10 text-primary hover:border-primary"
+                          : "border-border text-muted-foreground hover:border-primary"
+                      }`}
+                      title={s.public ? "Доступ по ссылке включён — нажмите, чтобы закрыть" : "Доступ по ссылке выключен — нажмите, чтобы открыть клиенту"}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        {togglingPublic === s.shootId ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <ExternalLink className="h-3 w-3" />
+                        )}
+                        Публичная
+                      </span>
+                      <span
+                        className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${
+                          s.public ? "bg-primary" : "bg-border"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            s.public ? "translate-x-3.5" : "translate-x-0.5"
+                          }`}
+                        />
+                      </span>
+                    </button>
+                    <div className="flex flex-wrap gap-2">
                     <Link
                       to={`/gallery/${s.shootId}`}
                       className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium transition-colors hover:border-primary"
@@ -353,6 +402,7 @@ function ProfilePage() {
                     >
                       {removing === s.shootId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                     </button>
+                    </div>
                   </div>
                 </div>
               );

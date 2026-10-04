@@ -6,8 +6,8 @@ service cloud.firestore {
     }
 
     match /shoots/{shootId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid
-                   || resource.data.public == true;
+      allow read: if resource.data.public == true
+                   || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }

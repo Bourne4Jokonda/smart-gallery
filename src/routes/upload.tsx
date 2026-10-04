@@ -63,7 +63,6 @@ export default function UploadPage() {
   const [shootId, setShootId] = useState("");
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
-  const [publicShoot, setPublicShoot] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [authUser, setAuthUser] = useState<{ uid: string; email: string | null } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -190,7 +189,7 @@ export default function UploadPage() {
         email: resolvedEmail.trim(),
         createdAt: Date.now(),
         aiResults: [],
-        public: publicShoot,
+        public: false,
       };
       saveShoot(record);
       console.warn("[smart-gallery] before saveShootRecord", {
@@ -445,17 +444,9 @@ export default function UploadPage() {
           )}
 
           {validItems.length > 0 && status === "idle" && (
-            <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-card p-4">
-              <input
-                type="checkbox"
-                checked={publicShoot}
-                onChange={(e) => setPublicShoot(e.target.checked)}
-                className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-border bg-background accent-primary text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <span className="text-sm leading-relaxed text-foreground">
-                Сделать эту съёмку доступной по ссылке. По умолчанию она остаётся только в вашем кабинете. Ссылку можно будет скопировать после загрузки.
-              </span>
-            </label>
+            <p className="mt-3 rounded-2xl border border-border bg-card p-4 text-sm leading-relaxed text-muted-foreground">
+              Съёмка создаётся приватной — только в вашем кабинете. Когда будете готовы показать клиенту, включите «Публичная» на карточке и задайте пароль.
+            </p>
           )}
 
           {/* ACTION */}
