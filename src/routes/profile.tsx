@@ -216,36 +216,11 @@ function ProfilePage() {
     const pw = passwordValue.trim();
     setPasswordBusy(true);
     try {
-      const auth = getAuthInstance();
-      const token = await auth.currentUser?.getIdToken().catch(() => null);
-      const headers = {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
-      if (pw.length === 0) {
-        const res = await fetch(`/api/set-shoot-password?id=${encodeURIComponent(passwordShootId)}`, {
-          method: "DELETE",
-          headers,
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || data.ok === false) {
-          throw new Error(data?.error || "Не удалось снять пароль");
-        }
-        setHasPassword((prev) => ({ ...prev, [passwordShootId]: false }));
-        toast.success("Пароль снят, галерея открыта");
-      } else {
-        const res = await fetch("/api/set-shoot-password", {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ id: passwordShootId, password: pw }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || data.ok === false) {
-          throw new Error(data?.error || "Не удалось сохранить пароль");
-        }
-        setHasPassword((prev) => ({ ...prev, [passwordShootId]: true }));
-        toast.success("Пароль установлен");
-      }
+      // Прямая клиентская запись: клиент авторизован и владеет сессией,
+      // Firestore rules пропускают update (userId == request.auth.uid).
+      await updateShootRecord(passwordShootId, { password: pw });
+      setHasPassword((prev) => ({ ...prev, [passwordShootId]: pw.length > 0 }));
+      toast.success(pw.length > 0 ? "Пароль установлен" : "Пароль снят, галерея открыта");
       setPasswordShootId(null);
       setPasswordValue("");
     } catch (err) {
