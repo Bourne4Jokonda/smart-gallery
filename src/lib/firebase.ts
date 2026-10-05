@@ -190,6 +190,8 @@ export async function getUserShoots(userId: string, maxDocs = 50) {
     aiResults?: Array<{ url: string; score: number | null; status: string; error?: string }>;
     public?: boolean;
     userId?: string;
+    title?: string;
+    password?: string;
   }> = [];
   snapshot.forEach((d) => {
     const data = d.data();
@@ -210,6 +212,8 @@ export async function getUserShoots(userId: string, maxDocs = 50) {
       aiResults: (data["aiResults"] as Array<{ url: string; score: number | null; status: string; error?: string }>) ?? [],
       public: Boolean(data["public"]),
       userId: (data["userId"] as string | undefined),
+      title: (data["title"] as string | undefined),
+      password: (data["password"] as string | undefined),
     });
   });
 
