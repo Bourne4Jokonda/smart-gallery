@@ -424,43 +424,48 @@ function ProfilePage() {
                       </span>
                     </button>
                     <div className={`flex gap-2 ${s.public ? "" : "pointer-events-none opacity-35"}`}>
-                      <button
-                        type="button"
+                      <div
+                        role="button"
+                        tabIndex={0}
                         onClick={() => openPasswordDialog(s.shootId, Boolean(hasPassword[s.shootId]))}
-                        className="inline-flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-primary"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") openPasswordDialog(s.shootId, Boolean(hasPassword[s.shootId]));
+                        }}
+                        className="inline-flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-primary"
                         title={hasPassword[s.shootId] ? "Сменить/снять пароль" : "Задать пароль"}
                       >
                         <KeyRound className="h-3 w-3 shrink-0" />
                         <span className="truncate">
                           {hasPassword[s.shootId] ? "Пароль задан ••••••" : "Пароль не задан"}
                         </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const pw = s.password ?? "";
-                          if (!pw) {
-                            toast.error("Пароль не задан — сначала установите его");
-                            return;
-                          }
-                          try {
-                            await navigator.clipboard.writeText(pw);
-                            toast.success("Пароль скопирован");
-                          } catch {
-                            toast.error("Не удалось скопировать пароль");
-                          }
-                        }}
-                        disabled={!hasPassword[s.shootId]}
-                        className={`inline-flex shrink-0 items-center justify-center rounded-lg border px-2 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                          hasPassword[s.shootId]
-                            ? "border-border text-muted-foreground hover:border-primary hover:text-primary"
-                            : "border-border text-muted-foreground"
-                        }`}
-                        title={hasPassword[s.shootId] ? "Скопировать пароль" : "Пароль не задан"}
-                        aria-label="Скопировать пароль"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </button>
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const pw = s.password ?? "";
+                            if (!pw) {
+                              toast.error("Пароль не задан — сначала установите его");
+                              return;
+                            }
+                            try {
+                              await navigator.clipboard.writeText(pw);
+                              toast.success("Пароль скопирован");
+                            } catch {
+                              toast.error("Не удалось скопировать пароль");
+                            }
+                          }}
+                          disabled={!hasPassword[s.shootId]}
+                          className={`ml-auto inline-flex shrink-0 items-center justify-center rounded-md p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                            hasPassword[s.shootId]
+                              ? "text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                              : "text-muted-foreground"
+                          }`}
+                          title={hasPassword[s.shootId] ? "Скопировать пароль" : "Пароль не задан"}
+                          aria-label="Скопировать пароль"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleCopyLink(`${window.location.origin}/public-gallery/${s.shootId}`)}
@@ -509,10 +514,7 @@ function ProfilePage() {
                 type="button"
                 onClick={async () => {
                   const pw = passwordValue.trim();
-                  if (!pw) {
-                    toast.error("Поле пустое — ничего копировать");
-                    return;
-                  }
+                  if (!pw) return;
                   try {
                     await navigator.clipboard.writeText(pw);
                     toast.success("Пароль скопирован");
@@ -520,9 +522,12 @@ function ProfilePage() {
                     toast.error("Не удалось скопировать пароль");
                   }
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-primary"
+                disabled={!passwordValue.trim()}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                  passwordValue.trim() ? "text-muted-foreground hover:text-primary" : "text-muted-foreground"
+                }`}
                 aria-label="Скопировать пароль"
-                title="Скопировать пароль"
+                title={passwordValue.trim() ? "Скопировать пароль" : "Пароль не введён"}
               >
                 <Copy className="h-4 w-4" />
               </button>
