@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   Camera,
+  Copy,
   Eye,
   EyeOff,
   ExternalLink,
@@ -436,6 +437,32 @@ function ProfilePage() {
                       </button>
                       <button
                         type="button"
+                        onClick={async () => {
+                          const pw = s.password ?? "";
+                          if (!pw) {
+                            toast.error("Пароль не задан — сначала установите его");
+                            return;
+                          }
+                          try {
+                            await navigator.clipboard.writeText(pw);
+                            toast.success("Пароль скопирован");
+                          } catch {
+                            toast.error("Не удалось скопировать пароль");
+                          }
+                        }}
+                        disabled={!hasPassword[s.shootId]}
+                        className={`inline-flex shrink-0 items-center justify-center rounded-lg border px-2 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                          hasPassword[s.shootId]
+                            ? "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                            : "border-border text-muted-foreground"
+                        }`}
+                        title={hasPassword[s.shootId] ? "Скопировать пароль" : "Пароль не задан"}
+                        aria-label="Скопировать пароль"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleCopyLink(`${window.location.origin}/public-gallery/${s.shootId}`)}
                         disabled={!s.public}
                         className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
@@ -473,10 +500,31 @@ function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setPasswordVisible((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                className="absolute right-12 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                 aria-label={passwordVisible ? "Скрыть пароль" : "Показать пароль"}
               >
                 {passwordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const pw = passwordValue.trim();
+                  if (!pw) {
+                    toast.error("Поле пустое — ничего копировать");
+                    return;
+                  }
+                  try {
+                    await navigator.clipboard.writeText(pw);
+                    toast.success("Пароль скопирован");
+                  } catch {
+                    toast.error("Не удалось скопировать пароль");
+                  }
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-primary"
+                aria-label="Скопировать пароль"
+                title="Скопировать пароль"
+              >
+                <Copy className="h-4 w-4" />
               </button>
             </div>
             <ul className="mt-4 list-inside list-disc space-y-1 text-xs text-muted-foreground">
