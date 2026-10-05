@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useLocation,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
@@ -120,6 +121,8 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const location = useLocation();
+  const isPublicGallery = location.pathname.startsWith("/public-gallery/");
   const [user, setUser] = useState<{ uid: string; email: string } | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -173,6 +176,16 @@ function RootComponent() {
             <p className="mt-3 text-sm text-muted-foreground">Проверяем авторизацию…</p>
           </div>
         </div>
+      </QueryClientProvider>
+    );
+  }
+
+  if (isPublicGallery) {
+    // Публичная галерея: своя шапка, без навигации и кнопки «Войти»
+    return (
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+        <Toaster theme="dark" position="bottom-center" richColors />
       </QueryClientProvider>
     );
   }
