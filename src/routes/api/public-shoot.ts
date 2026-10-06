@@ -32,6 +32,7 @@ export const Route = createFileRoute("/api/public-shoot")({
           } else if (typeof rawTs === "number") {
             createdAt = rawTs;
           }
+          const userId = typeof data.userId === "string" ? data.userId : null;
           return Response.json({
             ok: true,
             shootId: id,
@@ -39,6 +40,7 @@ export const Route = createFileRoute("/api/public-shoot")({
             title: (data.title as string | undefined),
             email: (data.email as string | undefined) ?? null,
             createdAt,
+            userId,
             fileUrls: [],
             aiResults: [],
           });
@@ -89,6 +91,7 @@ export const Route = createFileRoute("/api/public-shoot")({
           } else if (typeof rawTs === "number") {
             createdAt = rawTs;
           }
+          const userId = typeof data.userId === "string" ? data.userId : null;
           return Response.json({
             ok: true,
             shootId: id,
@@ -96,6 +99,7 @@ export const Route = createFileRoute("/api/public-shoot")({
             title: (data.title as string | undefined),
             email: (data.email as string | undefined) ?? null,
             createdAt,
+            userId,
             fileUrls: (data.fileUrls as string[]) ?? [],
             aiResults: (data.aiResults as Array<{ url: string; score: number | null; status: string; error?: string }>) ?? [],
             public: isPublic,

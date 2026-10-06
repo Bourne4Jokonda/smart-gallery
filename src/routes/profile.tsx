@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { readShoots, removeShoot, saveShoot } from "@/lib/storage";
-import { getAuthInstance, getUserShoots, signOutUser, updateShootRecord, deleteShootRecord } from "@/lib/firebase";
+import { getAuthInstance, getUserShoots, getUserProfile, saveUserProfile, signOutUser, updateShootRecord, deleteShootRecord } from "@/lib/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
 
 export const Route = createFileRoute("/profile")({
@@ -43,6 +43,7 @@ type ShootItem = {
   public?: boolean;
   title?: string;
   password?: string;
+  userId?: string;
 };
 
 function ProfileError({ error, reset }: { error: Error; reset: () => void }) {
@@ -79,6 +80,21 @@ function ProfilePage() {
   const [renameValue, setRenameValue] = useState("");
   const [renameBusy, setRenameBusy] = useState(false);
 
+  const [profile, setProfile] = useState<{
+    userId: string;
+    watermarkEnabled?: boolean;
+    watermarkType?: "none" | "text" | "image";
+    watermarkText?: string | null;
+    watermarkImageUrl?: string | null;
+    watermarkPosition?: "center" | "bottom-right" | "top-left";
+    watermarkOpacity?: number;
+  } | null>(null);
+  const [watermarkSaving, setWatermarkSaving] = useState(false);
+  const [watermarkText, setWatermarkText] = useState("");
+  const [watermarkImageFile, setWatermarkImageFile] = useState<File | null>(null);
+  const [watermarkPosition, setWatermarkPosition] = useState<"center" | "bottom-right" | "top-left">("bottom-right");
+  const [watermarkOpacity, setWatermarkOpacity] = useState(0.35);
+
   useEffect(() => {
     const auth = getAuthInstance();
     let cancelled = false;
@@ -114,6 +130,14 @@ function ProfilePage() {
         const list = Object.values(merged).sort((a, b) => b.createdAt - a.createdAt);
         if (!cancelled) {
           setShoots(list);
+        }
+
+        const userProfile = await getUserProfile(user.uid);
+        if (!cancelled && userProfile) {
+          setProfile(userProfile);
+          setWatermarkText(userProfile.watermarkText ?? "");
+          setWatermarkPosition(userProfile.watermarkPosition ?? "bottom-right");
+          setWatermarkOpacity(userProfile.watermarkOpacity ?? 0.35);
         }
       } catch (err) {
         if (!cancelled) {
@@ -213,6 +237,45 @@ function ProfilePage() {
       window.location.href = "/login";
     } catch {
       toast.error("Не удалось выйти");
+    }
+  };
+
+  const handleSaveWatermark = async () => {
+    if (!user || watermarkSaving) return;
+    setWatermarkSaving(true);
+    try {
+      let watermarkImageUrl = profile?.watermarkImageUrl ?? null;
+      if (watermarkImageFile) {
+        const form = new FormData();
+        form.append("file", watermarkImageFile);
+        const res = await fetch("/api/upload-watermark", {
+          method: "POST",
+          body: form,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data?.url === undefined) {
+          throw new Error(data?.error || "Не удалось загрузить водяной знак");
+        }
+        watermarkImageUrl = data.url as string;
+      }
+
+      const payload = {
+        watermarkEnabled: true,
+        watermarkType: watermarkText.trim() ? "text" : watermarkImageUrl ? "image" : "none",
+        watermarkText: watermarkText.trim() || null,
+        watermarkImageUrl,
+        watermarkPosition,
+        watermarkOpacity: watermarkOpacity,
+      };
+
+      await saveUserProfile(user.uid, payload);
+      setProfile((prev) => ({ ...prev, ...payload } as typeof prev));
+      toast.success("Водяной знак сохранён");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка сохранения";
+      toast.error(message);
+    } finally {
+      setWatermarkSaving(false);
     }
   };
 
@@ -320,6 +383,93 @@ function ProfilePage() {
             </Link>
           </div>
         </div>
+
+        <section className="mt-8 rounded-2xl border border-border bg-card/50 p-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold">Водяной знак</h2>
+                <p className="text-xs text-muted-foreground">Будет показываться в публичных галереях.</p>
+              </div>
+              <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={Boolean(profile?.watermarkEnabled)}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      watermarkEnabled: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4 rounded border-border"
+                />
+                Включён
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                Текст
+                <input
+                  value={watermarkText}
+                  onChange={(e) => setWatermarkText(e.target.value)}
+                  placeholder="Например: Фотограф Иван"
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                Логотип
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setWatermarkImageFile(e.target.files?.[0] ?? null)}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                />
+                {profile?.watermarkImageUrl && (
+                  <img src={profile.watermarkImageUrl} alt="" className="h-10 w-auto rounded-lg border border-border object-contain" />
+                )}
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                Положение
+                <select
+                  value={watermarkPosition}
+                  onChange={(e) => setWatermarkPosition(e.target.value as typeof watermarkPosition)}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                >
+                  <option value="bottom-right">Справа внизу</option>
+                  <option value="center">По центру</option>
+                  <option value="top-left">Слева вверху</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                Прозрачность
+                <input
+                  type="range"
+                  min="0.05"
+                  max="0.8"
+                  step="0.05"
+                  value={watermarkOpacity}
+                  onChange={(e) => setWatermarkOpacity(Number(e.target.value))}
+                  className="mt-2"
+                />
+                <span className="text-xs">{Math.round(watermarkOpacity * 100)}%</span>
+              </label>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSaveWatermark}
+              disabled={watermarkSaving}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {watermarkSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Сохранить watermark
+            </button>
+          </div>
+        </section>
 
         {shoots.length === 0 ? (
           <div className="mt-10 rounded-3xl border border-border bg-card p-10 text-center">

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import { toast } from "sonner";
+import { getUserProfile, type UserProfile } from "@/lib/firebase";
 
 type ShootRecord = {
   shootId: string;
@@ -20,6 +21,7 @@ type ShootRecord = {
   email?: string | null;
   createdAt: number;
   hasPassword: boolean;
+  userId?: string | null;
 };
 
 function filenameFromUrl(url: string, index: number): string {
@@ -33,6 +35,33 @@ function filenameFromUrl(url: string, index: number): string {
     // ignore
   }
   return `photo-${String(index + 1).padStart(3, "0")}.jpg`;
+}
+
+function WatermarkOverlay({ profile }: { profile: UserProfile }) {
+  if (!profile?.watermarkEnabled || profile.watermarkType === "none") return null;
+  const opacity = typeof profile.watermarkOpacity === "number" ? profile.watermarkOpacity : 0.35;
+  const positionClass =
+    profile.watermarkPosition === "center"
+      ? "inset-0 flex items-center justify-center"
+      : profile.watermarkPosition === "top-left"
+        ? "inset-0 flex items-start justify-start p-4"
+        : "inset-0 flex items-end justify-end p-4";
+  const content =
+    profile.watermarkType === "image" && profile.watermarkImageUrl ? (
+      <img src={profile.watermarkImageUrl} alt="" className="max-h-14 max-w-[70%] object-contain" />
+    ) : (
+      <span className="text-xs font-semibold tracking-wide text-white drop-shadow-md">
+        {profile.watermarkText?.trim() || "Smart Gallery"}
+      </span>
+    );
+
+  return (
+    <div className={`pointer-events-none absolute ${positionClass}`}>
+      <div className="rounded-xl bg-black/0 p-2" style={{ opacity }}>
+        {content}
+      </div>
+    </div>
+  );
 }
 
 async function downloadAsZip(
@@ -110,6 +139,25 @@ function PublicGalleryPage() {
     const prev = (currentLightboxIndex - 1 + record.fileUrls.length) % record.fileUrls.length;
     setLightboxUrl(record.fileUrls[prev] ?? null);
   };
+
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadProfile = async () => {
+      if (!record?.userId) return;
+      try {
+        const data = await getUserProfile(record.userId);
+        if (!cancelled) setProfile(data);
+      } catch {
+        // ignore profile load errors
+      }
+    };
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [record?.userId]);
 
   // ZIP / single download
   const [zipping, setZipping] = useState(false);
@@ -441,6 +489,7 @@ function PublicGalleryPage() {
                 loading="lazy"
                 className="h-full w-full object-cover"
               />
+              <WatermarkOverlay profile={profile} />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-3 text-left">
                 <p className="text-xs font-semibold">Кадр {i + 1}</p>
               </div>
@@ -518,6 +567,7 @@ function PublicGalleryPage() {
               onClick={(e) => e.stopPropagation()}
               className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
             />
+            <WatermarkOverlay profile={profile} />
 
             <div className="absolute -bottom-8 left-1/2 flex -translate-x-1/2 items-center whitespace-nowrap justify-center gap-2 rounded-full border border-border bg-card/80 px-4 py-1.5">
               <button
