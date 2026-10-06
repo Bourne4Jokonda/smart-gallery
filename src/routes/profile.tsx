@@ -78,6 +78,9 @@ function ProfilePage() {
   const [renameShootId, setRenameShootId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [renameBusy, setRenameBusy] = useState(false);
+  const [newSessionBusy, setNewSessionBusy] = useState(false);
+  const [newSessionOpen, setNewSessionOpen] = useState(false);
+  const [newSessionTitle, setNewSessionTitle] = useState("");
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -287,6 +290,43 @@ function ProfilePage() {
     }
   };
 
+  const createEmptySession = async () => {
+    const title = newSessionTitle.trim();
+    setNewSessionBusy(true);
+    try {
+      const res = await fetch("/api/create-empty-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+      const data = (await res.json()) as { ok: boolean; shootId?: string; title?: string; error?: string };
+      if (!res.ok || !data.ok) {
+        throw new Error(data?.error || "Не удалось создать сессию");
+      }
+      setShoots((prev) => [
+        {
+          shootId: data.shootId ?? "",
+          title: data.title ?? title ?? "",
+          fileUrls: [],
+          email: user?.email ?? null,
+          createdAt: Date.now(),
+          aiResults: [],
+          public: false,
+          password: "",
+        },
+        ...prev,
+      ]);
+      toast.success("Сессия создана");
+      setNewSessionOpen(false);
+      setNewSessionTitle("");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка создания сессии";
+      toast.error(message);
+    } finally {
+      setNewSessionBusy(false);
+    }
+  };
+
   const handleCopyLink = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
@@ -311,6 +351,14 @@ function ProfilePage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setNewSessionOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-sm font-medium transition-colors hover:border-primary"
+            >
+              <Sparkles className="h-4 w-4" />
+              Новая сессия
+            </button>
             <Link
               to="/upload"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
@@ -588,6 +636,43 @@ function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setRenameShootId(null)}
+                className="rounded-xl border border-border px-4 py-3 text-sm font-medium transition-colors hover:border-primary"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {newSessionOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-5 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-sm">
+            <h3 className="text-base font-bold">Новая сессия</h3>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Создайте пустую съёмку, чтобы сразу подготовить ссылку и пароль для клиента. Фото загрузите потом.
+            </p>
+            <input
+              type="text"
+              value={newSessionTitle}
+              onChange={(e) => setNewSessionTitle(e.target.value)}
+              placeholder="Например: Свадьба Иван и Мария"
+              maxLength={60}
+              className="mt-4 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/60 focus:border-primary"
+              autoFocus
+            />
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={createEmptySession}
+                disabled={newSessionBusy}
+                className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+              >
+                {newSessionBusy ? "Создаём…" : "Создать сессию"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setNewSessionOpen(false)}
                 className="rounded-xl border border-border px-4 py-3 text-sm font-medium transition-colors hover:border-primary"
               >
                 Отмена
