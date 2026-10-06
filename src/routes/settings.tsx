@@ -125,25 +125,19 @@ function SettingsPage() {
     );
   }
 
+  const enabled = profile?.watermarkEnabled !== false;
+  const previewText = watermarkText.trim() || "Smart Gallery";
+  const previewOpacity = watermarkOpacity ?? 0.35;
+  const previewPosition =
+    watermarkPosition === "center"
+      ? "center"
+      : watermarkPosition === "top-left"
+        ? "top-left"
+        : "bottom-right";
+  const previewHasImage = profile?.watermarkType === "image" && !!profile?.watermarkImageUrl;
+
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
-      <header className="border-b border-border px-5 py-4 sm:px-8">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <span className="inline-flex items-center gap-2 font-bold tracking-tight">
-            <span className="inline-flex rounded-lg bg-primary p-1.5 text-primary-foreground">
-              <Camera className="h-4 w-4" />
-            </span>
-            Smart Gallery
-          </span>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-muted-foreground">{user.email}</span>
-            <a href="/profile" className="text-primary hover:underline">
-              Кабинет
-            </a>
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
         <h1 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">Настройки профиля</h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -236,7 +230,7 @@ function SettingsPage() {
               Сохранить настройки
             </button>
 
-            {preview && (
+            {enabled && (
               <div className="mt-2 rounded-xl border border-border bg-background p-4 text-xs text-muted-foreground">
                 <p className="mb-2 font-semibold text-foreground">Превью</p>
                 <div className="relative aspect-video overflow-hidden rounded-lg bg-muted">
@@ -247,18 +241,18 @@ function SettingsPage() {
                   />
                   <div
                     className={`absolute inset-0 flex ${
-                      preview.position === "center"
+                      previewPosition === "center"
                         ? "items-center justify-center"
-                        : preview.position === "top-left"
+                        : previewPosition === "top-left"
                           ? "items-start justify-start p-4"
                           : "items-end justify-end p-4"
                     }`}
                   >
-                    <div className="rounded-xl bg-black/0 p-2" style={{ opacity: preview.opacity }}>
-                      {preview.hasImage && preview.imageUrl ? (
-                        <img src={preview.imageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
+                    <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
+                      {previewHasImage && profile?.watermarkImageUrl ? (
+                        <img src={profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
                       ) : (
-                        <span className="text-xs font-semibold tracking-wide text-white drop-shadow-md">{preview.text}</span>
+                        <span className="text-xs font-semibold tracking-wide text-white drop-shadow-md">{previewText}</span>
                       )}
                     </div>
                   </div>
