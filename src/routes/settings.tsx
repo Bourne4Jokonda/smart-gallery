@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
+  ArrowLeft,
   Camera,
   Loader2,
   Save,
@@ -138,10 +139,18 @@ function SettingsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
-        <h1 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">Настройки профиля</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Здесь будет расширение: watermark, публичность по умолчанию, брендинг и пр.
-        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">Настройки профиля</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Здесь будет расширение: watermark, публичность по умолчанию, брендинг и пр.
+            </p>
+          </div>
+          <Link to="/profile" className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
+            <ArrowLeft className="h-4 w-4" />
+            Назад в кабинет
+          </Link>
+        </div>
 
         <section className="mt-8 rounded-2xl border border-border bg-card/50 p-6">
           <div className="flex flex-col gap-4">

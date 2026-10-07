@@ -130,6 +130,13 @@ function ProfilePage() {
         const list = Object.values(merged).sort((a, b) => b.createdAt - a.createdAt);
         if (!cancelled) {
           setShoots(list);
+          setHasPassword(
+            list.reduce((acc, s) => {
+              const has = Boolean(s.password && s.password.trim().length > 0);
+              acc[s.shootId] = has;
+              return acc;
+            }, {} as Record<string, boolean>),
+          );
         }
 
         const userProfile = await getUserProfile(user.uid);
