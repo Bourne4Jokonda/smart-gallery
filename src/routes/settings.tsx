@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { getAuthInstance, getUserProfile, saveUserProfile, type UserProfile } from "@/lib/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/settings")({
   beforeLoad: () => {
