@@ -46,7 +46,7 @@ function WatermarkOverlay({ profile }: { profile: UserProfile }) {
       ? "inset-0 flex items-center justify-center"
       : profile.watermarkPosition === "top-left"
         ? "inset-0 flex items-start justify-start p-4"
-        : "inset-0 flex items-end justify-end p-4";
+        : "inset-0 flex items-end justify-end p-4 pb-8";
   const content =
     profile.watermarkType === "image" && profile.watermarkImageUrl ? (
       <img src={profile.watermarkImageUrl} alt="" className="max-h-16 max-w-[70%] object-contain" />

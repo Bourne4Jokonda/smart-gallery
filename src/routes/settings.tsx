@@ -29,6 +29,9 @@ function SettingsPage() {
   const [watermarkImageFile, setWatermarkImageFile] = useState<File | null>(null);
   const [watermarkPosition, setWatermarkPosition] = useState<UserProfile["watermarkPosition"]>("bottom-right");
   const [watermarkOpacity, setWatermarkOpacity] = useState(0.35);
+  const [watermarkFont, setWatermarkFont] = useState("font-sans");
+  const [watermarkFontSize, setWatermarkFontSize] = useState(12);
+  const [watermarkFontWeight, setWatermarkFontWeight] = useState("600");
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -91,6 +94,9 @@ function SettingsPage() {
         watermarkImageUrl,
         watermarkPosition,
         watermarkOpacity: watermarkOpacity,
+        watermarkFont,
+        watermarkFontSize,
+        watermarkFontWeight,
       };
 
       await saveUserProfile(user.uid, payload);
@@ -137,6 +143,9 @@ function SettingsPage() {
         ? "top-left"
         : "bottom-right";
   const previewHasImage = profile?.watermarkType === "image" && !!profile?.watermarkImageUrl;
+  const previewFont = watermarkFont || profile?.watermarkFont || "font-sans";
+  const previewFontSize = watermarkFontSize || profile?.watermarkFontSize || 12;
+  const previewFontWeight = watermarkFontWeight || profile?.watermarkFontWeight || "600";
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
@@ -229,6 +238,49 @@ function SettingsPage() {
               </label>
             </div>
 
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                Шрифт
+                <select
+                  value={watermarkFont}
+                  onChange={(e) => setWatermarkFont(e.target.value)}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                >
+                  <option value="font-sans">Sans</option>
+                  <option value="font-serif">Serif</option>
+                  <option value="font-mono">Mono</option>
+                  <option value="font-hand">Hand</option>
+                  <option value="font-display">Display</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                Размер
+                <input
+                  type="range"
+                  min="10"
+                  max="32"
+                  step="1"
+                  value={watermarkFontSize}
+                  onChange={(e) => setWatermarkFontSize(Number(e.target.value))}
+                  className="mt-2"
+                />
+                <span className="text-xs">{watermarkFontSize}px</span>
+              </label>
+              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                Жирность
+                <select
+                  value={watermarkFontWeight}
+                  onChange={(e) => setWatermarkFontWeight(e.target.value)}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                >
+                  <option value="400">Regular</option>
+                  <option value="500">Medium</option>
+                  <option value="600">Semibold</option>
+                  <option value="700">Bold</option>
+                </select>
+              </label>
+            </div>
+
             <button
               type="button"
               onClick={handleSave}
@@ -243,27 +295,57 @@ function SettingsPage() {
             {enabled && (
               <div className="mt-2 rounded-xl border border-border bg-background p-4 text-xs text-muted-foreground">
                 <p className="mb-2 font-semibold text-foreground">Превью</p>
-                <div className="relative aspect-video overflow-hidden rounded-lg bg-muted">
-                  <img
-                    src="https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1200&auto=format&fit=crop"
-                    alt="preview"
-                    className="h-full w-full object-cover"
-                  />
-                  <div
-                    className={`absolute inset-0 flex ${
-                      previewPosition === "center"
-                        ? "items-center justify-center"
-                        : previewPosition === "top-left"
-                          ? "items-start justify-start p-4"
-                          : "items-end justify-end p-4"
-                    }`}
-                  >
-                    <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
-                      {previewHasImage && profile?.watermarkImageUrl ? (
-                        <img src={profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
-                      ) : (
-                        <span className="text-xs font-semibold tracking-wide text-white drop-shadow-md">{previewText}</span>
-                      )}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="relative aspect-video overflow-hidden rounded-lg bg-muted">
+                    <img
+                      src="https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1200&auto=format&fit=crop"
+                      alt="preview"
+                      className="h-full w-full object-cover"
+                    />
+                    <div
+                      className={`absolute inset-0 flex ${
+                        previewPosition === "center"
+                          ? "items-center justify-center"
+                          : previewPosition === "top-left"
+                            ? "items-start justify-start p-4"
+                            : "items-end justify-end p-4 pb-8"
+                      }`}
+                    >
+                      <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
+                        {previewHasImage && profile?.watermarkImageUrl ? (
+                          <img src={profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
+                        ) : (
+                          <span className={`${previewFont} text-white drop-shadow-md`} style={{ fontSize: previewFontSize, fontWeight: previewFontWeight }}>
+                            {previewText}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-muted sm:aspect-[9/16]">
+                    <img
+                      src="https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1200&auto=format&fit=crop"
+                      alt="preview portrait"
+                      className="h-full w-full object-cover"
+                    />
+                    <div
+                      className={`absolute inset-0 flex ${
+                        previewPosition === "center"
+                          ? "items-center justify-center"
+                          : previewPosition === "top-left"
+                            ? "items-start justify-start p-4"
+                            : "items-end justify-end p-4 pb-8"
+                      }`}
+                    >
+                      <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
+                        {previewHasImage && profile?.watermarkImageUrl ? (
+                          <img src={profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
+                        ) : (
+                          <span className={`${previewFont} text-white drop-shadow-md`} style={{ fontSize: previewFontSize, fontWeight: previewFontWeight }}>
+                            {previewText}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
