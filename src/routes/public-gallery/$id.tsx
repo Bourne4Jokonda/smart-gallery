@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import { toast } from "sonner";
-import { getUserProfile, type UserProfile } from "@/lib/firebase";
+import { getPublicUserProfile, type UserProfile } from "@/lib/firebase";
 
 type ShootRecord = {
   shootId: string;
@@ -147,7 +147,7 @@ function PublicGalleryPage() {
     const loadProfile = async () => {
       if (!record?.userId) return;
       try {
-        const data = await getUserProfile(record.userId);
+        const data = await getPublicUserProfile(record.userId!);
         if (!cancelled) setProfile(data);
       } catch {
         // ignore profile load errors

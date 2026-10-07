@@ -9,6 +9,11 @@ service cloud.firestore {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
 
+    match /public-profiles/{userId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
     match /shoots/{shootId} {
       allow read: if resource.data.public == true
                    || (isAuthenticated() && resource.data.userId == request.auth.uid);

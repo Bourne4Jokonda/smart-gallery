@@ -251,10 +251,33 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   };
 }
 
+export async function getPublicUserProfile(userId: string): Promise<UserProfile | null> {
+  const db = getDb();
+  const ref = doc(db, "public-profiles", userId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    return null;
+  }
+  const data = snap.data() as Record<string, unknown>;
+  return {
+    userId,
+    watermarkEnabled: Boolean(data["watermarkEnabled"]),
+    watermarkType: (data["watermarkType"] as UserProfile["watermarkType"]) ?? "none",
+    watermarkText: (data["watermarkText"] as string | null) ?? null,
+    watermarkImageUrl: (data["watermarkImageUrl"] as string | null) ?? null,
+    watermarkPosition: (data["watermarkPosition"] as UserProfile["watermarkPosition"]) ?? "bottom-right",
+    watermarkOpacity:
+      typeof data["watermarkOpacity"] === "number" ? data["watermarkOpacity"] : 0.35,
+  };
+}
+
 export async function saveUserProfile(userId: string, patch: Partial<UserProfile>) {
   const db = getDb();
   const ref = doc(db, "users", userId);
   await setDoc(ref, { ...patch, userId }, { merge: true });
+
+  const publicRef = doc(db, "public-profiles", userId);
+  await setDoc(publicRef, { ...patch, userId }, { merge: true });
 }
 
 export const MAX_FILE_SIZE = 20 * 1024 * 1024;
