@@ -229,7 +229,7 @@ export type UserProfile = {
   watermarkImageUrl?: string | null;
   watermarkPosition?: "center" | "bottom-right" | "top-left";
   watermarkOpacity?: number;
-  watermarkFont?: string | null;
+  watermarkFontFamily?: string | null;
   watermarkFontSize?: number | null;
   watermarkFontWeight?: string | null;
 };
@@ -251,7 +251,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     watermarkPosition: (data["watermarkPosition"] as UserProfile["watermarkPosition"]) ?? "bottom-right",
     watermarkOpacity:
       typeof data["watermarkOpacity"] === "number" ? data["watermarkOpacity"] : 0.35,
-    watermarkFont: (data["watermarkFont"] as string | null) ?? null,
+    watermarkFontFamily: (data["watermarkFontFamily"] as string | null) ?? null,
     watermarkFontSize: typeof data["watermarkFontSize"] === "number" ? data["watermarkFontSize"] : null,
     watermarkFontWeight: (data["watermarkFontWeight"] as string | null) ?? null,
   };
@@ -275,7 +275,7 @@ export async function getPublicUserProfile(userId: string): Promise<UserProfile 
     watermarkPosition: (data["watermarkPosition"] as UserProfile["watermarkPosition"]) ?? "bottom-right",
     watermarkOpacity:
       typeof data["watermarkOpacity"] === "number" ? data["watermarkOpacity"] : 0.35,
-    watermarkFont: (data["watermarkFont"] as string | null) ?? null,
+    watermarkFontFamily: (data["watermarkFontFamily"] as string | null) ?? null,
     watermarkFontSize: typeof data["watermarkFontSize"] === "number" ? data["watermarkFontSize"] : null,
     watermarkFontWeight: (data["watermarkFontWeight"] as string | null) ?? null,
   };

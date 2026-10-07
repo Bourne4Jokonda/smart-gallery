@@ -29,9 +29,9 @@ function SettingsPage() {
   const [watermarkImageFile, setWatermarkImageFile] = useState<File | null>(null);
   const [watermarkPosition, setWatermarkPosition] = useState<UserProfile["watermarkPosition"]>("bottom-right");
   const [watermarkOpacity, setWatermarkOpacity] = useState(0.35);
-  const [watermarkFont, setWatermarkFont] = useState("font-sans");
-  const [watermarkFontSize, setWatermarkFontSize] = useState(12);
-  const [watermarkFontWeight, setWatermarkFontWeight] = useState("600");
+  const [watermarkFontFamily, setWatermarkFontFamily] = useState<string | null>(null);
+  const [watermarkFontSize, setWatermarkFontSize] = useState<number | null>(null);
+  const [watermarkFontWeight, setWatermarkFontWeight] = useState<string | null>(null);
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -61,6 +61,9 @@ function SettingsPage() {
           setWatermarkText(data.watermarkText ?? "");
           setWatermarkPosition(data.watermarkPosition ?? "bottom-right");
           setWatermarkOpacity(data.watermarkOpacity ?? 0.35);
+          setWatermarkFontFamily(data.watermarkFontFamily ?? null);
+          setWatermarkFontSize(data.watermarkFontSize ?? null);
+          setWatermarkFontWeight(data.watermarkFontWeight ?? null);
         }
       } catch {
         // ignore
@@ -94,7 +97,7 @@ function SettingsPage() {
         watermarkImageUrl,
         watermarkPosition,
         watermarkOpacity: watermarkOpacity,
-        watermarkFont,
+        watermarkFontFamily,
         watermarkFontSize,
         watermarkFontWeight,
       };
@@ -143,9 +146,9 @@ function SettingsPage() {
         ? "top-left"
         : "bottom-right";
   const previewHasImage = profile?.watermarkType === "image" && !!profile?.watermarkImageUrl;
-  const previewFont = watermarkFont || profile?.watermarkFont || "font-sans";
-  const previewFontSize = watermarkFontSize || profile?.watermarkFontSize || 12;
-  const previewFontWeight = watermarkFontWeight || profile?.watermarkFontWeight || "600";
+  const previewFontFamily = watermarkFontFamily || profile?.watermarkFontFamily || "inherit";
+  const previewFontSize = watermarkFontSize ?? profile?.watermarkFontSize ?? 14;
+  const previewFontWeight = watermarkFontWeight || profile?.watermarkFontWeight || "inherit";
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
@@ -242,15 +245,16 @@ function SettingsPage() {
               <label className="flex flex-col gap-2 text-xs text-muted-foreground">
                 Шрифт
                 <select
-                  value={watermarkFont}
-                  onChange={(e) => setWatermarkFont(e.target.value)}
+                  value={watermarkFontFamily ?? ""}
+                  onChange={(e) => setWatermarkFontFamily(e.target.value || null)}
                   className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 >
-                  <option value="font-sans">Sans</option>
-                  <option value="font-serif">Serif</option>
-                  <option value="font-mono">Mono</option>
-                  <option value="font-hand">Hand</option>
-                  <option value="font-display">Display</option>
+                  <option value="">По умолчанию</option>
+                  <option value="sans-serif">Sans</option>
+                  <option value="serif">Serif</option>
+                  <option value="monospace">Mono</option>
+                  <option value="cursive">Hand</option>
+                  <option value="system-ui">System</option>
                 </select>
               </label>
               <label className="flex flex-col gap-2 text-xs text-muted-foreground">
@@ -260,19 +264,20 @@ function SettingsPage() {
                   min="10"
                   max="32"
                   step="1"
-                  value={watermarkFontSize}
+                  value={watermarkFontSize ?? 14}
                   onChange={(e) => setWatermarkFontSize(Number(e.target.value))}
                   className="mt-2"
                 />
-                <span className="text-xs">{watermarkFontSize}px</span>
+                <span className="text-xs">{watermarkFontSize ?? 14}px</span>
               </label>
               <label className="flex flex-col gap-2 text-xs text-muted-foreground">
                 Жирность
                 <select
-                  value={watermarkFontWeight}
-                  onChange={(e) => setWatermarkFontWeight(e.target.value)}
+                  value={watermarkFontWeight ?? ""}
+                  onChange={(e) => setWatermarkFontWeight(e.target.value || null)}
                   className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 >
+                  <option value="">По умолчанию</option>
                   <option value="400">Regular</option>
                   <option value="500">Medium</option>
                   <option value="600">Semibold</option>
@@ -315,7 +320,14 @@ function SettingsPage() {
                         {previewHasImage && profile?.watermarkImageUrl ? (
                           <img src={profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
                         ) : (
-                          <span className={`${previewFont} text-white drop-shadow-md`} style={{ fontSize: previewFontSize, fontWeight: previewFontWeight }}>
+                          <span
+                            className="text-white drop-shadow-md"
+                            style={{
+                              fontFamily: previewFontFamily,
+                              fontSize: previewFontSize,
+                              fontWeight: previewFontWeight,
+                            }}
+                          >
                             {previewText}
                           </span>
                         )}
@@ -341,7 +353,14 @@ function SettingsPage() {
                         {previewHasImage && profile?.watermarkImageUrl ? (
                           <img src={profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
                         ) : (
-                          <span className={`${previewFont} text-white drop-shadow-md`} style={{ fontSize: previewFontSize, fontWeight: previewFontWeight }}>
+                          <span
+                            className="text-white drop-shadow-md"
+                            style={{
+                              fontFamily: previewFontFamily,
+                              fontSize: previewFontSize,
+                              fontWeight: previewFontWeight,
+                            }}
+                          >
                             {previewText}
                           </span>
                         )}

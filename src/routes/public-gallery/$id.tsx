@@ -51,10 +51,17 @@ function WatermarkOverlay({ profile }: { profile: UserProfile }) {
     profile.watermarkType === "image" && profile.watermarkImageUrl ? (
       <img src={profile.watermarkImageUrl} alt="" className="max-h-16 max-w-[70%] object-contain" />
     ) : (
-      <span className="text-xs font-semibold tracking-wide text-white drop-shadow-md">
+      <span
+        className="text-xs font-semibold tracking-wide text-white drop-shadow-md"
+        style={{ fontFamily, fontSize, fontWeight }}
+      >
         {profile.watermarkText?.trim() || "Smart Gallery"}
       </span>
     );
+
+  const fontFamily = profile?.watermarkFontFamily || "inherit";
+  const fontSize = typeof profile?.watermarkFontSize === "number" ? profile.watermarkFontSize : 14;
+  const fontWeight = profile?.watermarkFontWeight || "inherit";
 
   return (
     <div className={`pointer-events-none absolute ${positionClass}`}>
