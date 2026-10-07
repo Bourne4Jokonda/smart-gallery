@@ -235,8 +235,18 @@ function PublicGalleryPage() {
           shootId: string;
           hasPassword: boolean;
           title?: string;
+          userId?: string | null;
         };
         if (cancelled) return;
+        setRecord({
+          shootId: data.shootId,
+          title: data.title,
+          fileUrls: [],
+          email: null,
+          createdAt: Date.now(),
+          hasPassword: Boolean(data.hasPassword),
+          userId: data.userId ?? null,
+        });
         if (data.hasPassword) {
           setPhase("gate");
         } else {
