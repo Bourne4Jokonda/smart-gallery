@@ -146,12 +146,16 @@ function PublicGalleryPage() {
   useEffect(() => {
     let cancelled = false;
     const loadProfile = async () => {
-      if (!record?.userId) return;
+      if (!record?.userId) {
+        console.warn("[public-gallery] missing userId in record", record);
+        return;
+      }
       try {
         const data = await getPublicUserProfile(record.userId!);
+        console.log("[public-gallery] public profile loaded", data);
         if (!cancelled) setProfile(data);
-      } catch {
-        // ignore profile load errors
+      } catch (err) {
+        console.warn("[public-gallery] public profile load failed", err);
       }
       if (!cancelled && !profile && record?.userId) {
         try {
@@ -202,6 +206,7 @@ function PublicGalleryPage() {
           email: data.email ?? null,
           createdAt: data.createdAt,
           hasPassword: Boolean(data.hasPassword),
+          userId: data.userId ?? null,
         });
         setPhase("unlocked");
       } catch (err) {

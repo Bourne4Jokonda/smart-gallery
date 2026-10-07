@@ -73,7 +73,7 @@ function SettingsPage() {
     if (!user || saving) return;
     setSaving(true);
     try {
-      let watermarkImageUrl = profile?.watermarkImageUrl ?? null;
+      let watermarkImageUrl = watermarkImageFile ? null : (profile?.watermarkImageUrl ?? null);
       if (watermarkImageFile) {
         const { uploadToCloudinary, isCloudinaryConfigured } = await import("@/lib/cloudinary");
         if (!isCloudinaryConfigured()) {
@@ -95,6 +95,7 @@ function SettingsPage() {
 
       await saveUserProfile(user.uid, payload);
       setProfile((prev) => ({ ...(prev ?? { userId: user.uid }), ...payload }));
+      setWatermarkImageFile(null);
       toast.success("Настройки сохранены");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ошибка сохранения";
