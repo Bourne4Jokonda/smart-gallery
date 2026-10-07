@@ -73,14 +73,13 @@ function SettingsPage() {
     try {
       let watermarkImageUrl = profile?.watermarkImageUrl ?? null;
       if (watermarkImageFile) {
-        const form = new FormData();
-        form.append("file", watermarkImageFile);
-        const res = await fetch("/api/upload-watermark", { method: "POST", body: form });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || data?.url === undefined) {
-          throw new Error(data?.error || "Не удалось загрузить водяной знак");
+        const { uploadToCloudinary, isCloudinaryConfigured } = await import("@/lib/cloudinary");
+        if (!isCloudinaryConfigured()) {
+          throw new Error("Cloudinary не настроен");
         }
-        watermarkImageUrl = data.url as string;
+        watermarkImageUrl = await uploadToCloudinary(watermarkImageFile, {
+          folder: "smart-gallery/watermarks",
+        });
       }
 
       const payload = {
