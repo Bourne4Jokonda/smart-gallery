@@ -255,6 +255,7 @@ export async function getPublicUserProfile(userId: string): Promise<UserProfile 
   const db = getDb();
   const ref = doc(db, "public-profiles", userId);
   const snap = await getDoc(ref);
+  console.log("[firebase] getPublicUserProfile", { userId, exists: snap.exists(), id: ref.id });
   if (!snap.exists()) {
     return null;
   }
