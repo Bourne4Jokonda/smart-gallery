@@ -533,7 +533,7 @@ function ProfilePage() {
                               toast.error("Не удалось скопировать пароль");
                             }
                           }}
-                          disabled={!hasPassword[s.shootId]}
+                          disabled={!(s.password && s.password.trim().length > 0)}
                           className={`ml-auto inline-flex shrink-0 items-center justify-center rounded-md p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                             hasPassword[s.shootId]
                               ? "text-muted-foreground hover:bg-primary/10 hover:text-primary"

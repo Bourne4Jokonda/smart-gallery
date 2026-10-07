@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  Copy,
+  KeyRound,
+  Loader2,
+  Lock,
   ChevronLeft,
   ChevronRight,
   Download,
   Images,
-  KeyRound,
-  Loader2,
-  Lock,
   X,
 } from "lucide-react";
 import JSZip from "jszip";
@@ -48,7 +49,7 @@ function WatermarkOverlay({ profile }: { profile: UserProfile }) {
         : "inset-0 flex items-end justify-end p-4";
   const content =
     profile.watermarkType === "image" && profile.watermarkImageUrl ? (
-      <img src={profile.watermarkImageUrl} alt="" className="max-h-14 max-w-[70%] object-contain" />
+      <img src={profile.watermarkImageUrl} alt="" className="max-h-16 max-w-[70%] object-contain" />
     ) : (
       <span className="text-xs font-semibold tracking-wide text-white drop-shadow-md">
         {profile.watermarkText?.trim() || "Smart Gallery"}
@@ -151,6 +152,16 @@ function PublicGalleryPage() {
         if (!cancelled) setProfile(data);
       } catch {
         // ignore profile load errors
+      }
+      if (!cancelled && !profile && record?.userId) {
+        try {
+          const local = JSON.parse(localStorage.getItem(`smart-gallery-fallback-profile:${record.userId}`) || "null");
+          if (local && local.watermarkEnabled) {
+            setProfile(local);
+          }
+        } catch {
+          // ignore
+        }
       }
     };
     loadProfile();

@@ -14,6 +14,7 @@ import { Route as AuditDuplicatesRouteImport } from './routes/audit-duplicates'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as ApiCurateRouteImport } from './routes/api/curate'
 import { Route as ApiDeleteImageRouteImport } from './routes/api/delete-image'
@@ -22,7 +23,6 @@ import { Route as ApiNotifyLeadRouteImport } from './routes/api/notify-lead'
 import { Route as ApiPublicShootRouteImport } from './routes/api/public-shoot'
 import { Route as ApiSetShootPasswordRouteImport } from './routes/api/set-shoot-password'
 import { Route as ApiShootRouteImport } from './routes/api/shoot'
-import { Route as ApiUploadWatermarkRouteImport } from './routes/api/upload-watermark'
 import { Route as GalleryIdRouteImport } from './routes/gallery/$id'
 import { Route as PublicGalleryIdRouteImport } from './routes/public-gallery/$id'
 
@@ -49,6 +49,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UploadRoute = UploadRouteImport.update({
@@ -91,11 +96,6 @@ const ApiShootRoute = ApiShootRouteImport.update({
   path: '/api/shoot',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUploadWatermarkRoute = ApiUploadWatermarkRouteImport.update({
-  id: '/api/upload-watermark',
-  path: '/api/upload-watermark',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const GalleryIdRoute = GalleryIdRouteImport.update({
   id: '/gallery/$id',
   path: '/gallery/$id',
@@ -113,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/upload': typeof UploadRoute
   '/api/curate': typeof ApiCurateRoute
   '/api/delete-image': typeof ApiDeleteImageRoute
@@ -121,7 +122,6 @@ export interface FileRoutesByFullPath {
   '/api/public-shoot': typeof ApiPublicShootRoute
   '/api/set-shoot-password': typeof ApiSetShootPasswordRoute
   '/api/shoot': typeof ApiShootRoute
-  '/api/upload-watermark': typeof ApiUploadWatermarkRoute
   '/gallery/$id': typeof GalleryIdRoute
   '/public-gallery/$id': typeof PublicGalleryIdRoute
 }
@@ -131,6 +131,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/upload': typeof UploadRoute
   '/api/curate': typeof ApiCurateRoute
   '/api/delete-image': typeof ApiDeleteImageRoute
@@ -139,7 +140,6 @@ export interface FileRoutesByTo {
   '/api/public-shoot': typeof ApiPublicShootRoute
   '/api/set-shoot-password': typeof ApiSetShootPasswordRoute
   '/api/shoot': typeof ApiShootRoute
-  '/api/upload-watermark': typeof ApiUploadWatermarkRoute
   '/gallery/$id': typeof GalleryIdRoute
   '/public-gallery/$id': typeof PublicGalleryIdRoute
 }
@@ -150,6 +150,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/upload': typeof UploadRoute
   '/api/curate': typeof ApiCurateRoute
   '/api/delete-image': typeof ApiDeleteImageRoute
@@ -158,7 +159,6 @@ export interface FileRoutesById {
   '/api/public-shoot': typeof ApiPublicShootRoute
   '/api/set-shoot-password': typeof ApiSetShootPasswordRoute
   '/api/shoot': typeof ApiShootRoute
-  '/api/upload-watermark': typeof ApiUploadWatermarkRoute
   '/gallery/$id': typeof GalleryIdRoute
   '/public-gallery/$id': typeof PublicGalleryIdRoute
 }
@@ -170,6 +170,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/profile'
+    | '/settings'
     | '/upload'
     | '/api/curate'
     | '/api/delete-image'
@@ -178,7 +179,6 @@ export interface FileRouteTypes {
     | '/api/public-shoot'
     | '/api/set-shoot-password'
     | '/api/shoot'
-    | '/api/upload-watermark'
     | '/gallery/$id'
     | '/public-gallery/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -188,6 +188,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/profile'
+    | '/settings'
     | '/upload'
     | '/api/curate'
     | '/api/delete-image'
@@ -196,7 +197,6 @@ export interface FileRouteTypes {
     | '/api/public-shoot'
     | '/api/set-shoot-password'
     | '/api/shoot'
-    | '/api/upload-watermark'
     | '/gallery/$id'
     | '/public-gallery/$id'
   id:
@@ -206,6 +206,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/profile'
+    | '/settings'
     | '/upload'
     | '/api/curate'
     | '/api/delete-image'
@@ -214,7 +215,6 @@ export interface FileRouteTypes {
     | '/api/public-shoot'
     | '/api/set-shoot-password'
     | '/api/shoot'
-    | '/api/upload-watermark'
     | '/gallery/$id'
     | '/public-gallery/$id'
   fileRoutesById: FileRoutesById
@@ -225,6 +225,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
   UploadRoute: typeof UploadRoute
   ApiCurateRoute: typeof ApiCurateRoute
   ApiDeleteImageRoute: typeof ApiDeleteImageRoute
@@ -233,7 +234,6 @@ export interface RootRouteChildren {
   ApiPublicShootRoute: typeof ApiPublicShootRoute
   ApiSetShootPasswordRoute: typeof ApiSetShootPasswordRoute
   ApiShootRoute: typeof ApiShootRoute
-  ApiUploadWatermarkRoute: typeof ApiUploadWatermarkRoute
   GalleryIdRoute: typeof GalleryIdRoute
   PublicGalleryIdRoute: typeof PublicGalleryIdRoute
 }
@@ -273,6 +273,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/upload': {
@@ -331,13 +338,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiShootRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/upload-watermark': {
-      id: '/api/upload-watermark'
-      path: '/api/upload-watermark'
-      fullPath: '/api/upload-watermark'
-      preLoaderRoute: typeof ApiUploadWatermarkRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/gallery/$id': {
       id: '/gallery/$id'
       path: '/gallery/$id'
@@ -361,6 +361,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
   UploadRoute: UploadRoute,
   ApiCurateRoute: ApiCurateRoute,
   ApiDeleteImageRoute: ApiDeleteImageRoute,
@@ -369,7 +370,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShootRoute: ApiPublicShootRoute,
   ApiSetShootPasswordRoute: ApiSetShootPasswordRoute,
   ApiShootRoute: ApiShootRoute,
-  ApiUploadWatermarkRoute: ApiUploadWatermarkRoute,
   GalleryIdRoute: GalleryIdRoute,
   PublicGalleryIdRoute: PublicGalleryIdRoute,
 }
