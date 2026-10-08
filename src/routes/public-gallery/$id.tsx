@@ -127,6 +127,7 @@ function PublicGalleryPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [record, setRecord] = useState<ShootRecord | null>(null);
 
   // Lightbox state
@@ -190,6 +191,8 @@ function PublicGalleryPage() {
     let cancelled = false;
 
     const unlock = async (pw: string) => {
+      setPasswordError(null);
+      setError(null);
       try {
         const res = await fetch("/api/public-shoot", {
           method: "POST",
@@ -198,11 +201,16 @@ function PublicGalleryPage() {
         });
         if (!res.ok) {
           if (res.status === 404) {
-            if (!cancelled) setPhase("notfound");
+            setPhase("notfound");
             return;
           }
           const data = await res.json().catch(() => ({}));
-          throw new Error(data?.error || "Не удалось загрузить галерею");
+          const msg = data?.error || "Не удалось загрузить галерею";
+          if (res.status === 401 || /парол/i.test(String(msg))) {
+            setPasswordError("Неверный пароль");
+            return;
+          }
+          throw new Error(msg);
         }
         const data = (await res.json()) as ShootRecord & { ok: boolean };
         if (cancelled) return;
@@ -218,8 +226,9 @@ function PublicGalleryPage() {
         setPhase("unlocked");
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Не удалось загрузить галерею");
-          setPhase("notfound");
+          const message = err instanceof Error ? err.message : "Не удалось загрузить галерею";
+          setError(message);
+          setPhase("gate");
         }
       }
     };

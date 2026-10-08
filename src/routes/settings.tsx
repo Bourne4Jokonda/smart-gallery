@@ -27,11 +27,22 @@ function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [watermarkText, setWatermarkText] = useState("");
   const [watermarkImageFile, setWatermarkImageFile] = useState<File | null>(null);
+  const [watermarkImagePreview, setWatermarkImagePreview] = useState<string | null>(null);
   const [watermarkPosition, setWatermarkPosition] = useState<UserProfile["watermarkPosition"]>("bottom-right");
   const [watermarkOpacity, setWatermarkOpacity] = useState(0.35);
   const [watermarkFontFamily, setWatermarkFontFamily] = useState<string | null>(null);
   const [watermarkFontSize, setWatermarkFontSize] = useState<number | null>(null);
   const [watermarkFontWeight, setWatermarkFontWeight] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!watermarkImageFile) {
+      setWatermarkImagePreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(watermarkImageFile);
+    setWatermarkImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [watermarkImageFile]);
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -145,7 +156,7 @@ function SettingsPage() {
       : watermarkPosition === "top-left"
         ? "top-left"
         : "bottom-right";
-  const previewHasImage = profile?.watermarkType === "image" && !!profile?.watermarkImageUrl;
+  const previewHasImage = (watermarkImagePreview || (profile?.watermarkType === "image" && !!profile?.watermarkImageUrl));
   const previewFontFamily = watermarkFontFamily || profile?.watermarkFontFamily || "inherit";
   const previewFontSize = watermarkFontSize ?? profile?.watermarkFontSize ?? 14;
   const previewFontWeight = watermarkFontWeight || profile?.watermarkFontWeight || "inherit";
@@ -207,8 +218,8 @@ function SettingsPage() {
                   onChange={(e) => setWatermarkImageFile(e.target.files?.[0] ?? null)}
                   className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 />
-                {profile?.watermarkImageUrl && (
-                  <img src={profile.watermarkImageUrl} alt="" className="h-10 w-auto rounded-lg border border-border object-contain" />
+                {(watermarkImagePreview || profile?.watermarkImageUrl) && (
+                  <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="h-10 w-auto rounded-lg border border-border object-contain" />
                 )}
               </label>
             </div>
@@ -241,7 +252,7 @@ function SettingsPage() {
               </label>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-2 text-xs text-muted-foreground">
                 Шрифт
                 <select
@@ -257,33 +268,35 @@ function SettingsPage() {
                   <option value="system-ui">System</option>
                 </select>
               </label>
-              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
-                Размер
-                <input
-                  type="range"
-                  min="10"
-                  max="32"
-                  step="1"
-                  value={watermarkFontSize ?? 14}
-                  onChange={(e) => setWatermarkFontSize(Number(e.target.value))}
-                  className="mt-2"
-                />
-                <span className="text-xs">{watermarkFontSize ?? 14}px</span>
-              </label>
-              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
-                Жирность
-                <select
-                  value={watermarkFontWeight ?? ""}
-                  onChange={(e) => setWatermarkFontWeight(e.target.value || null)}
-                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-                >
-                  <option value="">По умолчанию</option>
-                  <option value="400">Regular</option>
-                  <option value="500">Medium</option>
-                  <option value="600">Semibold</option>
-                  <option value="700">Bold</option>
-                </select>
-              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                  Размер
+                  <input
+                    type="range"
+                    min="10"
+                    max="32"
+                    step="1"
+                    value={watermarkFontSize ?? 14}
+                    onChange={(e) => setWatermarkFontSize(Number(e.target.value))}
+                    className="mt-2"
+                  />
+                  <span className="text-xs">{watermarkFontSize ?? 14}px</span>
+                </label>
+                <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                  Жирность
+                  <select
+                    value={watermarkFontWeight ?? ""}
+                    onChange={(e) => setWatermarkFontWeight(e.target.value || null)}
+                    className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                  >
+                    <option value="">По умолчанию</option>
+                    <option value="400">Regular</option>
+                    <option value="500">Medium</option>
+                    <option value="600">Semibold</option>
+                    <option value="700">Bold</option>
+                  </select>
+                </label>
+              </div>
             </div>
 
             <button
@@ -317,8 +330,8 @@ function SettingsPage() {
                       }`}
                     >
                       <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
-                        {previewHasImage && profile?.watermarkImageUrl ? (
-                          <img src={profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
+                        {previewHasImage && (watermarkImagePreview || profile?.watermarkImageUrl) ? (
+                          <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
                         ) : (
                           <span
                             className="text-white drop-shadow-md"
@@ -350,8 +363,8 @@ function SettingsPage() {
                       }`}
                     >
                       <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
-                        {previewHasImage && profile?.watermarkImageUrl ? (
-                          <img src={profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
+                        {previewHasImage && (watermarkImagePreview || profile?.watermarkImageUrl) ? (
+                          <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
                         ) : (
                           <span
                             className="text-white drop-shadow-md"
