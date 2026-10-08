@@ -330,20 +330,19 @@ function SettingsPage() {
                       }`}
                     >
                       <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
-                        {previewHasImage && (watermarkImagePreview || profile?.watermarkImageUrl) ? (
-                          <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
-                        ) : (
-                          <span
-                            className="text-white drop-shadow-md"
-                            style={{
-                              fontFamily: previewFontFamily,
-                              fontSize: previewFontSize,
-                              fontWeight: previewFontWeight,
-                            }}
-                          >
-                            {previewText}
-                          </span>
+                        {(watermarkImagePreview || profile?.watermarkImageUrl) && (
+                          <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="mr-2 inline-block max-h-10 max-w-[70%] object-contain" />
                         )}
+                        <span
+                          className="text-white drop-shadow-md"
+                          style={{
+                            fontFamily: previewFontFamily,
+                            fontSize: previewFontSize,
+                            fontWeight: previewFontWeight,
+                          }}
+                        >
+                          {previewText}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -363,20 +362,19 @@ function SettingsPage() {
                       }`}
                     >
                       <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
-                        {previewHasImage && (watermarkImagePreview || profile?.watermarkImageUrl) ? (
-                          <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="max-h-10 max-w-[70%] object-contain" />
-                        ) : (
-                          <span
-                            className="text-white drop-shadow-md"
-                            style={{
-                              fontFamily: previewFontFamily,
-                              fontSize: previewFontSize,
-                              fontWeight: previewFontWeight,
-                            }}
-                          >
-                            {previewText}
-                          </span>
+                        {(watermarkImagePreview || profile?.watermarkImageUrl) && (
+                          <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="mr-2 inline-block max-h-10 max-w-[70%] object-contain" />
                         )}
+                        <span
+                          className="text-white drop-shadow-md"
+                          style={{
+                            fontFamily: previewFontFamily,
+                            fontSize: previewFontSize,
+                            fontWeight: previewFontWeight,
+                          }}
+                        >
+                          {previewText}
+                        </span>
                       </div>
                     </div>
                   </div>
