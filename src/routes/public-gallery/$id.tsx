@@ -228,7 +228,11 @@ function PublicGalleryPage() {
         if (!cancelled) {
           const message = err instanceof Error ? err.message : "Не удалось загрузить галерею";
           setError(message);
-          setPhase("gate");
+          if (phase === "gate" || hasPassword) {
+            setPhase("gate");
+          } else {
+            setPhase("notfound");
+          }
         }
       }
     };
