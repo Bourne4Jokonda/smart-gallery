@@ -320,7 +320,8 @@ function PublicGalleryPage() {
           setPhase("notfound");
           return;
         }
-        throw new Error(data?.error || "Неверный пароль");
+        setError(data?.error || "Неверный пароль");
+        return;
       }
       setRecord({
         shootId: data.shootId,
@@ -329,10 +330,9 @@ function PublicGalleryPage() {
         email: data.email ?? null,
         createdAt: data.createdAt,
         hasPassword: Boolean(data.hasPassword),
+        userId: data.userId ?? null,
       });
       setPhase("unlocked");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Неверный пароль");
     } finally {
       setChecking(false);
     }

@@ -35,6 +35,16 @@ function SettingsPage() {
   const [watermarkFontWeight, setWatermarkFontWeight] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!watermarkImageFile) {
+      setWatermarkImagePreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(watermarkImageFile);
+    setWatermarkImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [watermarkImageFile]);
+
+  useEffect(() => {
     const auth = getAuthInstance();
     let cancelled = false;
     const unsub = onAuthStateChanged(auth, (u) => {
