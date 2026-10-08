@@ -47,6 +47,9 @@ function WatermarkOverlay({ profile }: { profile: UserProfile }) {
       : profile.watermarkPosition === "top-left"
         ? "inset-0 flex items-start justify-start p-4"
         : "inset-0 flex items-end justify-end p-4 pb-8";
+  const fontFamily = profile?.watermarkFontFamily || "inherit";
+  const fontSize = typeof profile?.watermarkFontSize === "number" ? profile.watermarkFontSize : 14;
+  const fontWeight = profile?.watermarkFontWeight || "inherit";
   const content =
     profile.watermarkType === "image" && profile.watermarkImageUrl ? (
       <img src={profile.watermarkImageUrl} alt="" className="max-h-16 max-w-[70%] object-contain" />
@@ -58,10 +61,6 @@ function WatermarkOverlay({ profile }: { profile: UserProfile }) {
         {profile.watermarkText?.trim() || "Smart Gallery"}
       </span>
     );
-
-  const fontFamily = profile?.watermarkFontFamily || "inherit";
-  const fontSize = typeof profile?.watermarkFontSize === "number" ? profile.watermarkFontSize : 14;
-  const fontWeight = profile?.watermarkFontWeight || "inherit";
 
   return (
     <div className={`pointer-events-none absolute ${positionClass}`}>
@@ -205,12 +204,9 @@ function PublicGalleryPage() {
             return;
           }
           const data = await res.json().catch(() => ({}));
-          const msg = data?.error || "Не удалось загрузить галерею";
-          if (res.status === 401 || /парол/i.test(String(msg))) {
-            setPasswordError("Неверный пароль");
-            return;
-          }
-          throw new Error(msg);
+          setError(data?.error || "Не удалось загрузить галерею");
+          setPhase("gate");
+          return;
         }
         const data = (await res.json()) as ShootRecord & { ok: boolean };
         if (cancelled) return;
