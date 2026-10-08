@@ -45,6 +45,16 @@ function SettingsPage() {
   }, [watermarkImageFile]);
 
   useEffect(() => {
+    if (!watermarkImageFile) {
+      setWatermarkImagePreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(watermarkImageFile);
+    setWatermarkImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [watermarkImageFile]);
+
+  useEffect(() => {
     const auth = getAuthInstance();
     let cancelled = false;
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -320,31 +330,31 @@ function SettingsPage() {
                       alt="preview"
                       className="h-full w-full object-cover"
                     />
-                    <div
-                      className={`absolute inset-0 flex ${
-                        previewPosition === "center"
-                          ? "items-center justify-center"
-                          : previewPosition === "top-left"
-                            ? "items-start justify-start p-4"
-                            : "items-end justify-end p-4 pb-8"
-                      }`}
-                    >
-                      <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
-                        {(watermarkImagePreview || profile?.watermarkImageUrl) && (
-                          <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="mr-2 inline-block max-h-10 max-w-[70%] object-contain" />
-                        )}
-                        <span
-                          className="text-white drop-shadow-md"
-                          style={{
-                            fontFamily: previewFontFamily,
-                            fontSize: previewFontSize,
-                            fontWeight: previewFontWeight,
-                          }}
-                        >
-                          {previewText}
-                        </span>
+                      <div
+                        className={`absolute inset-0 flex ${
+                          previewPosition === "center"
+                            ? "items-center justify-center"
+                            : previewPosition === "top-left"
+                              ? "items-start justify-start p-4"
+                              : "items-end justify-end pb-2"
+                        }`}
+                      >
+                        <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
+                          {(watermarkImagePreview || profile?.watermarkImageUrl) && (
+                            <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="mr-2 inline-block max-h-10 max-w-[70%] object-contain" />
+                          )}
+                          <span
+                            className="text-white drop-shadow-md"
+                            style={{
+                              fontFamily: previewFontFamily,
+                              fontSize: previewFontSize,
+                              fontWeight: previewFontWeight,
+                            }}
+                          >
+                            {previewText}
+                          </span>
+                        </div>
                       </div>
-                    </div>
                   </div>
                   <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-muted sm:aspect-[9/16]">
                     <img
@@ -352,31 +362,31 @@ function SettingsPage() {
                       alt="preview portrait"
                       className="h-full w-full object-cover"
                     />
-                    <div
-                      className={`absolute inset-0 flex ${
-                        previewPosition === "center"
-                          ? "items-center justify-center"
-                          : previewPosition === "top-left"
-                            ? "items-start justify-start p-4"
-                            : "items-end justify-end p-4 pb-8"
-                      }`}
-                    >
-                      <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
-                        {(watermarkImagePreview || profile?.watermarkImageUrl) && (
-                          <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="mr-2 inline-block max-h-10 max-w-[70%] object-contain" />
-                        )}
-                        <span
-                          className="text-white drop-shadow-md"
-                          style={{
-                            fontFamily: previewFontFamily,
-                            fontSize: previewFontSize,
-                            fontWeight: previewFontWeight,
-                          }}
-                        >
-                          {previewText}
-                        </span>
+                      <div
+                        className={`absolute inset-0 flex ${
+                          previewPosition === "center"
+                            ? "items-center justify-center"
+                            : previewPosition === "top-left"
+                              ? "items-start justify-start p-4"
+                              : "items-end justify-end pb-2"
+                        }`}
+                      >
+                        <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
+                          {(watermarkImagePreview || profile?.watermarkImageUrl) && (
+                            <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="mr-2 inline-block max-h-10 max-w-[70%] object-contain" />
+                          )}
+                          <span
+                            className="text-white drop-shadow-md"
+                            style={{
+                              fontFamily: previewFontFamily,
+                              fontSize: previewFontSize,
+                              fontWeight: previewFontWeight,
+                            }}
+                          >
+                            {previewText}
+                          </span>
+                        </div>
                       </div>
-                    </div>
                   </div>
                 </div>
               </div>
