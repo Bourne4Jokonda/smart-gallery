@@ -22,7 +22,6 @@ import {
 import { readShoots, removeShoot, saveShoot } from "@/lib/storage";
 import { getAuthInstance, getUserShoots, getUserProfile, saveUserProfile, signOutUser, updateShootRecord, deleteShootRecord } from "@/lib/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { AppHeader, AppFooter } from "@/components/app-header";
 
 export const Route = createFileRoute("/profile")({
   beforeLoad: () => {},
@@ -369,7 +368,6 @@ function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
-      <AppHeader />
       <main className="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -673,7 +671,11 @@ function ProfilePage() {
 
       </main>
 
-      <AppFooter />
+      <footer className="border-t border-border px-5 py-10 sm:px-8">
+        <div className="mx-auto max-w-5xl text-center text-xs text-muted-foreground">
+          © 2026 Умная галерея для фотографов
+        </div>
+      </footer>
     </div>
   );
 }

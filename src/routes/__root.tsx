@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, UploadCloud } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -202,8 +202,11 @@ function RootComponent() {
             {user ? (
               <>
                 <span className="hidden sm:inline text-xs text-muted-foreground">{user.email}</span>
-                <Link to="/upload" className="rounded-lg bg-white px-3 py-2 text-black">Загрузить</Link>
-                <Link to="/profile" className="rounded-lg border border-border px-3 py-2">Кабинет</Link>
+                <Link to="/upload" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]">
+                  <UploadCloud className="h-4 w-4" />
+                  Загрузить
+                </Link>
+                <Link to="/profile" className="rounded-xl border border-border px-3.5 py-2 transition-colors hover:border-primary hover:text-primary">Кабинет</Link>
                 <button
                   type="button"
                   onClick={async () => {
@@ -217,13 +220,13 @@ function RootComponent() {
                       window.location.href = "/login";
                     }
                   }}
-                  className="rounded-lg border border-border px-3 py-2"
+                  className="rounded-xl border border-border px-3.5 py-2 transition-colors hover:border-primary hover:text-primary"
                 >
                   Выйти
                 </button>
               </>
             ) : (
-              <Link to="/login" className="rounded-lg bg-white px-3 py-2 text-black">Войти</Link>
+              <Link to="/login" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]">Войти</Link>
             )}
           </nav>
         </div>
