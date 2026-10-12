@@ -470,21 +470,22 @@ function ProfilePage() {
                     <span className="mx-2 text-border">·</span>
                     лучших: <span className="text-xl font-extrabold text-foreground">{bests}</span>
                   </p>
-                  <div className="mt-3 space-y-2">
+
+                  <div className="mt-3">
                     <button
                       type="button"
                       onClick={() => togglePublic(s.shootId, Boolean(s.public))}
                       disabled={togglingPublic === s.shootId}
-                      className={`inline-flex w-full items-center justify-between rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                      className={`inline-flex w-full items-center justify-between rounded-full border px-4 py-2.5 text-xs font-semibold transition-colors ${
                         s.public
                           ? "border-primary/40 bg-primary/10 text-primary hover:border-primary"
-                          : "border-border text-foreground hover:border-primary"
+                          : "border-border bg-secondary text-foreground hover:border-primary"
                       }`}
                       title={s.public ? "Доступ включён — нажмите, чтобы закрыть" : "Доступ выключен — нажмите, чтобы открыть клиенту"}
                     >
                       <span>Открыть доступ</span>
                       <span
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
                           s.public ? "bg-primary" : "bg-border"
                         }`}
                       >
@@ -495,23 +496,21 @@ function ProfilePage() {
                         />
                       </span>
                     </button>
-                    <div className={`flex gap-2 ${s.public ? "" : "pointer-events-none opacity-35"}`}>
-                      <div
-                        role="button"
-                        tabIndex={0}
+                    <div className={`mt-2 flex gap-2 ${s.public ? "" : "pointer-events-none opacity-35"}`}>
+                      <button
+                        type="button"
                         onClick={() => openPasswordDialog(s.shootId, Boolean(hasPassword[s.shootId]))}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") openPasswordDialog(s.shootId, Boolean(hasPassword[s.shootId]));
-                        }}
-                        className="inline-flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-primary"
+                        disabled={!s.public}
+                        className="inline-flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                         title={hasPassword[s.shootId] ? "Сменить/снять пароль" : "Задать пароль"}
                       >
                         <KeyRound className="h-3 w-3 shrink-0" />
                         <span className="truncate">
                           {hasPassword[s.shootId] ? "Пароль задан ••••••" : "Пароль не задан"}
                         </span>
-                        <button
-                          type="button"
+                        <span
+                          role="button"
+                          tabIndex={0}
                           onClick={async (e) => {
                             e.stopPropagation();
                             const pw = s.password ?? "";
@@ -526,7 +525,11 @@ function ProfilePage() {
                               toast.error("Не удалось скопировать пароль");
                             }
                           }}
-                          disabled={!(s.password && s.password.trim().length > 0)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.stopPropagation();
+                            }
+                          }}
                           className={`ml-auto inline-flex shrink-0 items-center justify-center rounded-md p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                             hasPassword[s.shootId]
                               ? "text-muted-foreground hover:bg-primary/10 hover:text-primary"
@@ -536,13 +539,13 @@ function ProfilePage() {
                           aria-label="Скопировать пароль"
                         >
                           <Copy className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                        </span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleCopyLink(`${window.location.origin}/public-gallery/${s.shootId}`)}
                         disabled={!s.public}
-                        className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                        className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
                           s.public
                             ? "border-primary/40 bg-primary/10 text-primary hover:border-primary"
                             : "border-border text-muted-foreground"
