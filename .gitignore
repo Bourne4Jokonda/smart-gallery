@@ -33,3 +33,7 @@ dist-ssr
 
 .vercel
 .env*
+cab.css
+cab.html
+scratch-*.css
+scratch-*.html
