@@ -22,6 +22,7 @@ import {
 import { readShoots, removeShoot, saveShoot } from "@/lib/storage";
 import { getAuthInstance, getUserShoots, getUserProfile, saveUserProfile, signOutUser, updateShootRecord, deleteShootRecord } from "@/lib/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
+import { AppHeader, AppFooter } from "@/components/app-header";
 
 export const Route = createFileRoute("/profile")({
   beforeLoad: () => {},
@@ -368,30 +369,24 @@ function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
+      <AppHeader />
       <main className="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-primary">Личный кабинет</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary">Личный кабинет</p>
             <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">Мои съёмки</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {user?.email ? `Аккаунт: ${user.email}` : "Загрузка аккаунта…"}
-              <span className="ml-2">
-                Всего съёмок: {shoots.length} · Лучших кадров по AI: {bestCount}
-              </span>
+              Всего съёмок: <span className="font-semibold text-foreground">{shoots.length}</span>
+              <span className="mx-2 text-border">·</span>
+              Лучших кадров по AI: <span className="font-semibold text-foreground">{bestCount}</span>
             </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/upload"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
-            >
-              <UploadCloud className="h-4 w-4" />
-              Загрузить новую съёмку
-            </Link>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {user?.email ? `Аккаунт: ${user.email}` : "Загрузка аккаунта…"}
+            </p>
           </div>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-6">
           <Link
             to="/settings"
             className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
@@ -457,26 +452,26 @@ function ProfilePage() {
                       {removing === s.shootId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                     </button>
                   </div>
-                  <div className="mt-3 space-y-1">
-                    <div className="flex items-center gap-1">
-                      <Link to={`/gallery/${s.shootId}`} className="text-sm font-semibold hover:text-primary">
-                        {title || `Съёмка #${s.shootId.slice(-6)}`}
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => openRename(s.shootId, title)}
-                        className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-                        aria-label="Переименовать"
-                        title="Переименовать"
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{dateStr} · #{s.shootId.slice(-6)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {s.fileUrls.length} фото · лучших: {bests}
-                    </p>
+                  <div className="mt-3 flex items-center gap-1">
+                    <Link to={`/gallery/${s.shootId}`} className="text-sm font-bold text-foreground hover:text-primary">
+                      {title || `Съёмка #${s.shootId.slice(-6)}`}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => openRename(s.shootId, title)}
+                      className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                      aria-label="Переименовать"
+                      title="Переименовать"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
                   </div>
+                  <p className="text-xs text-muted-foreground">{dateStr} · #{s.shootId.slice(-6)}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    <span className="text-xl font-extrabold text-foreground">{s.fileUrls.length}</span> фото
+                    <span className="mx-2 text-border">·</span>
+                    лучших: <span className="text-xl font-extrabold text-foreground">{bests}</span>
+                  </p>
                   <div className="mt-3 space-y-2">
                     <button
                       type="button"
@@ -678,11 +673,7 @@ function ProfilePage() {
 
       </main>
 
-      <footer className="border-t border-border px-5 py-10 sm:px-8">
-        <div className="mx-auto max-w-5xl text-center text-xs text-muted-foreground">
-          © 2026 Умная галерея для фотографов
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   );
 }
