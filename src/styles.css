@@ -626,6 +626,33 @@
   transform: none;
 }
 
+/* ---------- Кабинет: карточки съёмок ---------- */
+.d-shoot-card {
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.d-shoot-card:hover {
+  border-color: var(--color-muted-foreground);
+}
+
+.d-shoot-num {
+  font-weight: 900;
+  font-size: 1.35rem;
+  color: var(--color-foreground);
+  letter-spacing: -0.02em;
+}
+
+/* Пилюля «Открыть доступ» / «Ссылка» в активном состоянии */
+.d-pill-on {
+  border-color: rgba(44, 166, 228, 0.4);
+  background: rgba(44, 166, 228, 0.1);
+  color: var(--color-primary);
+}
+
+.d-pill-on:hover {
+  border-color: var(--color-primary);
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .d-stat-band {

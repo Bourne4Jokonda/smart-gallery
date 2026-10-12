@@ -368,50 +368,70 @@ function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
-      <main className="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-primary">Личный кабинет</p>
-            <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">Мои съёмки</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Всего съёмок: <span className="font-semibold text-foreground">{shoots.length}</span>
-              <span className="mx-2 text-border">·</span>
-              Лучших кадров по AI: <span className="font-semibold text-foreground">{bestCount}</span>
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {user?.email ? `Аккаунт: ${user.email}` : "Загрузка аккаунта…"}
-            </p>
-          </div>
+      <main className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
+        {/* Шапка кабинета */}
+        <div className="reveal">
+          <span className="d-kicker">Личный кабинет</span>
+          <h1 className="d-display mt-4 text-[clamp(2rem,4.5vw,3.4rem)]">
+            Мои съёмки
+          </h1>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+            Всего съёмок:{" "}
+            <span className="font-bold text-foreground">{shoots.length}</span>
+            <span className="mx-2 text-border">·</span>
+            Лучших кадров по ИИ:{" "}
+            <span className="font-bold text-foreground">{bestCount}</span>
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground/70">
+            {user?.email ? `Аккаунт: ${user.email}` : "Загрузка аккаунта…"}
+          </p>
         </div>
 
-        <div className="mt-6">
-          <Link
-            to="/settings"
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
-          >
+        <div className="reveal mt-6 flex flex-wrap items-center gap-3">
+          <Link to="/upload" className="d-btn-primary">
+            <Sparkles className="h-4 w-4" />
+            Загрузить съёмку
+          </Link>
+          <Link to="/settings" className="d-btn-ghost">
+            <Camera className="h-4 w-4" />
             Настройки профиля
           </Link>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="d-btn-ghost disabled:opacity-60"
+          >
+            {refreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCcw className="h-4 w-4" />
+            )}
+            Синхронизировать
+          </button>
         </div>
 
         {shoots.length === 0 ? (
-          <div className="mt-10 rounded-3xl border border-border bg-card p-10 text-center">
+          <div className="reveal mt-10 d-lead">
             <Images className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h2 className="mt-5 text-2xl font-bold">Съёмок пока нет</h2>
-            <p className="mt-3 text-sm text-muted-foreground">
+            <h2 className="d-display mt-5 text-[clamp(1.5rem,3vw,2rem)]">
+              Съёмок пока нет
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
               Загрузите первую съёмку, и здесь появится карточка с результатами.
             </p>
-            <Link
-              to="/upload"
-              className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
-            >
+            <Link to="/upload" className="d-btn-primary mt-6">
               <Sparkles className="h-4 w-4" />
               Загрузить съёмку
             </Link>
           </div>
         ) : (
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="reveal mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {shoots.map((s) => {
-              const bests = s.aiResults?.filter((r) => r.status === "ok" && r.score != null && r.score >= 7).length ?? 0;
+              const bests =
+                s.aiResults?.filter(
+                  (r) => r.status === "ok" && r.score != null && r.score >= 7,
+                ).length ?? 0;
               const date = new Date(s.createdAt);
               const dateStr = date.toLocaleString("ru-RU", {
                 timeZone: "Europe/Moscow",
@@ -424,18 +444,25 @@ function ProfilePage() {
               const cover = s.fileUrls[0] ?? "";
               const title = s.title?.trim() || "";
               return (
-                <div key={s.shootId} className="rounded-2xl border border-border bg-card p-4">
+                <div key={s.shootId} className="d-card d-shoot-card">
                   <div className="relative">
                     <Link
                       to={`/gallery/${s.shootId}`}
-                      className="block overflow-hidden rounded-xl bg-muted transition-transform hover:scale-[1.01]"
+                      className="d-photo block"
                       title="Открыть съёмку"
                     >
                       <div className="aspect-video">
                         {cover ? (
-                          <img src={cover} alt={title || s.shootId} className="h-full w-full object-cover" loading="lazy" />
+                          <img
+                            src={cover}
+                            alt={title || s.shootId}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
                         ) : (
-                          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Нет превью</div>
+                          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                            Нет превью
+                          </div>
                         )}
                       </div>
                     </Link>
@@ -447,11 +474,18 @@ function ProfilePage() {
                       aria-label="Удалить съёмку"
                       title="Удалить съёмку"
                     >
-                      {removing === s.shootId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      {removing === s.shootId ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
-                  <div className="mt-3 flex items-center gap-1">
-                    <Link to={`/gallery/${s.shootId}`} className="text-sm font-bold text-foreground hover:text-primary">
+                  <div className="mt-4 flex items-center gap-1.5">
+                    <Link
+                      to={`/gallery/${s.shootId}`}
+                      className="text-base font-bold text-foreground transition-colors hover:text-primary"
+                    >
                       {title || `Съёмка #${s.shootId.slice(-6)}`}
                     </Link>
                     <button
@@ -464,24 +498,31 @@ function ProfilePage() {
                       <Pencil className="h-3 w-3" />
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">{dateStr} · #{s.shootId.slice(-6)}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    <span className="text-xl font-extrabold text-foreground">{s.fileUrls.length}</span> фото
+                  <p className="text-xs text-muted-foreground">
+                    {dateStr} · #{s.shootId.slice(-6)}
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    <span className="d-shoot-num">{s.fileUrls.length}</span> фото
                     <span className="mx-2 text-border">·</span>
-                    лучших: <span className="text-xl font-extrabold text-foreground">{bests}</span>
+                    лучших:{" "}
+                    <span className="d-shoot-num">{bests}</span>
                   </p>
 
-                  <div className="mt-3">
+                  <div className="mt-4">
                     <button
                       type="button"
                       onClick={() => togglePublic(s.shootId, Boolean(s.public))}
                       disabled={togglingPublic === s.shootId}
-                      className={`inline-flex w-full items-center justify-between rounded-full border px-4 py-2.5 text-xs font-semibold transition-colors ${
+                      className={`inline-flex w-full items-center justify-between rounded-full border px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-60 ${
                         s.public
-                          ? "border-primary/40 bg-primary/10 text-primary hover:border-primary"
+                          ? "d-pill-on"
                           : "border-border bg-secondary text-foreground hover:border-primary"
                       }`}
-                      title={s.public ? "Доступ включён — нажмите, чтобы закрыть" : "Доступ выключен — нажмите, чтобы открыть клиенту"}
+                      title={
+                        s.public
+                          ? "Доступ включён — нажмите, чтобы закрыть"
+                          : "Доступ выключен — нажмите, чтобы открыть клиенту"
+                      }
                     >
                       <span>Открыть доступ</span>
                       <span
@@ -496,17 +537,27 @@ function ProfilePage() {
                         />
                       </span>
                     </button>
-                    <div className={`mt-2 flex gap-2 ${s.public ? "" : "pointer-events-none opacity-35"}`}>
+                    <div
+                      className={`mt-2 flex gap-2 ${s.public ? "" : "pointer-events-none opacity-35"}`}
+                    >
                       <button
                         type="button"
-                        onClick={() => openPasswordDialog(s.shootId, Boolean(hasPassword[s.shootId]))}
+                        onClick={() =>
+                          openPasswordDialog(s.shootId, Boolean(hasPassword[s.shootId]))
+                        }
                         disabled={!s.public}
-                        className="inline-flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                        title={hasPassword[s.shootId] ? "Сменить/снять пароль" : "Задать пароль"}
+                        className="inline-flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed"
+                        title={
+                          hasPassword[s.shootId]
+                            ? "Сменить/снять пароль"
+                            : "Задать пароль"
+                        }
                       >
                         <KeyRound className="h-3 w-3 shrink-0" />
                         <span className="truncate">
-                          {hasPassword[s.shootId] ? "Пароль задан ••••••" : "Пароль не задан"}
+                          {hasPassword[s.shootId]
+                            ? "Пароль задан ••••••"
+                            : "Пароль не задан"}
                         </span>
                         <span
                           role="button"
@@ -535,7 +586,11 @@ function ProfilePage() {
                               ? "text-muted-foreground hover:bg-primary/10 hover:text-primary"
                               : "text-muted-foreground"
                           }`}
-                          title={hasPassword[s.shootId] ? "Скопировать пароль" : "Пароль не задан"}
+                          title={
+                            hasPassword[s.shootId]
+                              ? "Скопировать пароль"
+                              : "Пароль не задан"
+                          }
                           aria-label="Скопировать пароль"
                         >
                           <Copy className="h-3.5 w-3.5" />
@@ -543,11 +598,15 @@ function ProfilePage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleCopyLink(`${window.location.origin}/public-gallery/${s.shootId}`)}
+                        onClick={() =>
+                          handleCopyLink(
+                            `${window.location.origin}/public-gallery/${s.shootId}`,
+                          )
+                        }
                         disabled={!s.public}
-                        className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
+                        className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                           s.public
-                            ? "border-primary/40 bg-primary/10 text-primary hover:border-primary"
+                            ? "d-pill-on"
                             : "border-border text-muted-foreground"
                         }`}
                         title="Скопировать ссылку для клиента"
@@ -564,9 +623,10 @@ function ProfilePage() {
         )}
       {passwordShootId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-5 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-sm">
+          <div className="d-price w-full max-w-sm p-6">
             <h3 className="text-base font-bold">
-              Пароль съёмки <span className="text-primary">#{passwordShootId.slice(-6)}</span>
+              Пароль съёмки{" "}
+              <span className="text-primary">#{passwordShootId.slice(-6)}</span>
             </h3>
             <div className="relative mt-4">
               <input
@@ -618,14 +678,14 @@ function ProfilePage() {
                 type="button"
                 onClick={savePassword}
                 disabled={passwordBusy}
-                className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+                className="d-btn-primary flex-1"
               >
                 {passwordBusy ? "Сохраняем…" : "Подтвердить"}
               </button>
               <button
                 type="button"
                 onClick={() => setPasswordShootId(null)}
-                className="rounded-xl border border-border px-4 py-3 text-sm font-medium transition-colors hover:border-primary"
+                className="d-btn-ghost"
               >
                 Отмена
               </button>
@@ -636,7 +696,7 @@ function ProfilePage() {
 
       {renameShootId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-5 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-sm">
+          <div className="d-price w-full max-w-sm p-6">
             <h3 className="text-base font-bold">Название съёмки</h3>
             <p className="mt-2 text-xs text-muted-foreground">
               Название видно только вам в кабинете. Ссылка и ID съёмки{" "}
@@ -656,14 +716,14 @@ function ProfilePage() {
                 type="button"
                 onClick={saveRename}
                 disabled={renameBusy}
-                className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+                className="d-btn-primary flex-1"
               >
                 {renameBusy ? "Сохраняем…" : "Сохранить название"}
               </button>
               <button
                 type="button"
                 onClick={() => setRenameShootId(null)}
-                className="rounded-xl border border-border px-4 py-3 text-sm font-medium transition-colors hover:border-primary"
+                className="d-btn-ghost"
               >
                 Отмена
               </button>
@@ -675,7 +735,7 @@ function ProfilePage() {
       </main>
 
       <footer className="border-t border-border px-5 py-10 sm:px-8">
-        <div className="mx-auto max-w-5xl text-center text-xs text-muted-foreground">
+        <div className="mx-auto max-w-6xl text-center text-xs text-muted-foreground/70">
           © 2026 Умная галерея для фотографов
         </div>
       </footer>
