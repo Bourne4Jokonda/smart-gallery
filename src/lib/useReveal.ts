@@ -2,20 +2,42 @@ import { useEffect } from "react";
 
 /**
  * Анимация появления секций (reveal on scroll).
- * Ставит класс .in на элементы .reveal, когда они попадают в viewport.
- * При prefers-reduced-motion или без IntersectionObserver — сразу ставит .in.
  *
- * ВАЖНО: если этот хук не подключить на странице с классами .reveal,
- * элементы останутся невидимыми (opacity: 0), но кликабельными.
+ * Двойная защита от невидимых секций:
+ * 1. IntersectionObserver — добавляет .in, когда элемент попадает в viewport.
+ * 2. Таймаут-фолбэк: если через 1.2с ни один элемент не получил .in
+ *    (headless-режим, кастомный WebView, IO не генерирует события) —
+ *    ставим .in всем. Элементы всегда видны, анимация — только украшение.
+ *
+ * При prefers-reduced-motion — сразу .in всем.
  */
 export function useReveal(): void {
   useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const els = document.querySelectorAll(".reveal");
-    if (reduce || !("IntersectionObserver" in window)) {
+    if (els.length === 0) return;
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
       els.forEach((el) => el.classList.add("in"));
       return;
     }
+
+    let revealed = false;
+    const markAll = () => {
+      if (revealed) return;
+      revealed = true;
+      els.forEach((el) => el.classList.add("in"));
+    };
+    const fallbackTimer = window.setTimeout(() => {
+      const anyVisible = document.querySelector(".reveal.in");
+      if (!anyVisible) markAll();
+    }, 1200);
+
+    if (!("IntersectionObserver" in window)) {
+      markAll();
+      return () => window.clearTimeout(fallbackTimer);
+    }
+
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((en) => {
@@ -27,7 +49,12 @@ export function useReveal(): void {
       },
       { threshold: 0.1 },
     );
+
     els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      io.disconnect();
+    };
   }, []);
 }
