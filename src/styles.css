@@ -145,3 +145,513 @@
     font-family: var(--font-sans);
   }
 }
+
+/* ============================================================
+   Smart Gallery — композиция «Дерзкий» (лендинг)
+   Uppercase-заголовки, вертикальный список фич, крупные цифры.
+   ============================================================ */
+
+/* ---------- Дизайн-токены лендинга ---------- */
+.d-display {
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.d-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.d-kicker::before {
+  content: "";
+  width: 24px;
+  height: 2px;
+  background: var(--color-primary);
+}
+
+.d-kicker-center::before {
+  display: none;
+}
+
+/* ---------- Кнопки ---------- */
+.d-btn-primary,
+.d-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 12px 26px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease,
+    border-color 0.15s ease, color 0.15s ease, filter 0.15s ease;
+}
+
+.d-btn-primary {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.d-btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.d-btn-primary:active {
+  transform: scale(0.97);
+}
+
+.d-btn-ghost {
+  border-color: var(--color-border);
+  color: var(--color-foreground);
+  background: transparent;
+}
+
+.d-btn-ghost:hover {
+  border-color: var(--color-muted-foreground);
+  background: var(--color-card);
+}
+
+/* ---------- Hero ---------- */
+.d-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-muted-foreground);
+}
+
+.d-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.d-photo {
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--color-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.d-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 4 / 5;
+}
+
+.d-photo-tag {
+  position: absolute;
+  left: -8px;
+  top: 58%;
+  transform: translateY(-50%);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 8px 16px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 640px) {
+  .d-photo-tag {
+    left: 8px;
+  }
+}
+
+/* ---------- Proof (до/после) ---------- */
+.d-ba-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+  margin-bottom: 14px;
+}
+
+.d-ba-label b {
+  color: var(--color-foreground);
+  font-size: 15px;
+}
+
+.d-ba-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.d-ba-grid img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.d-ba-gray img {
+  filter: grayscale(1) brightness(0.75);
+}
+
+.d-pick {
+  position: relative;
+  display: block;
+}
+
+.d-pick img {
+  position: relative;
+  z-index: 1;
+}
+
+.d-pick::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 2px solid var(--color-primary);
+  pointer-events: none;
+}
+
+.d-pick-dot {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  z-index: 2;
+}
+
+/* ---------- Карточки ---------- */
+.d-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 28px;
+  height: 100%;
+}
+
+.d-stat {
+  display: block;
+  font-weight: 900;
+  font-size: clamp(2rem, 3.4vw, 2.9rem);
+  color: var(--color-primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+
+/* ---------- Вертикальный список фич ---------- */
+.d-feature {
+  display: flex;
+  gap: 18px;
+  align-items: baseline;
+  padding: 22px 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.d-feature:last-child {
+  border-bottom: none;
+}
+
+.d-feature-main {
+  border-bottom: 1px solid var(--color-primary);
+}
+
+.d-feature-ico {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: rgba(44, 166, 228, 0.14);
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--color-primary);
+  margin-bottom: 0;
+  transform: translateY(4px);
+}
+
+.d-feature-title {
+  font-weight: 900;
+  font-size: clamp(1.2rem, 2.2vw, 1.7rem);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+/* ---------- Шаги ---------- */
+.d-step-num {
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--color-primary);
+  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+}
+
+/* ---------- Stat band ---------- */
+.d-stat-band {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  padding: clamp(2rem, 5vw, 4rem);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(1.8rem, 4vw, 4rem);
+  align-items: center;
+}
+
+.d-stat-nums {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.d-big-num {
+  font-weight: 900;
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.d-arrow {
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  color: var(--color-muted-foreground);
+}
+
+/* ---------- Early access ---------- */
+.d-early {
+  background: var(--color-secondary);
+  border: 1px solid var(--color-primary);
+  border-radius: 22px;
+  padding: clamp(2rem, 5vw, 4rem);
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.d-early-price {
+  text-align: center;
+  padding: 28px;
+  border: 1px dashed var(--color-border);
+  border-radius: 16px;
+}
+
+.d-early-sum {
+  font-weight: 900;
+  font-size: clamp(2.4rem, 4.5vw, 3.4rem);
+  letter-spacing: -0.02em;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.d-early-per {
+  color: var(--color-muted-foreground);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.d-early-note {
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+  margin-top: 14px;
+  font-weight: 600;
+}
+
+/* ---------- Security ---------- */
+.d-sec-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-card);
+}
+
+/* ---------- Pricing ---------- */
+.d-price {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 30px 28px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.d-price-pop {
+  background: var(--color-secondary);
+  border-color: var(--color-primary);
+}
+
+.d-pop-tag {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 999px;
+}
+
+.d-price-sum {
+  font-weight: 900;
+  font-size: clamp(2.1rem, 3.4vw, 2.7rem);
+  letter-spacing: -0.02em;
+  margin-top: 12px;
+  line-height: 1;
+}
+
+.d-price-per {
+  color: var(--color-muted-foreground);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* ---------- FAQ ---------- */
+.d-faq-item {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-card);
+  overflow: hidden;
+}
+
+.d-faq-q {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: transparent;
+  border: none;
+  color: var(--color-foreground);
+  text-align: left;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 18px 20px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.d-faq-chev {
+  flex: none;
+  color: var(--color-primary);
+  transition: transform 0.25s ease;
+  height: 18px;
+  width: 18px;
+}
+
+.d-faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.d-faq-open {
+  max-height: 260px;
+}
+
+/* ---------- Lead form ---------- */
+.d-lead {
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  border-radius: 22px;
+  padding: clamp(2.2rem, 5vw, 4rem);
+  text-align: center;
+}
+
+.d-input {
+  flex: 1;
+  min-width: 240px;
+  min-height: 52px;
+  padding: 14px 22px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+}
+
+.d-input::placeholder {
+  color: var(--color-muted-foreground);
+}
+
+.d-input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+/* ---------- Reveal on scroll ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .d-stat-band {
+    grid-template-columns: 1fr;
+  }
+
+  .d-early {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .d-ba-grid,
+  .d-feature {
+    gap: 12px;
+  }
+
+  .d-feature-ico {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

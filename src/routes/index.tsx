@@ -1,18 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { isFirebaseConfigured, saveLead } from "@/lib/firebase";
 import {
   ArrowDown,
   BadgeCheck,
-  Camera,
   Check,
   CheckCircle2,
   ChevronDown,
-  Clock3,
-  Eye,
-  FolderSearch,
-  HeartCrack,
   Images,
   Loader2,
   Lock,
@@ -20,7 +15,7 @@ import {
   Send,
   ShieldCheck,
   Sparkles,
-  Timer,
+  Trash2,
   UploadCloud,
   Wand2,
   Zap,
@@ -48,98 +43,64 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const rawPhotos = [
-  "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1469371670807-013ccf25f16a?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=400&auto=format&fit=crop",
+/* ---------- Контент ---------- */
+
+const heroPhotos = [
+  "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=800&auto=format&fit=crop",
+];
+
+const proofRaw = [
+  "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=400&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1595407753234-0882f1e77954?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?w=400&auto=format&fit=crop",
-];
-
-const bestPhotos = [
-  "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1529634806980-85c3dd6d34ac?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1460978812857-470ed1c77af0?w=600&auto=format&fit=crop",
-];
-
-const demoRaw = [
-  "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=400&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=400&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=400&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1469371670807-013ccf25f16a?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1595407753234-0882f1e77954?w=400&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400&auto=format&fit=crop",
 ];
 
-const demoBest = [
-  "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1529634806980-85c3dd6d34ac?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1460978812857-470ed1c77af0?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1471897488648-5eae4ac6686b?w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&auto=format&fit=crop",
-];
+// Индексы кадров, которые AI отметил как лучшие (совпадают с proofRaw)
+const bestPicks = [0, 2, 4];
 
 const pains = [
   {
-    icon: Clock3,
-    title: "8 часов на отбор",
-    text: "После каждой съёмки вы тратите целый рабочий день, чтобы вручную просмотреть тысячу похожих кадров.",
+    stat: "8 часов",
+    title: "Отбор в один вечер",
+    text: "Пролистать 1000 снимков после свадьбы — рутина, которая съедает вечер и портит глаза.",
   },
   {
-    icon: HeartCrack,
-    title: "Усталость и ошибки",
-    text: "К вечеру глаз «замыливается»: лучшие кадры теряются, а клиент получает не самые сильные фото.",
+    stat: "2 дня",
+    title: "Клиент ждёт галерею",
+    text: "Пока вы отбираете, клиент пишет в мессенджер: «А когда галерея?» — и репутация тает.",
   },
   {
-    icon: FolderSearch,
-    title: "Клиент ждёт неделями",
-    text: "Клиент ждёт неделями — пока идёт отбор, нервничает и пишет в мессенджеры.",
+    stat: "−30%",
+    title: "Дубликаты и брак",
+    text: "Похожие кадры, смазанные, закрытые глаза — всё нужно заметить вручную, и всегда что-то ускользает.",
   },
 ];
 
-const solutions = [
+const features = [
   {
     icon: ScanFace,
-    title: "Анализ резкости и эмоций",
-    text: "AI проверяет каждый кадр: фокус, открытые глаза, живые эмоции и выражения лиц.",
+    main: true,
+    title: "Оценка эмоций и резкости",
+    text: "Каждый кадр получает балл: выражение лиц, открытость глаз, резкость, свет. Вы видите цифру — и понимаете, почему кадр в подборке.",
   },
   {
     icon: Images,
-    title: "Группировка дублей",
-    text: "Похожие кадры складываются в серии, и из каждой выбирается один самый сильный.",
+    title: "Группировка дубликатов",
+    text: "Похожие снимки сворачиваются в стопки — остаётся выбрать один из серии.",
   },
   {
     icon: Wand2,
-    title: "Оценка композиции и света",
-    text: "Алгоритм оценивает экспозицию, баланс белого и композицию как опытный фоторедактор.",
+    title: "Композиция и свет",
+    text: "Балл за композицию, баланс и свет — ловит кадры, где модель и рамка сходятся.",
   },
   {
     icon: Zap,
-    title: "Готово за 10 минут",
-    text: "Загрузили карточку памяти — получили готовую галерею лучших фото. Дальше только ваша обработка.",
+    title: "Галерея за 10 минут",
+    text: "Ссылка с паролем, ваш водяной знак и ZIP-архив — всё готово к отправке клиенту.",
   },
 ];
 
@@ -148,19 +109,37 @@ const steps = [
     num: "01",
     icon: UploadCloud,
     title: "Загрузите съёмку",
-    text: "Перетащите до 1500 фото (JPEG/RAW) прямо в браузер. Ничего устанавливать не нужно.",
+    text: "Raw или jpg, целой папкой или архивом. Никакой предобработки не нужно.",
   },
   {
     num: "02",
     icon: Sparkles,
-    title: "AI отбирает лучшее",
-    text: "За ~10 минут сервис разбирает серии, отсеивает брак и ранжирует кадры по качеству.",
+    title: "ИИ отбирает лучшие",
+    text: "Оценки, дубликаты, флаги брака — вы проверяете результат, а не листаете тысячу кадров.",
   },
   {
     num: "03",
     icon: BadgeCheck,
-    title: "Проверьте и отдайте клиенту",
-    text: "Вы утверждаете финальный список и отправляете готовую галерею ссылкой для клиента в тот же день.",
+    title: "Отправьте клиенту",
+    text: "Ссылка + пароль, водяной знак, скачивание ZIP. Клиент открывает галерею сам.",
+  },
+];
+
+const securityPoints = [
+  {
+    icon: ShieldCheck,
+    title: "Хранение в России",
+    text: "Все фото и данные — на серверах в РФ. Никаких зарубежных облаков.",
+  },
+  {
+    icon: Lock,
+    title: "Шифрование",
+    text: "Галереи доступны только по ссылке и паролю. Без пароля — ни одного кадра.",
+  },
+  {
+    icon: Trash2,
+    title: "Автоудаление через 30 дней",
+    text: "После завершения заказа съёмка удаляется автоматически. Вы контролируете срок.",
   },
 ];
 
@@ -168,91 +147,67 @@ const plans = [
   {
     name: "Пробный",
     price: "0 ₽",
-    period: "первая съёмка",
-    features: [
-      "Первая съёмка",
-      "До 500 фото",
-      "AI-отбор лучших",
-      "Без цветокоррекции",
-    ],
+    period: "одна съёмка, навсегда",
+    features: ["1 съёмка · до 100 фото", "ИИ-отбор и дубликаты", "Галерея с паролем"],
     featured: false,
     cta: "Начать бесплатно",
   },
   {
     name: "Старт",
     price: "990 ₽",
-    period: "в месяц",
+    period: "/ месяц",
     features: [
-      "До 5 съёмок в месяц",
-      "До 1500 фото в съёмку",
-      "AI-отбор и группировка",
-      "Базовая цветокоррекция",
-      "Галерея для клиента",
+      "10 съёмок в месяц",
+      "Неограниченно фото",
+      "Водяной знак + логотип",
+      "ZIP-скачивание для клиента",
     ],
     featured: true,
-    cta: "Выбрать тариф",
+    cta: "Попробовать 14 дней",
   },
   {
     name: "Профи",
     price: "2 990 ₽",
-    period: "в месяц",
+    period: "/ месяц",
     features: [
-      "До 15 съёмок в месяц",
-      "До 3000 фото в съёмку",
-      "AI-отбор и группировка",
-      "Продвинутая цветокоррекция",
+      "Безлимитные съёмки",
+      "Брендинг студии",
       "Приоритетная обработка",
-      "Персональный менеджер",
+      "Поддержка в Telegram",
     ],
     featured: false,
-    cta: "Выбрать тариф",
-  },
-];
-
-const securityPoints = [
-  {
-    icon: ShieldCheck,
-    title: "Хранение в РФ",
-    text: "Файлы хранятся на серверах в России. Соответствие 152-ФЗ.",
-  },
-  {
-    icon: Lock,
-    title: "Шифрование",
-    text: "Все данные передаются по защищённому соединению.",
-  },
-  {
-    icon: Clock3,
-    title: "Удаление через 30 дней",
-    text: "Файлы автоматически удаляются через 30 дней или по запросу.",
+    cta: "Связаться",
   },
 ];
 
 const faq = [
   {
-    q: "AI заменит мой вкус при отборе?",
-    a: "Нет. AI снимает рутину — отсеивает брак и дубли, а финальное слово всегда за вами. Вы утверждаете каждый кадр перед отправкой клиенту.",
+    q: "Как загружать фото?",
+    a: "Целой папкой или ZIP-архивом. Raw, jpg, heic — формат не важен, ИИ принимает всё, что выдаёт камера.",
   },
   {
-    q: "Какие форматы и объёмы поддерживаются?",
-    a: "JPEG и RAW основных камер (Canon, Nikon, Sony, Fujifilm). До 1500 фото на съёмку в бесплатном тарифе, до 2000 — в платных.",
+    q: "ИИ удалит или изменит мои фото?",
+    a: "Нет. ИИ только оценивает и сортирует — оригиналы не трогает. Вы всегда видите исходник рядом с оценкой.",
   },
   {
-    q: "Мои фотографии в безопасности?",
-    a: "Да. Фото используются только для вашего отбора, не попадают в обучение моделей и удаляются с серверов через 30 дней после закрытия галереи.",
+    q: "Можно ли брендировать галерею?",
+    a: "Да. Текстовый водяной знак или ваш логотип: шрифт, размер, прозрачность, позиция — всё настраивается в профиле с живым превью.",
   },
   {
-    q: "Что если AI ошибётся и удалит хороший кадр?",
-    a: "Ничего не удаляется безвозвратно: все отсеянные фото остаются в папке «Отбор AI», и вы можете вернуть любой кадр одним кликом.",
+    q: "Где хранятся данные клиентов?",
+    a: "Только на серверах в России. Галерея доступна по ссылке и паролю, после завершения заказа удаляется автоматически.",
   },
   {
-    q: "Нужно ли что-то устанавливать?",
-    a: "Нет, всё работает в браузере: загрузили карточку памяти — получили готовую галерею. Есть версии для телефона и компьютера.",
+    q: "Как клиент получит галерею?",
+    a: "Вы отправляете ссылку и пароль. Клиент открывает галерею без регистрации, смотрит фото и скачивает ZIP одним архивом.",
   },
   {
-    q: "А если у меня свадьба на 3000 фото?",
-    a: "Студия обрабатывает до 10 000 фото за съёмку, разбивка по эпизодам (церемония, банкет, прогулка) идёт автоматически.",
+    q: "Когда можно отменить подписку?",
+    a: "В любой момент, одним кликом в кабинете. Доступ сохранится до конца оплаченного периода.",
   },
 ];
+
+/* ---------- Компонент ---------- */
 
 function Landing() {
   const formRef = useRef<HTMLDivElement>(null);
@@ -261,9 +216,28 @@ function Landing() {
   const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
+  // Анимация появления секций (reveal)
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const els = document.querySelectorAll(".reveal");
+    if (reduce || !("IntersectionObserver" in window)) {
+      els.forEach((el) => el.classList.add("in"));
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) {
+            en.target.classList.add("in");
+            io.unobserve(en.target);
+          }
+        });
+      },
+      { threshold: 0.1 },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -296,244 +270,249 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       {/* HERO */}
-      <header className="relative overflow-hidden px-5 pt-16 pb-20 sm:px-8 sm:pt-24">
-        <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-primary/20 blur-[120px]" />
-        <div className="relative mx-auto max-w-3xl text-center">
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-medium tracking-wide text-muted-foreground">
-            <Camera className="h-3.5 w-3.5 text-primary" />
-            Новая ниша для фотографов
-          </p>
-          <h1 className="text-balance text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-6xl">
-            AI-фотограф: отбор 1000 фото за{" "}
-            <span className="text-primary">10 минут</span>, а не 8 часов.
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-            AI отберёт брак, дубли и лучшие кадры. Вы только проверите результат.
-          </p>
-          <Link
-            to="/upload"
-            className="group mt-8 inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:brightness-110 active:scale-[0.98]"
-          >
-            Попробовать AI-отбор бесплатно
-            <ArrowDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
-          </Link>
-
-
-          {/* Collage before/after */}
-          <div className="mt-14 grid grid-cols-2 gap-3 sm:gap-4">
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-1.5">
-                {rawPhotos.map((src, j) => (
-                  <div
-                    key={src}
-                    className="relative aspect-square overflow-hidden rounded-md bg-muted"
-                  >
-                    <img
-                      src={src}
-                      alt={`Сырой неотобранный кадр со съёмки ${j + 1}`}
-                      loading="lazy"
-                      className="h-full w-full object-cover opacity-70 grayscale"
-                    />
-                    <div className="absolute inset-0 bg-background/45" />
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs font-medium text-muted-foreground">
-                До: 1000 сырых кадров
-              </p>
+      <section className="px-5 pb-20 pt-14 sm:px-8 sm:pt-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
+          <div className="reveal">
+            <span className="d-badge">
+              <span className="d-badge-dot" />
+              Новая ниша для фотографов
+            </span>
+            <h1 className="d-display mt-6 text-[clamp(2.5rem,6.2vw,5rem)]">
+              Отбор <span className="text-primary">1000 кадров</span> за 10 минут — а не 8 часов
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
+              ИИ отмечает лучшие фото свадьбы, группирует дубликаты и собирает
+              галерею с паролем. Клиент получает ссылку — вы получаете вечер обратно.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <a
+                href="#lead"
+                className="d-btn-primary"
+              >
+                Попробовать бесплатно
+                <ArrowDown className="h-4 w-4" />
+              </a>
+              <a href="#proof" className="d-btn-ghost">
+                Смотреть, как это работает
+              </a>
             </div>
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-1.5">
-                {bestPhotos.map((src, j) => (
-                  <div
-                    key={src}
-                    className="overflow-hidden rounded-md ring-2 ring-primary/60 shadow-lg shadow-primary/20"
-                  >
-                    <img
-                      src={src}
-                      alt={`Лучший кадр, отобранный AI ${j + 1}`}
-                      loading="lazy"
-                      className="aspect-square h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                    />
-                  </div>
+            <p className="mt-5 text-sm font-semibold text-muted-foreground/70">
+              1 съёмка бесплатно · без карты · фото хранятся в России
+            </p>
+          </div>
+
+          <div className="reveal relative">
+            <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
+              <figure className="d-photo">
+                <img src={heroPhotos[0]} alt="Свадебная пара" loading="lazy" />
+              </figure>
+              <figure className="d-photo mt-11 sm:mt-14">
+                <img src={heroPhotos[1]} alt="Свадебный кадр" loading="lazy" />
+              </figure>
+            </div>
+            <span className="d-photo-tag">87 лучших</span>
+          </div>
+        </div>
+      </section>
+
+      {/* PROOF — до/после */}
+      <section id="proof" className="px-5 py-16 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="reveal">
+            <span className="d-kicker">Результат</span>
+            <h2 className="d-display mt-4 text-[clamp(1.9rem,4vw,3rem)]">
+              Было 1000 кадров. Стало <span className="text-primary">87 лучших</span>.
+            </h2>
+            <p className="mt-5 max-w-2xl text-muted-foreground">
+              Слева — сырая стопка после свадьбы. Справа — то же самое после
+              отбора ИИ: дубликаты свёрнуты, лучшие кадры отмечены голубым.
+            </p>
+          </div>
+          <div className="reveal mt-10 grid gap-6 sm:gap-8 md:grid-cols-2">
+            <div>
+              <div className="d-ba-label">
+                <b>До</b> · 1000 фото
+              </div>
+              <div className="d-ba-grid d-ba-gray">
+                {proofRaw.map((src) => (
+                  <img key={src} src={src} alt="" loading="lazy" />
                 ))}
               </div>
-              <p className="text-xs font-medium text-muted-foreground">
-                После: 87 лучших фото
-              </p>
+            </div>
+            <div>
+              <div className="d-ba-label">
+                <b>После</b> · 87 фото
+              </div>
+              <div className="d-ba-grid">
+                {proofRaw.map((src, i) =>
+                  bestPicks.includes(i) ? (
+                    <span key={src} className="d-pick">
+                      <img src={src} alt="Лучший кадр, отобранный ИИ" loading="lazy" />
+                      <span className="d-pick-dot" />
+                    </span>
+                  ) : (
+                    <img key={src} src={src} alt="" loading="lazy" />
+                  ),
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </header>
+      </section>
 
-      {/* PAINS */}
-      <section className="px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Знакомо каждому фотографу
-          </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+      {/* PAIN — крупные цифры */}
+      <section id="pain" className="px-5 py-16 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="reveal">
+            <span className="d-kicker">Знакомо?</span>
+            <h2 className="d-display mt-4 text-[clamp(1.9rem,4vw,3rem)]">
+              Отбор съедает больше, чем съёмка
+            </h2>
+          </div>
+          <div className="reveal mt-10 grid gap-4 sm:grid-cols-3">
             {pains.map((p) => (
-              <div
-                key={p.title}
-                className="rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary/40"
-              >
-                <div className="mb-4 inline-flex rounded-xl bg-muted p-3">
-                  <p.icon className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold">{p.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.text}</p>
+              <div key={p.title} className="d-card">
+                <span className="d-stat">{p.stat}</span>
+                <h3 className="mt-2 text-lg font-bold">{p.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {p.text}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* SOLUTION */}
-      <section className="px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-5xl">
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary">
-            Что делает AI
-          </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Ваш личный фоторедактор, который не устаёт
-          </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            {solutions.map((s) => (
+      {/* FEATURES — вертикальный список */}
+      <section id="features" className="px-5 py-16 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="reveal">
+            <span className="d-kicker">Что делает ИИ</span>
+            <h2 className="d-display mt-4 text-[clamp(1.9rem,4vw,3rem)]">
+              Не просто фильтр — <span className="text-primary">второй глаз</span>
+            </h2>
+            <p className="mt-5 max-w-2xl text-muted-foreground">
+              ИИ оценивает каждый кадр по нескольким осям и оставляет только то,
+              что вы бы отобрали сами — только быстрее.
+            </p>
+          </div>
+          <div className="reveal mt-10">
+            {features.map((f) => (
               <div
-                key={s.title}
-                className="rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary/40"
+                key={f.title}
+                className={`d-feature ${f.main ? "d-feature-main" : ""}`}
               >
-                <div className="mb-4 inline-flex rounded-xl bg-primary/10 p-3">
-                  <s.icon className="h-6 w-6 text-primary" />
+                <div className="d-feature-ico">
+                  <f.icon className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
+                <div>
+                  <h3 className="d-feature-title">{f.title}</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                    {f.text}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* STEPS */}
-      <section className="px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Как это работает
-          </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+      {/* HOW — три шага */}
+      <section id="how" className="px-5 py-16 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="reveal">
+            <span className="d-kicker">Процесс</span>
+            <h2 className="d-display mt-4 text-[clamp(1.9rem,4vw,3rem)]">
+              Три шага — <span className="text-primary">и галерея готова</span>
+            </h2>
+          </div>
+          <div className="reveal mt-10 grid gap-4 sm:grid-cols-3">
             {steps.map((s) => (
-              <div
-                key={s.num}
-                className="relative rounded-2xl border border-border bg-card p-6"
-              >
-                <span className="absolute right-5 top-4 text-4xl font-extrabold text-primary/20">
-                  {s.num}
-                </span>
-                <div className="mb-4 inline-flex rounded-xl bg-primary p-3">
-                  <s.icon className="h-6 w-6 text-primary-foreground" />
+              <div key={s.num} className="d-card">
+                <div className="d-step-num">{s.num}</div>
+                <div className="d-feature-ico mb-4">
+                  <s.icon className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
+                <h3 className="text-base font-bold">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {s.text}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* AI DEMO */}
+      {/* STAT BAND — крупные цифры */}
       <section className="px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
-            Посмотрите, что умеет AI
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-center text-sm text-muted-foreground sm:text-base">
-            Слева — исходные фото со съёмки. Справа — то, что AI отобрал.
-          </p>
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6">
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                {demoRaw.map((src, j) => (
-                  <div
-                    key={src}
-                    className="relative aspect-square overflow-hidden rounded-md bg-muted"
-                  >
-                    <img
-                      src={src}
-                      alt={`Исходное фото со съёмки ${j + 1}`}
-                      loading="lazy"
-                      className="h-full w-full object-cover opacity-60 grayscale"
-                    />
-                    <div className="absolute inset-0 bg-background/50" />
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs font-medium text-muted-foreground">До: исходники</p>
+        <div className="reveal mx-auto max-w-6xl">
+          <div className="d-stat-band">
+            <div className="d-stat-nums">
+              <span className="d-big-num text-primary">1500</span>
+              <span className="d-arrow">→</span>
+              <span className="d-big-num">30 сек</span>
             </div>
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                {demoBest.map((src, j) => (
-                  <div
-                    key={src}
-                    className="overflow-hidden rounded-md ring-2 ring-primary/70 shadow-lg shadow-primary/20"
-                  >
-                    <img
-                      src={src}
-                      alt={`Отобранный AI кадр ${j + 1}`}
-                      loading="lazy"
-                      className="aspect-square h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                    />
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs font-medium text-primary">После: отбор AI</p>
+            <div>
+              <h2 className="d-feature-title text-xl sm:text-2xl">
+                Полная свадебная съёмка — за половину чашки кофе
+              </h2>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+                1500 фото обрабатываются и сортируются за 30 секунд. Вы тратите
+                время на проверку результата, а не на прокрутку.
+              </p>
             </div>
           </div>
-          <p className="mt-8 text-center text-sm font-semibold text-muted-foreground">
-            Одна съёмка. 1500 фото. 30 секунд обработки.
-          </p>
         </div>
       </section>
 
       {/* EARLY ACCESS */}
       <section className="px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-primary/40 bg-card p-8 text-center sm:p-12">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            🎯 Ранний доступ
-          </h2>
-          <p className="mx-auto mt-5 max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Сервис в бета-тесте. Первым 10 фотографам — тариф Старт за 490 ₽/мес
-            навсегда (скидка 50%). Места ограничены.
-          </p>
-          <button
-            onClick={scrollToForm}
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:brightness-110 active:scale-[0.98]"
-          >
-            Занять место за 490 ₽
-          </button>
-          <p className="mt-4 text-xs text-muted-foreground/60">
-            Осталось 7 мест из 10
-          </p>
+        <div className="reveal mx-auto max-w-6xl">
+          <div className="d-early">
+            <div>
+              <span className="d-kicker">Ранний доступ</span>
+              <h2 className="d-display mt-4 text-[clamp(1.7rem,3.4vw,2.6rem)]">
+                490 ₽/мес навсегда — для первых{" "}
+                <span className="text-primary">10 фотографов</span>
+              </h2>
+              <p className="mt-4 max-w-lg text-muted-foreground">
+                Пока сервис в раннем доступе, цена фиксируется на всю подписку.
+                После первых десяти — тариф вырастет до 990 ₽.
+              </p>
+            </div>
+            <div className="d-early-price">
+              <div className="d-early-sum">490 ₽</div>
+              <div className="d-early-per">/ месяц, навсегда</div>
+              <a href="#lead" className="d-btn-primary mt-5 w-full justify-center">
+                Взять ранний доступ
+              </a>
+              <div className="d-early-note">осталось 7 мест из 10</div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* SECURITY */}
       <section className="px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
-            🔒 Ваши фото под защитой
-          </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+        <div className="mx-auto max-w-6xl">
+          <div className="reveal">
+            <span className="d-kicker">Доверие</span>
+            <h2 className="d-display mt-4 text-[clamp(1.9rem,4vw,3rem)]">
+              Фото клиентов — <span className="text-primary">под защитой</span>
+            </h2>
+          </div>
+          <div className="reveal mt-10 grid gap-4 sm:grid-cols-3">
             {securityPoints.map((s) => (
-              <div
-                key={s.title}
-                className="rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary/40"
-              >
-                <div className="mb-4 inline-flex rounded-xl bg-primary/10 p-3">
-                  <s.icon className="h-6 w-6 text-primary" />
+              <div key={s.title} className="d-sec-item">
+                <div className="d-feature-ico">
+                  <s.icon className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
+                <div>
+                  <h3 className="text-base font-bold">{s.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {s.text}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -541,59 +520,52 @@ function Landing() {
       </section>
 
       {/* PRICING */}
-      <section className="px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
-            Простые цены
-          </h2>
-          <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-primary/40 bg-primary/10 px-6 py-4 text-center">
-            <p className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
-              <Timer className="h-4 w-4" />
-              Первым 10 фотографам — первая съёмка БЕСПЛАТНО (до 1500 фото)
-            </p>
+      <section id="price" className="px-5 py-16 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="reveal">
+            <span className="d-kicker">Тарифы</span>
+            <h2 className="d-display mt-4 text-[clamp(1.9rem,4vw,3rem)]">
+              Начните бесплатно. <span className="text-primary">Масштабируйтесь потом.</span>
+            </h2>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+          <div className="reveal mt-12 grid gap-4 sm:grid-cols-3">
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`flex flex-col rounded-2xl border p-6 ${
-                  plan.featured
-                    ? "border-primary bg-card shadow-lg shadow-primary/10 sm:-translate-y-2"
-                    : "border-border bg-card"
-                }`}
+                className={`d-price ${plan.featured ? "d-price-pop" : ""}`}
               >
-                {plan.featured && (
-                  <span className="mb-3 w-fit rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
-                    Популярный
-                  </span>
-                )}
-                <h3 className="text-lg font-semibold">{plan.name}</h3>
-                <p className="mt-3 text-3xl font-extrabold">
-                  {plan.price}
-                  <span className="ml-2 text-sm font-normal text-muted-foreground">
-                    {plan.period}
-                  </span>
-                </p>
-                <ul className="mt-6 flex-1 space-y-3">
+                {plan.featured && <span className="d-pop-tag">Популярный</span>}
+                <h3 className="text-base font-bold">{plan.name}</h3>
+                <div className="d-price-sum">{plan.price}</div>
+                <div className="d-price-per">{plan.period}</div>
+                <ul className="mb-7 mt-6 flex-1 space-y-2.5">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <li
+                      key={f}
+                      className="flex items-start gap-2.5 text-sm text-muted-foreground"
+                    >
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       {f}
                     </li>
                   ))}
                 </ul>
-                <button
-                  onClick={scrollToForm}
-                  className="mt-8 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
+                <a
+                  href="#lead"
+                  className={`${plan.featured ? "d-btn-primary" : "d-btn-ghost"} w-full justify-center`}
                 >
                   {plan.cta}
-                </button>
+                </a>
               </div>
             ))}
           </div>
-          <p className="mt-8 text-center text-sm text-muted-foreground">
+          <p className="reveal mt-8 text-center text-sm text-muted-foreground">
             Первым 10 фотографам — тариф Старт за 490 ₽/мес навсегда.{" "}
-            <a href="https://t.me/ai_gallery_helper" target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">
+            <a
+              href="https://t.me/ai_gallery_helper"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-primary hover:underline"
+            >
               Напишите нам
             </a>{" "}
             — выдадим промокод.
@@ -602,36 +574,34 @@ function Landing() {
       </section>
 
       {/* FAQ */}
-      <section className="px-5 py-16 sm:px-8 sm:py-24">
+      <section id="faq" className="px-5 py-16 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-3xl">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Частые вопросы
-          </h2>
-          <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-card">
+          <div className="reveal">
+            <span className="d-kicker">Вопросы</span>
+            <h2 className="d-display mt-4 text-[clamp(1.9rem,4vw,3rem)]">
+              Частые вопросы
+            </h2>
+          </div>
+          <div className="reveal mt-10 grid gap-2.5">
             {faq.map((item, i) => (
-              <div key={item.q}>
+              <div key={item.q} className="d-faq-item">
                 <button
+                  type="button"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left"
+                  className="d-faq-q"
                   aria-expanded={openFaq === i}
                 >
-                  <span className="text-base font-semibold">{item.q}</span>
+                  <span>{item.q}</span>
                   <ChevronDown
-                    className={`h-5 w-5 shrink-0 text-primary transition-transform duration-300 ${
-                      openFaq === i ? "rotate-180" : ""
-                    }`}
+                    className={`d-faq-chev ${openFaq === i ? "rotate-180" : ""}`}
                   />
                 </button>
                 <div
-                  className={`grid transition-all duration-300 ease-in-out ${
-                    openFaq === i ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                  }`}
+                  className={`d-faq-a ${openFaq === i ? "d-faq-open" : ""}`}
                 >
-                  <div className="overflow-hidden">
-                    <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
-                      {item.a}
-                    </p>
-                  </div>
+                  <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground sm:px-6">
+                    {item.a}
+                  </p>
                 </div>
               </div>
             ))}
@@ -639,106 +609,104 @@ function Landing() {
         </div>
       </section>
 
-      {/* FORM */}
-      <section className="px-5 py-16 sm:px-8 sm:py-24" ref={formRef}>
-        <div className="mx-auto max-w-xl rounded-3xl border border-primary/30 bg-card p-7 text-center sm:p-10">
-          <div className="mx-auto mb-5 inline-flex rounded-2xl bg-primary p-3.5">
-            <Eye className="h-7 w-7 text-primary-foreground" />
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Попробуйте на своей съёмке
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Оставьте email — пришлём ссылку на бесплатный AI-отбор первой съёмки.
-          </p>
-          <p className="mt-4 text-sm font-semibold text-primary">
-            Без регистрации. Первые 10 фотографов получают съёмку бесплатно — навсегда
-          </p>
-          {status === "done" ? (
-            <div className="mt-7 flex flex-col items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-8">
-              <CheckCircle2 className="h-10 w-10 text-primary" />
-              <p className="text-lg font-semibold">Заявка принята!</p>
-              <p className="text-sm text-muted-foreground">
-                Мы отправили ссылку на <span className="text-foreground">{email}</span>.
-                Проверьте почту — письмо уже летит к вам.
-              </p>
-              <Link
-                to="/upload"
-                className="mt-2 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
-              >
-                <UploadCloud className="h-4 w-4" />
-                Загрузить съёмку сейчас
-              </Link>
-            </div>
-
-          ) : (
-            <form onSubmit={submit} className="mt-7 space-y-3" noValidate>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error) setError("");
-                }}
-                placeholder="ваш@email.ru"
-                className={`w-full rounded-xl border bg-background px-5 py-4 text-base outline-none transition-colors placeholder:text-muted-foreground focus:border-primary ${
-                  error ? "border-destructive" : "border-input"
-                }`}
-              />
-              {error && (
-                <p className="text-left text-sm text-destructive">{error}</p>
-              )}
-              <button
-                type="submit"
-                disabled={status === "sending"}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-4 text-base font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
-              >
-                {status === "sending" ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Отправляем…
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Хочу попробовать AI-отбор
-                  </>
+      {/* LEAD FORM */}
+      <section id="lead" className="px-5 py-16 sm:px-8 sm:py-24" ref={formRef}>
+        <div className="reveal mx-auto max-w-2xl">
+          <div className="d-lead">
+            <span className="d-kicker d-kicker-center">Ранний доступ</span>
+            <h2 className="d-display mt-4 text-[clamp(1.7rem,3.6vw,2.6rem)]">
+              Первым получить <span className="text-primary">ранний доступ</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-muted-foreground">
+              Оставьте почту — пришлём ссылку на пробную съёмку и расскажем про
+              оставшиеся места по 490 ₽.
+            </p>
+            {status === "done" ? (
+              <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-8">
+                <CheckCircle2 className="h-10 w-10 text-primary" />
+                <p className="text-lg font-semibold">Заявка принята!</p>
+                <p className="text-sm text-muted-foreground">
+                  Мы отправили ссылку на{" "}
+                  <span className="text-foreground">{email}</span>. Проверьте
+                  почту — письмо уже летит к вам.
+                </p>
+                <Link
+                  to="/upload"
+                  className="d-btn-primary mt-2"
+                >
+                  <UploadCloud className="h-4 w-4" />
+                  Загрузить съёмку сейчас
+                </Link>
+              </div>
+            ) : (
+              <form onSubmit={submit} className="mt-8 space-y-3" noValidate>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (error) setError("");
+                  }}
+                  placeholder="ваш@email.ru"
+                  aria-label="Email"
+                  className={`d-input ${error ? "border-destructive" : ""}`}
+                />
+                {error && (
+                  <p className="text-left text-sm text-destructive">{error}</p>
                 )}
-              </button>
-            </form>
-          )}
-          <p className="mt-6 text-xs leading-relaxed text-muted-foreground/60">
-            Загружая фото, вы соглашаетесь с обработкой данных в соответствии с{" "}
-            <Link to="/privacy" className="underline hover:text-primary">
-              Политикой конфиденциальности
-            </Link>
-            .
-          </p>
+                <button
+                  type="submit"
+                  disabled={status === "sending"}
+                  className="d-btn-primary w-full justify-center disabled:opacity-70"
+                >
+                  {status === "sending" ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Отправляем…
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Получить доступ
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+            <p className="mt-5 text-xs font-semibold text-muted-foreground/70">
+              Никакого спама. Только доступ и важные обновления.
+            </p>
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground/50">
+              Загружая фото, вы соглашаетесь с обработкой данных в соответствии с{" "}
+              <Link to="/privacy" className="underline hover:text-primary">
+                Политикой конфиденциальности
+              </Link>
+              .
+            </p>
+          </div>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className="border-t border-border px-5 py-10 sm:px-8">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-          <div>
-            <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary hover:underline">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-center text-sm text-muted-foreground/70 sm:flex-row sm:text-left">
+          <span>© 2026 Умная галерея для фотографов</span>
+          <div className="flex items-center gap-6">
+            <Link
+              to="/privacy"
+              className="transition-colors hover:text-foreground"
+            >
               Политика конфиденциальности
             </Link>
-            <p className="mt-2 text-xs text-muted-foreground/60">
-              © 2026 Умная галерея для фотографов
-            </p>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Остались вопросы?{" "}
             <a
               href="https://t.me/ai_gallery_helper"
               target="_blank"
               rel="noreferrer"
               className="font-semibold text-primary hover:underline"
             >
-              Напишите в Telegram: @ai_gallery_helper
+              Поддержка в Telegram
             </a>
-          </p>
+          </div>
         </div>
       </footer>
     </div>
