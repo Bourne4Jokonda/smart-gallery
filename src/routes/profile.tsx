@@ -22,6 +22,7 @@ import {
 import { readShoots, removeShoot, saveShoot } from "@/lib/storage";
 import { getAuthInstance, getUserShoots, getUserProfile, saveUserProfile, signOutUser, updateShootRecord, deleteShootRecord } from "@/lib/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
+import { useReveal } from "@/lib/useReveal";
 
 export const Route = createFileRoute("/profile")({
   beforeLoad: () => {},
@@ -79,6 +80,8 @@ function ProfilePage() {
   const [renameShootId, setRenameShootId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [renameBusy, setRenameBusy] = useState(false);
+
+  useReveal();
 
   const [profile, setProfile] = useState<{
     userId: string;

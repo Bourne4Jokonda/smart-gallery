@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { isFirebaseConfigured, saveLead } from "@/lib/firebase";
 import {
@@ -20,6 +20,7 @@ import {
   Wand2,
   Zap,
 } from "lucide-react";
+import { useReveal } from "@/lib/useReveal";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -217,27 +218,7 @@ function Landing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // Анимация появления секций (reveal)
-  useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const els = document.querySelectorAll(".reveal");
-    if (reduce || !("IntersectionObserver" in window)) {
-      els.forEach((el) => el.classList.add("in"));
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => {
-          if (en.isIntersecting) {
-            en.target.classList.add("in");
-            io.unobserve(en.target);
-          }
-        });
-      },
-      { threshold: 0.1 },
-    );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
+  useReveal();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
