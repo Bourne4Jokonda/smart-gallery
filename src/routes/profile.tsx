@@ -414,7 +414,17 @@ function ProfilePage() {
           </button>
         </div>
 
-        {shoots.length === 0 ? (
+        {loading ? (
+          <div className="reveal mt-10 d-lead">
+            <Loader2 className="mx-auto h-10 w-10 animate-spin text-muted-foreground" />
+            <h2 className="d-display mt-5 text-[clamp(1.3rem,2.6vw,1.8rem)]">
+              Загружаем съёмки…
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
+              Синхронизируем с облаком — секунду.
+            </p>
+          </div>
+        ) : shoots.length === 0 ? (
           <div className="reveal mt-10 d-lead">
             <Images className="mx-auto h-12 w-12 text-muted-foreground" />
             <h2 className="d-display mt-5 text-[clamp(1.5rem,3vw,2rem)]">

@@ -3,58 +3,81 @@ import { useEffect } from "react";
 /**
  * Анимация появления секций (reveal on scroll).
  *
- * Двойная защита от невидимых секций:
+ * Тройная защита от невидимого контента:
  * 1. IntersectionObserver — добавляет .in, когда элемент попадает в viewport.
- * 2. Таймаут-фолбэк: если через 1.2с ни один элемент не получил .in
- *    (headless-режим, кастомный WebView, IO не генерирует события) —
- *    ставим .in всем. Элементы всегда видны, анимация — только украшение.
+ * 2. MutationObserver — ловит НОВЫЕ .reveal-элементы, добавленные после
+ *    mount (например, карточки съёмок после загрузки данных из Firebase).
+ * 3. Индивидуальный таймаут 2с на каждый элемент: если IO так и не
+ *    сработал (headless, кастомный WebView) — элемент гарантированно
+ *    получает .in. Контент никогда не пропадает, анимация — украшение.
  *
  * При prefers-reduced-motion — сразу .in всем.
  */
 export function useReveal(): void {
   useEffect(() => {
-    const els = document.querySelectorAll(".reveal");
-    if (els.length === 0) return;
-
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const revealAll = () => {
+      document.querySelectorAll(".reveal:not(.in)").forEach((el) =>
+        el.classList.add("in"),
+      );
+    };
+
     if (reduce) {
-      els.forEach((el) => el.classList.add("in"));
+      revealAll();
       return;
     }
 
-    let revealed = false;
-    const markAll = () => {
-      if (revealed) return;
-      revealed = true;
-      els.forEach((el) => el.classList.add("in"));
-    };
-    const fallbackTimer = window.setTimeout(() => {
-      const anyVisible = document.querySelector(".reveal.in");
-      if (!anyVisible) markAll();
-    }, 1200);
+    // Таймеры-фолбэки: WeakMap<Element, timerId>
+    const timers = new WeakMap<Element, number>();
 
-    if (!("IntersectionObserver" in window)) {
-      markAll();
-      return () => window.clearTimeout(fallbackTimer);
+    let io: IntersectionObserver | null = null;
+    if ("IntersectionObserver" in window) {
+      io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((en) => {
+            if (en.isIntersecting) {
+              en.target.classList.add("in");
+              io!.unobserve(en.target);
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
     }
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => {
-          if (en.isIntersecting) {
-            en.target.classList.add("in");
-            io.unobserve(en.target);
-          }
-        });
-      },
-      { threshold: 0.1 },
-    );
+    const watch = (el: Element) => {
+      if (timers.has(el)) return;
+      // Гарантия видности: через 2с элемент получит .in в любом случае
+      timers.set(
+        el,
+        window.setTimeout(() => {
+          el.classList.add("in");
+          io?.unobserve(el);
+        }, 2000),
+      );
+      io?.observe(el);
+    };
 
-    els.forEach((el) => io.observe(el));
+    // Существующие на момент mount элементы
+    document.querySelectorAll(".reveal").forEach(watch);
+
+    // Новые элементы (React рендерит карточки после загрузки данных)
+    const mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        m.addedNodes.forEach((n) => {
+          if (!(n instanceof HTMLElement)) return;
+          if (n.classList?.contains("reveal")) watch(n);
+          n.querySelectorAll?.(".reveal").forEach(watch);
+        });
+      }
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      window.clearTimeout(fallbackTimer);
-      io.disconnect();
+      mo.disconnect();
+      io?.disconnect();
+      timers.forEach((t) => window.clearTimeout(t));
     };
   }, []);
 }
