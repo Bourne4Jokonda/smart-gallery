@@ -792,11 +792,12 @@
   transition: transform 0.2s ease;
 }
 
-.d-switch[aria-pressed="true"] {
+/* Тумблер в активном состоянии — по aria-pressed кнопки-родителя */
+.d-shoot-access[aria-pressed="true"] .d-switch {
   background: var(--color-primary);
 }
 
-.d-switch[aria-pressed="true"]::after {
+.d-shoot-access[aria-pressed="true"] .d-switch::after {
   transform: translateX(18px);
 }
 
