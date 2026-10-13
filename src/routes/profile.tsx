@@ -575,7 +575,7 @@ function ProfilePage() {
           </div>
         )}
       {passwordShootId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-5 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
           <div className="d-price w-full max-w-sm p-6">
             <h3 className="text-base font-bold">
               Пароль съёмки{" "}
@@ -648,7 +648,7 @@ function ProfilePage() {
       )}
 
       {renameShootId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-5 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
           <div className="d-price w-full max-w-sm p-6">
             <h3 className="text-base font-bold">Название съёмки</h3>
             <p className="mt-2 text-xs text-muted-foreground">

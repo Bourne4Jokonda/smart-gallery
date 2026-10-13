@@ -198,15 +198,15 @@ function RootComponent() {
             <span className="inline-flex rounded-lg bg-primary p-1.5 text-primary-foreground">SG</span>
             Smart Gallery
           </Link>
-          <nav className="flex items-center gap-3 text-sm">
+          <nav className="flex items-center gap-2 sm:gap-3 text-sm">
             {user ? (
               <>
                 <span className="hidden sm:inline text-xs text-muted-foreground">{user.email}</span>
-                <Link to="/upload" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]">
+                <Link to="/upload" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] sm:px-3.5 sm:py-2 sm:text-sm">
                   <UploadCloud className="h-4 w-4" />
                   Загрузить
                 </Link>
-                <Link to="/profile" className="rounded-xl border border-border px-3.5 py-2 transition-colors hover:border-primary hover:text-primary">Кабинет</Link>
+                <Link to="/profile" className="rounded-xl border border-border px-2.5 py-1.5 text-xs transition-colors hover:border-primary hover:text-primary sm:px-3.5 sm:py-2 sm:text-sm">Кабинет</Link>
                 <button
                   type="button"
                   onClick={async () => {
@@ -220,13 +220,13 @@ function RootComponent() {
                       window.location.href = "/login";
                     }
                   }}
-                  className="rounded-xl border border-border px-3.5 py-2 transition-colors hover:border-primary hover:text-primary"
+                  className="rounded-xl border border-border px-2.5 py-1.5 text-xs transition-colors hover:border-primary hover:text-primary sm:px-3.5 sm:py-2 sm:text-sm"
                 >
                   Выйти
                 </button>
               </>
             ) : (
-              <Link to="/login" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]">Войти</Link>
+              <Link to="/login" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] sm:px-3.5 sm:py-2 sm:text-sm">Войти</Link>
             )}
           </nav>
         </div>
