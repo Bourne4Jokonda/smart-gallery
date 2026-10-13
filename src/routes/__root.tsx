@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
-import { Loader2, UploadCloud } from "lucide-react";
+import { Loader2, Menu, UploadCloud, X } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -126,6 +126,12 @@ function RootComponent() {
   const [user, setUser] = useState<{ uid: string; email: string } | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    // Мобильное меню закрывается при смене роута
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     try {
@@ -198,15 +204,17 @@ function RootComponent() {
             <span className="inline-flex rounded-lg bg-primary p-1.5 text-primary-foreground">SG</span>
             Smart Gallery
           </Link>
-          <nav className="flex items-center gap-2 sm:gap-3 text-sm">
+
+          {/* Десктоп: обычная навигация */}
+          <nav className="hidden items-center gap-3 text-sm sm:flex">
             {user ? (
               <>
-                <span className="hidden sm:inline text-xs text-muted-foreground">{user.email}</span>
-                <Link to="/upload" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] sm:px-3.5 sm:py-2 sm:text-sm">
+                <span className="text-xs text-muted-foreground">{user.email}</span>
+                <Link to="/upload" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]">
                   <UploadCloud className="h-4 w-4" />
                   Загрузить
                 </Link>
-                <Link to="/profile" className="rounded-xl border border-border px-2.5 py-1.5 text-xs transition-colors hover:border-primary hover:text-primary sm:px-3.5 sm:py-2 sm:text-sm">Кабинет</Link>
+                <Link to="/profile" className="rounded-xl border border-border px-3.5 py-2 transition-colors hover:border-primary hover:text-primary">Кабинет</Link>
                 <button
                   type="button"
                   onClick={async () => {
@@ -220,16 +228,75 @@ function RootComponent() {
                       window.location.href = "/login";
                     }
                   }}
-                  className="rounded-xl border border-border px-2.5 py-1.5 text-xs transition-colors hover:border-primary hover:text-primary sm:px-3.5 sm:py-2 sm:text-sm"
+                  className="rounded-xl border border-border px-3.5 py-2 transition-colors hover:border-primary hover:text-primary"
                 >
                   Выйти
                 </button>
               </>
             ) : (
-              <Link to="/login" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] sm:px-3.5 sm:py-2 sm:text-sm">Войти</Link>
+              <Link to="/login" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]">Войти</Link>
             )}
           </nav>
+
+          {/* Мобильный: бургер */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-expanded={mobileOpen}
+            aria-label={mobileOpen ? "Закрыть меню" : "Открыть меню"}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border text-foreground transition-colors hover:border-primary hover:text-primary sm:hidden"
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
+
+        {/* Мобильное выпадающее меню */}
+        {mobileOpen && (
+          <nav className="border-t border-border bg-background px-5 py-4 sm:hidden">
+            {user ? (
+              <div className="flex flex-col gap-3">
+                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                <Link
+                  to="/upload"
+                  onClick={() => setMobileOpen(false)}
+                  className="d-btn-primary w-full"
+                >
+                  <UploadCloud className="h-4 w-4" />
+                  Загрузить съёмку
+                </Link>
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className="d-btn-ghost w-full"
+                >
+                  Кабинет
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setMobileOpen(false);
+                    try {
+                      await signOutUser();
+                    } catch {
+                      // ignore
+                    } finally {
+                      setUser(null);
+                      router.invalidate();
+                      window.location.href = "/login";
+                    }
+                  }}
+                  className="d-btn-ghost w-full"
+                >
+                  Выйти
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" onClick={() => setMobileOpen(false)} className="d-btn-primary w-full">
+                Войти
+              </Link>
+            )}
+          </nav>
+        )}
       </header>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
