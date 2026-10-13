@@ -22,7 +22,6 @@ import {
 import { readShoots, removeShoot, saveShoot } from "@/lib/storage";
 import { getAuthInstance, getUserShoots, getUserProfile, saveUserProfile, signOutUser, updateShootRecord, deleteShootRecord } from "@/lib/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { useReveal } from "@/lib/useReveal";
 
 export const Route = createFileRoute("/profile")({
   beforeLoad: () => {},
@@ -80,8 +79,6 @@ function ProfilePage() {
   const [renameShootId, setRenameShootId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [renameBusy, setRenameBusy] = useState(false);
-
-  useReveal();
 
   const [profile, setProfile] = useState<{
     userId: string;
@@ -373,7 +370,7 @@ function ProfilePage() {
     <div className="min-h-screen bg-background text-foreground antialiased">
       <main className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
         {/* Шапка кабинета */}
-        <div className="reveal">
+        <div>
           <span className="d-kicker">Личный кабинет</span>
           <h1 className="d-display mt-4 text-[clamp(2rem,4.5vw,3.4rem)]">
             Мои съёмки
@@ -390,7 +387,7 @@ function ProfilePage() {
           </p>
         </div>
 
-        <div className="reveal mt-6 flex flex-wrap items-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center gap-3">
           <Link to="/upload" className="d-btn-primary">
             <Sparkles className="h-4 w-4" />
             Загрузить съёмку
@@ -415,7 +412,7 @@ function ProfilePage() {
         </div>
 
         {loading ? (
-          <div className="reveal mt-10 d-lead">
+          <div className="mt-10 d-lead">
             <Loader2 className="mx-auto h-10 w-10 animate-spin text-muted-foreground" />
             <h2 className="d-display mt-5 text-[clamp(1.3rem,2.6vw,1.8rem)]">
               Загружаем съёмки…
@@ -425,7 +422,7 @@ function ProfilePage() {
             </p>
           </div>
         ) : shoots.length === 0 ? (
-          <div className="reveal mt-10 d-lead">
+          <div className="mt-10 d-lead">
             <Images className="mx-auto h-12 w-12 text-muted-foreground" />
             <h2 className="d-display mt-5 text-[clamp(1.5rem,3vw,2rem)]">
               Съёмок пока нет
@@ -439,7 +436,7 @@ function ProfilePage() {
             </Link>
           </div>
         ) : (
-          <div className="reveal mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {shoots.map((s) => {
               const bests =
                 s.aiResults?.filter(
