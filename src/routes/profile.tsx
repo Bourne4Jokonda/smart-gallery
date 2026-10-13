@@ -14,7 +14,6 @@ import {
   Pencil,
   RefreshCcw,
   Share2,
-  Sparkles,
   Trash2,
   UploadCloud,
   X,
@@ -389,8 +388,8 @@ function ProfilePage() {
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Link to="/upload" className="d-btn-primary">
-            <Sparkles className="h-4 w-4" />
-            Загрузить съёмку
+            <UploadCloud className="h-4 w-4" />
+            Загрузить новую съёмку
           </Link>
           <Link to="/settings" className="d-btn-ghost">
             <Camera className="h-4 w-4" />
@@ -431,8 +430,8 @@ function ProfilePage() {
               Загрузите первую съёмку, и здесь появится карточка с результатами.
             </p>
             <Link to="/upload" className="d-btn-primary mt-6">
-              <Sparkles className="h-4 w-4" />
-              Загрузить съёмку
+              <UploadCloud className="h-4 w-4" />
+              Загрузить новую съёмку
             </Link>
           </div>
         ) : (
@@ -455,32 +454,29 @@ function ProfilePage() {
               const title = s.title?.trim() || "";
               return (
                 <div key={s.shootId} className="d-card d-shoot-card">
-                  <div className="relative">
+                  <div className="d-shoot-thumb">
                     <Link
                       to={`/gallery/${s.shootId}`}
-                      className="d-photo block"
+                      className="block h-full"
                       title="Открыть съёмку"
                     >
-                      <div className="aspect-video">
-                        {cover ? (
-                          <img
-                            src={cover}
-                            alt={title || s.shootId}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                            Нет превью
-                          </div>
-                        )}
-                      </div>
+                      {cover ? (
+                        <img
+                          src={cover}
+                          alt={title || s.shootId}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                          Нет превью
+                        </div>
+                      )}
                     </Link>
                     <button
                       type="button"
                       onClick={() => handleDelete(s.shootId, s.email)}
                       disabled={removing === s.shootId}
-                      className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/40 bg-black/55 text-white backdrop-blur-sm transition-colors hover:bg-destructive disabled:opacity-60"
+                      className="d-shoot-del"
                       aria-label="Удалить съёмку"
                       title="Удалить съёмку"
                     >
@@ -491,43 +487,38 @@ function ProfilePage() {
                       )}
                     </button>
                   </div>
-                  <div className="mt-4 flex items-center gap-1.5">
-                    <Link
-                      to={`/gallery/${s.shootId}`}
-                      className="text-base font-bold text-foreground transition-colors hover:text-primary"
-                    >
-                      {title || `Съёмка #${s.shootId.slice(-6)}`}
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => openRename(s.shootId, title)}
-                      className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-                      aria-label="Переименовать"
-                      title="Переименовать"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {dateStr} · #{s.shootId.slice(-6)}
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    <span className="d-shoot-num">{s.fileUrls.length}</span> фото
-                    <span className="mx-2 text-border">·</span>
-                    лучших:{" "}
-                    <span className="d-shoot-num">{bests}</span>
-                  </p>
+                  <div className="d-shoot-body">
+                    <div className="d-shoot-title">
+                      <Link
+                        to={`/gallery/${s.shootId}`}
+                        className="text-foreground transition-colors hover:text-primary"
+                      >
+                        {title || `Съёмка #${s.shootId.slice(-6)}`}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => openRename(s.shootId, title)}
+                        className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                        aria-label="Переименовать"
+                        title="Переименовать"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <p className="d-shoot-meta">
+                      {dateStr} · #{s.shootId.slice(-6)}
+                    </p>
+                    <p className="d-shoot-stats">
+                      <b>{s.fileUrls.length}</b> фото · лучших:{" "}
+                      <b>{bests}</b>
+                    </p>
 
-                  <div className="mt-4">
                     <button
                       type="button"
                       onClick={() => togglePublic(s.shootId, Boolean(s.public))}
                       disabled={togglingPublic === s.shootId}
-                      className={`inline-flex w-full items-center justify-between rounded-full border px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-60 ${
-                        s.public
-                          ? "d-pill-on"
-                          : "border-border bg-secondary text-foreground hover:border-primary"
-                      }`}
+                      className={`d-shoot-access ${s.public ? "d-pill-on" : ""}`}
+                      aria-pressed={Boolean(s.public)}
                       title={
                         s.public
                           ? "Доступ включён — нажмите, чтобы закрыть"
@@ -536,19 +527,13 @@ function ProfilePage() {
                     >
                       <span>Открыть доступ</span>
                       <span
-                        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-                          s.public ? "bg-primary" : "bg-border"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            s.public ? "translate-x-4" : "translate-x-0.5"
-                          }`}
-                        />
-                      </span>
+                        className="d-switch"
+                        aria-hidden="true"
+                        data-state={s.public ? "on" : "off"}
+                      />
                     </button>
                     <div
-                      className={`mt-2 flex gap-2 ${s.public ? "" : "pointer-events-none opacity-35"}`}
+                      className={`d-shoot-foot ${s.public ? "" : "pointer-events-none opacity-35"}`}
                     >
                       <button
                         type="button"
@@ -556,55 +541,17 @@ function ProfilePage() {
                           openPasswordDialog(s.shootId, Boolean(hasPassword[s.shootId]))
                         }
                         disabled={!s.public}
-                        className="inline-flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed"
+                        className={hasPassword[s.shootId] ? "d-pill-on" : ""}
                         title={
                           hasPassword[s.shootId]
                             ? "Сменить/снять пароль"
                             : "Задать пароль"
                         }
                       >
-                        <KeyRound className="h-3 w-3 shrink-0" />
-                        <span className="truncate">
-                          {hasPassword[s.shootId]
-                            ? "Пароль задан ••••••"
-                            : "Пароль не задан"}
-                        </span>
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            const pw = s.password ?? "";
-                            if (!pw) {
-                              toast.error("Пароль не задан — сначала установите его");
-                              return;
-                            }
-                            try {
-                              await navigator.clipboard.writeText(pw);
-                              toast.success("Пароль скопирован");
-                            } catch {
-                              toast.error("Не удалось скопировать пароль");
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.stopPropagation();
-                            }
-                          }}
-                          className={`ml-auto inline-flex shrink-0 items-center justify-center rounded-md p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                            hasPassword[s.shootId]
-                              ? "text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                              : "text-muted-foreground"
-                          }`}
-                          title={
-                            hasPassword[s.shootId]
-                              ? "Скопировать пароль"
-                              : "Пароль не задан"
-                          }
-                          aria-label="Скопировать пароль"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </span>
+                        <KeyRound className="h-3.5 w-3.5" />
+                        {hasPassword[s.shootId]
+                          ? "Пароль задан"
+                          : "Пароль не задан"}
                       </button>
                       <button
                         type="button"
@@ -614,14 +561,10 @@ function ProfilePage() {
                           )
                         }
                         disabled={!s.public}
-                        className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                          s.public
-                            ? "d-pill-on"
-                            : "border-border text-muted-foreground"
-                        }`}
+                        className="d-pill-on"
                         title="Скопировать ссылку для клиента"
                       >
-                        <Share2 className="h-3 w-3" />
+                        <Share2 className="h-3.5 w-3.5" />
                         Ссылка
                       </button>
                     </div>
