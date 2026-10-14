@@ -354,7 +354,7 @@ function SettingsPage() {
                             ? "items-center justify-center"
                             : previewPosition === "top-left"
                                 ? "items-start justify-start p-4"
-                                : "items-end justify-end pb-1 pr-1"
+                                : "items-end justify-end pb-0 pr-0"
                         }`}
                       >
                         <div className="rounded-2xl bg-black/20 backdrop-blur-sm p-2.5" style={{ opacity: previewOpacity }}>
@@ -386,7 +386,7 @@ function SettingsPage() {
                             ? "items-center justify-center"
                             : previewPosition === "top-left"
                                 ? "items-start justify-start p-4"
-                                : "items-end justify-end pb-1 pr-1"
+                                : "items-end justify-end pb-0 pr-0"
                         }`}
                       >
                         <div className="rounded-2xl bg-black/20 backdrop-blur-sm p-2.5" style={{ opacity: previewOpacity }}>
