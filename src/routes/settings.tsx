@@ -308,12 +308,13 @@ function SettingsPage() {
               <span className="text-xs font-medium">{watermarkFontSize ?? 14}px</span>
             </label>
 
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className="d-btn-primary w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide disabled:opacity-60"
-            >
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="d-btn-primary flex-1 justify-center gap-2 py-3 text-sm font-bold tracking-wide disabled:opacity-60"
+              >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               <Save className="h-4 w-4" />
               Сохранить настройки
@@ -330,11 +331,12 @@ function SettingsPage() {
                 setWatermarkImageFile(null);
                 setWatermarkImagePreview(null);
               }}
-              className="d-btn-ghost w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide"
+              className="d-btn-ghost flex-1 justify-center gap-2 py-3 text-sm font-bold tracking-wide"
             >
               <RefreshCcw className="h-4 w-4" />
               Сбросить
             </button>
+            </div>
 
             {enabled && (
               <div className="mt-2 rounded-2xl border border-border bg-card/50 p-5">
