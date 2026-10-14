@@ -102,9 +102,21 @@ function ProfilePage() {
       setUser(u);
       setAuthChecked(true);
       if (!u) {
-        setLoading(false);
-        setShoots([]);
-        window.location.href = "/login";
+        // Не разлогиниваем сразу, если есть облачная запись или локальный кэш
+        const hasLocal = typeof window !== "undefined" && (
+          localStorage.getItem("smart-gallery-shoots") ||
+          localStorage.getItem("smart-gallery-email") ||
+          localStorage.getItem("smart-gallery-fallback-profile")
+        );
+        if (!hasLocal) {
+          setLoading(false);
+          setShoots([]);
+          window.location.href = "/login";
+        } else {
+          setAuthChecked(true);
+          // Оставляем пользователя с локальными данными
+          console.warn("[profile] no auth user, using local cache");
+        }
       }
     });
     return () => {
@@ -382,8 +394,13 @@ function ProfilePage() {
             <span className="font-bold text-foreground">{bestCount}</span>
           </p>
           <p className="mt-2 text-xs text-muted-foreground/70">
-            {user?.email ? `Аккаунт: ${user.email}` : "Загрузка аккаунта…"}
+            {user?.email ? `Аккаунт: ${user.email}` : "Обновляем из облака — подождите…"}
           </p>
+          {!user && (
+            <p className="mt-1 text-xs text-amber-400">
+              Не авторизован. Данные загружаются из локального кэша. Обновите страницу или войдите, чтобы синхронизировать с облаком.
+            </p>
+          )}
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
