@@ -32,7 +32,7 @@ function SettingsPage() {
   const [watermarkPosition, setWatermarkPosition] = useState<UserProfile["watermarkPosition"]>("bottom-right");
   const [watermarkOpacity, setWatermarkOpacity] = useState(0.35);
   const [watermarkFontFamily, setWatermarkFontFamily] = useState<string | null>(null);
-  const [watermarkFontSize, setWatermarkFontSize] = useState<number | null>(140);
+  const [watermarkFontSize, setWatermarkFontSize] = useState<number | null>(14);
   const [watermarkFontWeight, setWatermarkFontWeight] = useState<string | null>(null);
 
   useEffect(() => {
@@ -267,49 +267,46 @@ function SettingsPage() {
               </label>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
-                Логотип
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setWatermarkImageFile(e.target.files?.[0] ?? null)}
-                  className="rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground outline-none file:mr-3 file:rounded-full file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-primary hover:file:bg-primary/20"
-                />
-                {(watermarkImagePreview || profile?.watermarkImageUrl) && (
-                  <img src={watermarkImagePreview || profile!.watermarkImageUrl!} alt="" className="h-10 w-auto rounded-lg border border-border object-contain" />
-                )}
-              </label>
-              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
-                Прозрачность
-                <input
-                  type="range"
-                  min="0.05"
-                  max="0.8"
-                  step="0.05"
-                  value={watermarkOpacity}
-                  onChange={(e) => setWatermarkOpacity(Number(e.target.value))}
-                  className="mt-2 accent-primary"
-                />
-                <span className="text-xs font-medium">{Math.round(watermarkOpacity * 100)}%</span>
-              </label>
-            </div>
+            <label className="flex flex-col gap-2 text-xs text-muted-foreground w-full">
+              <span>Логотип</span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setWatermarkImageFile(e.target.files?.[0] ?? null)}
+                className="rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground outline-none file:mr-3 file:rounded-full file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-primary hover:file:bg-primary/20"
+              />
+              {(watermarkImagePreview || profile?.watermarkImageUrl) && (
+                <img src={watermarkImagePreview || profile!.watermarkImageUrl!} alt="" className="h-10 w-auto rounded-lg border border-border object-contain" />
+              )}
+            </label>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
-                Размер
-                <input
-                  type="range"
-                  min="10"
-                  max="140"
-                  step="10"
-                  value={watermarkFontSize ?? 140}
-                  onChange={(e) => setWatermarkFontSize(Number(e.target.value))}
-                  className="mt-2 accent-primary"
-                />
-                <span className="text-xs font-medium">{watermarkFontSize ?? 140}px</span>
-              </label>
-            </div>
+            <label className="flex flex-col gap-2 text-xs text-muted-foreground w-full">
+              <span>Прозрачность</span>
+              <input
+                type="range"
+                min="0.05"
+                max="0.8"
+                step="0.05"
+                value={watermarkOpacity}
+                onChange={(e) => setWatermarkOpacity(Number(e.target.value))}
+                className="mt-1 accent-primary"
+              />
+              <span className="text-xs font-medium">{Math.round(watermarkOpacity * 100)}%</span>
+            </label>
+
+            <label className="flex flex-col gap-2 text-xs text-muted-foreground w-full">
+              <span>Размер</span>
+              <input
+                type="range"
+                min="10"
+                max="32"
+                step="1"
+                value={watermarkFontSize ?? 14}
+                onChange={(e) => setWatermarkFontSize(Number(e.target.value))}
+                className="mt-2 accent-primary"
+              />
+              <span className="text-xs font-medium">{watermarkFontSize ?? 14}px</span>
+            </label>
 
             <button
               type="button"
@@ -328,7 +325,7 @@ function SettingsPage() {
                 setWatermarkPosition("bottom-right");
                 setWatermarkOpacity(0.35);
                 setWatermarkFontFamily(null);
-                setWatermarkFontSize(140);
+                setWatermarkFontSize(14);
                 setWatermarkFontWeight("700");
                 setWatermarkImageFile(null);
                 setWatermarkImagePreview(null);
