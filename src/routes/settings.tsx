@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Camera,
   Loader2,
+  RefreshCcw,
   Save,
 } from "lucide-react";
 import { getAuthInstance, getUserProfile, saveUserProfile, type UserProfile } from "@/lib/firebase";
@@ -31,7 +32,7 @@ function SettingsPage() {
   const [watermarkPosition, setWatermarkPosition] = useState<UserProfile["watermarkPosition"]>("bottom-right");
   const [watermarkOpacity, setWatermarkOpacity] = useState(0.35);
   const [watermarkFontFamily, setWatermarkFontFamily] = useState<string | null>(null);
-  const [watermarkFontSize, setWatermarkFontSize] = useState<number | null>(null);
+  const [watermarkFontSize, setWatermarkFontSize] = useState<number | null>(140);
   const [watermarkFontWeight, setWatermarkFontWeight] = useState<string | null>(null);
 
   useEffect(() => {
@@ -217,20 +218,23 @@ function SettingsPage() {
                   value={watermarkText}
                   onChange={(e) => setWatermarkText(e.target.value)}
                   placeholder="Например: Фотограф Иван"
-                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                  className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </label>
               <label className="flex flex-col gap-2 text-xs text-muted-foreground">
-                Логотип
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setWatermarkImageFile(e.target.files?.[0] ?? null)}
-                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-                />
-                {(watermarkImagePreview || profile?.watermarkImageUrl) && (
-                  <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="h-10 w-auto rounded-lg border border-border object-contain" />
-                )}
+                Шрифт
+                <select
+                  value={watermarkFontFamily ?? ""}
+                  onChange={(e) => setWatermarkFontFamily(e.target.value || null)}
+                  className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                >
+                  <option value="">По умолчанию</option>
+                  <option value="sans-serif">Sans</option>
+                  <option value="serif">Serif</option>
+                  <option value="monospace">Mono</option>
+                  <option value="cursive">Hand</option>
+                  <option value="system-ui">System</option>
+                </select>
               </label>
             </div>
 
@@ -240,12 +244,41 @@ function SettingsPage() {
                 <select
                   value={watermarkPosition}
                   onChange={(e) => setWatermarkPosition(e.target.value as typeof watermarkPosition)}
-                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                  className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 >
                   <option value="bottom-right">Справа внизу</option>
                   <option value="center">По центру</option>
                   <option value="top-left">Слева вверху</option>
                 </select>
+              </label>
+              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                Жирность
+                <select
+                  value={watermarkFontWeight ?? ""}
+                  onChange={(e) => setWatermarkFontWeight(e.target.value || null)}
+                  className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                >
+                  <option value="">По умолчанию</option>
+                  <option value="400">Regular</option>
+                  <option value="500">Medium</option>
+                  <option value="600">Semibold</option>
+                  <option value="700">Bold</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+                Логотип
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setWatermarkImageFile(e.target.files?.[0] ?? null)}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground outline-none file:mr-3 file:rounded-full file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-primary hover:file:bg-primary/20"
+                />
+                {(watermarkImagePreview || profile?.watermarkImageUrl) && (
+                  <img src={watermarkImagePreview || profile!.watermarkImageUrl!} alt="" className="h-10 w-auto rounded-lg border border-border object-contain" />
+                )}
               </label>
               <label className="flex flex-col gap-2 text-xs text-muted-foreground">
                 Прозрачность
@@ -256,57 +289,26 @@ function SettingsPage() {
                   step="0.05"
                   value={watermarkOpacity}
                   onChange={(e) => setWatermarkOpacity(Number(e.target.value))}
-                  className="mt-2"
+                  className="mt-2 accent-primary"
                 />
-                <span className="text-xs">{Math.round(watermarkOpacity * 100)}%</span>
+                <span className="text-xs font-medium">{Math.round(watermarkOpacity * 100)}%</span>
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-2 text-xs text-muted-foreground">
-                Шрифт
-                <select
-                  value={watermarkFontFamily ?? ""}
-                  onChange={(e) => setWatermarkFontFamily(e.target.value || null)}
-                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-                >
-                  <option value="">По умолчанию</option>
-                  <option value="sans-serif">Sans</option>
-                  <option value="serif">Serif</option>
-                  <option value="monospace">Mono</option>
-                  <option value="cursive">Hand</option>
-                  <option value="system-ui">System</option>
-                </select>
+                Размер
+                <input
+                  type="range"
+                  min="10"
+                  max="140"
+                  step="10"
+                  value={watermarkFontSize ?? 140}
+                  onChange={(e) => setWatermarkFontSize(Number(e.target.value))}
+                  className="mt-2 accent-primary"
+                />
+                <span className="text-xs font-medium">{watermarkFontSize ?? 140}px</span>
               </label>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="flex flex-col gap-2 text-xs text-muted-foreground">
-                  Размер
-                  <input
-                    type="range"
-                    min="10"
-                    max="32"
-                    step="1"
-                    value={watermarkFontSize ?? 14}
-                    onChange={(e) => setWatermarkFontSize(Number(e.target.value))}
-                    className="mt-2"
-                  />
-                  <span className="text-xs">{watermarkFontSize ?? 14}px</span>
-                </label>
-                <label className="flex flex-col gap-2 text-xs text-muted-foreground">
-                  Жирность
-                  <select
-                    value={watermarkFontWeight ?? ""}
-                    onChange={(e) => setWatermarkFontWeight(e.target.value || null)}
-                    className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-                  >
-                    <option value="">По умолчанию</option>
-                    <option value="400">Regular</option>
-                    <option value="500">Medium</option>
-                    <option value="600">Semibold</option>
-                    <option value="700">Bold</option>
-                  </select>
-                </label>
-              </div>
             </div>
 
             <button
@@ -318,6 +320,23 @@ function SettingsPage() {
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               <Save className="h-4 w-4" />
               Сохранить настройки
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setWatermarkText("Smart Gallery");
+                setWatermarkPosition("bottom-right");
+                setWatermarkOpacity(0.35);
+                setWatermarkFontFamily(null);
+                setWatermarkFontSize(140);
+                setWatermarkFontWeight("700");
+                setWatermarkImageFile(null);
+                setWatermarkImagePreview(null);
+              }}
+              className="d-btn-ghost w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide"
+            >
+              <RefreshCcw className="h-4 w-4" />
+              Сбросить
             </button>
 
             {enabled && (
