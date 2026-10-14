@@ -176,22 +176,22 @@ function SettingsPage() {
       <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">Настройки профиля</h1>
+            <h1 className="d-display text-[clamp(2rem,4.5vw,3.4rem)]">Настройки профиля</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Здесь будет расширение: watermark, публичность по умолчанию, брендинг и пр.
+              Водяной знак, брендинг и публичность по умолчанию.
             </p>
           </div>
-          <Link to="/profile" className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
+          <Link to="/profile" className="d-btn-ghost self-start">
             <ArrowLeft className="h-4 w-4" />
             Назад в кабинет
           </Link>
         </div>
 
-        <section className="mt-8 rounded-2xl border border-border bg-card/50 p-6">
+        <section className="d-card d-shoot-card mt-10">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-semibold">Водяной знак</h2>
+                <h2 className="d-display text-[clamp(1.3rem,2.6vw,1.8rem)]">Водяной знак</h2>
                 <p className="text-xs text-muted-foreground">Показывается в публичных галереях.</p>
               </div>
               <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
@@ -313,7 +313,7 @@ function SettingsPage() {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+              className="d-btn-primary w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               <Save className="h-4 w-4" />
@@ -321,8 +321,8 @@ function SettingsPage() {
             </button>
 
             {enabled && (
-              <div className="mt-2 rounded-xl border border-border bg-background p-4 text-xs text-muted-foreground">
-                <p className="mb-2 font-semibold text-foreground">Превью</p>
+              <div className="mt-2 rounded-2xl border border-border bg-card/50 p-5">
+                <p className="mb-3 text-sm font-bold tracking-tight">Живое превью</p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="relative aspect-video overflow-hidden rounded-lg bg-muted">
                     <img
@@ -339,7 +339,7 @@ function SettingsPage() {
                               : "items-end justify-end pb-2"
                         }`}
                       >
-                        <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
+                        <div className="rounded-2xl bg-black/20 backdrop-blur-sm p-2.5" style={{ opacity: previewOpacity }}>
                           {(watermarkImagePreview || profile?.watermarkImageUrl) && (
                             <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="mr-2 inline-block max-h-10 max-w-[70%] object-contain" />
                           )}
@@ -371,7 +371,7 @@ function SettingsPage() {
                               : "items-end justify-end pb-2"
                         }`}
                       >
-                        <div className="rounded-xl bg-black/0 p-2" style={{ opacity: previewOpacity }}>
+                        <div className="rounded-2xl bg-black/20 backdrop-blur-sm p-2.5" style={{ opacity: previewOpacity }}>
                           {(watermarkImagePreview || profile?.watermarkImageUrl) && (
                             <img src={watermarkImagePreview || profile.watermarkImageUrl} alt="" className="mr-2 inline-block max-h-10 max-w-[70%] object-contain" />
                           )}
