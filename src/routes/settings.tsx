@@ -188,7 +188,7 @@ function SettingsPage() {
           </Link>
         </div>
 
-        <section className="d-card d-shoot-card mt-10">
+        <section className="d-card mt-10">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div>
