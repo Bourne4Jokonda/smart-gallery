@@ -353,8 +353,8 @@ function SettingsPage() {
                           previewPosition === "center"
                             ? "items-center justify-center"
                             : previewPosition === "top-left"
-                              ? "items-start justify-start p-4"
-                              : "items-end justify-end pb-2"
+                                ? "items-start justify-start p-4"
+                                : "items-end justify-end pb-1 pr-1"
                         }`}
                       >
                         <div className="rounded-2xl bg-black/20 backdrop-blur-sm p-2.5" style={{ opacity: previewOpacity }}>
@@ -385,8 +385,8 @@ function SettingsPage() {
                           previewPosition === "center"
                             ? "items-center justify-center"
                             : previewPosition === "top-left"
-                              ? "items-start justify-start p-4"
-                              : "items-end justify-end pb-2"
+                                ? "items-start justify-start p-4"
+                                : "items-end justify-end pb-1 pr-1"
                         }`}
                       >
                         <div className="rounded-2xl bg-black/20 backdrop-blur-sm p-2.5" style={{ opacity: previewOpacity }}>
