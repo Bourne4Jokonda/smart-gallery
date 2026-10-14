@@ -182,7 +182,7 @@ function SettingsPage() {
               Водяной знак, брендинг и публичность по умолчанию.
             </p>
           </div>
-          <Link to="/profile" className="d-btn-ghost self-start">
+          <Link to="/profile" className="inline-flex items-center gap-2 text-sm text-primary hover:underline self-start">
             <ArrowLeft className="h-4 w-4" />
             Назад в кабинет
           </Link>
