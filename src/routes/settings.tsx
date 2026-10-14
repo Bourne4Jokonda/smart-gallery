@@ -175,17 +175,17 @@ function SettingsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <Link to="/profile" className="inline-flex items-center gap-2 text-sm text-primary hover:underline self-start">
+          <ArrowLeft className="h-4 w-4" />
+          Назад в кабинет
+        </Link>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mt-3">
           <div>
             <h1 className="d-display text-[clamp(2rem,4.5vw,3.4rem)]">Настройки профиля</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Водяной знак, брендинг и публичность по умолчанию.
             </p>
           </div>
-          <Link to="/profile" className="inline-flex items-center gap-2 text-sm text-primary hover:underline self-start">
-            <ArrowLeft className="h-4 w-4" />
-            Назад в кабинет
-          </Link>
         </div>
 
         <section className="d-card mt-10">
