@@ -232,6 +232,7 @@ export type UserProfile = {
   watermarkFontFamily?: string | null;
   watermarkFontSize?: number | null;
   watermarkFontWeight?: string | null;
+  watermarkOffset?: number;
 };
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
@@ -254,6 +255,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     watermarkFontFamily: (data["watermarkFontFamily"] as string | null) ?? null,
     watermarkFontSize: typeof data["watermarkFontSize"] === "number" ? data["watermarkFontSize"] : null,
     watermarkFontWeight: (data["watermarkFontWeight"] as string | null) ?? null,
+    watermarkOffset: typeof data["watermarkOffset"] === "number" ? data["watermarkOffset"] : 0,
   };
 }
 
@@ -278,6 +280,7 @@ export async function getPublicUserProfile(userId: string): Promise<UserProfile 
     watermarkFontFamily: (data["watermarkFontFamily"] as string | null) ?? null,
     watermarkFontSize: typeof data["watermarkFontSize"] === "number" ? data["watermarkFontSize"] : null,
     watermarkFontWeight: (data["watermarkFontWeight"] as string | null) ?? null,
+    watermarkOffset: typeof data["watermarkOffset"] === "number" ? data["watermarkOffset"] : 0,
   };
 }
 

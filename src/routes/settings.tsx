@@ -34,6 +34,7 @@ function SettingsPage() {
   const [watermarkFontFamily, setWatermarkFontFamily] = useState<string | null>(null);
   const [watermarkFontSize, setWatermarkFontSize] = useState<number | null>(14);
   const [watermarkFontWeight, setWatermarkFontWeight] = useState<string | null>(null);
+  const [watermarkOffset, setWatermarkOffset] = useState(0);
 
   useEffect(() => {
     if (!watermarkImageFile) {
@@ -86,6 +87,7 @@ function SettingsPage() {
           setWatermarkFontFamily(data.watermarkFontFamily ?? null);
           setWatermarkFontSize(data.watermarkFontSize ?? null);
           setWatermarkFontWeight(data.watermarkFontWeight ?? null);
+          setWatermarkOffset(typeof data.watermarkOffset === "number" ? data.watermarkOffset : 0);
         }
       } catch {
         // ignore
@@ -122,6 +124,7 @@ function SettingsPage() {
         watermarkFontFamily,
         watermarkFontSize,
         watermarkFontWeight,
+        watermarkOffset,
       };
 
       await saveUserProfile(user.uid, payload);
@@ -308,6 +311,20 @@ function SettingsPage() {
               <span className="text-xs font-medium">{watermarkFontSize ?? 14}px</span>
             </label>
 
+            <label className="flex flex-col gap-2 text-xs text-muted-foreground w-full">
+              <span>Отступ</span>
+              <input
+                type="range"
+                min="0"
+                max="32"
+                step="4"
+                value={watermarkOffset}
+                onChange={(e) => setWatermarkOffset(Number(e.target.value))}
+                className="mt-2 accent-primary"
+              />
+              <span className="text-xs font-medium">{watermarkOffset}px</span>
+            </label>
+
             <div className="flex gap-3">
               <button
                 type="button"
@@ -354,8 +371,9 @@ function SettingsPage() {
                             ? "items-center justify-center"
                             : previewPosition === "top-left"
                                 ? "items-start justify-start p-4"
-                                : "items-end justify-end pb-0 pr-0"
+                                : "items-end justify-end"
                         }`}
+                        style={{ paddingBottom: Math.max(0, (watermarkOffset ?? 0) / 4) + 'px', paddingRight: Math.max(0, (watermarkOffset ?? 0) / 4) + 'px' }}
                       >
                         <div className="rounded-2xl bg-black/20 backdrop-blur-sm p-2.5" style={{ opacity: previewOpacity }}>
                           {(watermarkImagePreview || profile?.watermarkImageUrl) && (
@@ -386,8 +404,9 @@ function SettingsPage() {
                             ? "items-center justify-center"
                             : previewPosition === "top-left"
                                 ? "items-start justify-start p-4"
-                                : "items-end justify-end pb-0 pr-0"
+                                : "items-end justify-end"
                         }`}
+                        style={{ paddingBottom: Math.max(0, (watermarkOffset ?? 0) / 4) + 'px', paddingRight: Math.max(0, (watermarkOffset ?? 0) / 4) + 'px' }}
                       >
                         <div className="rounded-2xl bg-black/20 backdrop-blur-sm p-2.5" style={{ opacity: previewOpacity }}>
                           {(watermarkImagePreview || profile?.watermarkImageUrl) && (
