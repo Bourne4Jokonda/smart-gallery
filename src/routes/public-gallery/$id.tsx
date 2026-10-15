@@ -41,12 +41,13 @@ function filenameFromUrl(url: string, index: number): string {
 function WatermarkOverlay({ profile }: { profile: UserProfile }) {
   if (!profile?.watermarkEnabled || profile.watermarkType === "none") return null;
   const opacity = typeof profile.watermarkOpacity === "number" ? profile.watermarkOpacity : 0.35;
+  const offset = typeof profile?.watermarkOffset === "number" ? profile.watermarkOffset : 0;
   const positionClass =
     profile.watermarkPosition === "center"
       ? "inset-0 flex items-center justify-center"
       : profile.watermarkPosition === "top-left"
         ? "inset-0 flex items-start justify-start p-4"
-        : "inset-0 flex items-end justify-end p-4 pb-8";
+        : `inset-0 flex items-end justify-end pb-${Math.max(0, Math.round(offset / 4))} pr-${Math.max(0, Math.round(offset / 4))}`;
   const fontFamily = profile?.watermarkFontFamily || "inherit";
   const fontSize = typeof profile?.watermarkFontSize === "number" ? profile.watermarkFontSize : 14;
   const fontWeight = profile?.watermarkFontWeight || "inherit";
