@@ -19,7 +19,7 @@ import { Copy } from "lucide-react";
 import { getAuthInstance, onUserChange, getDb } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { saveShoot, readShoots } from "@/lib/storage";
-import { saveShootRecord, saveShootRecordById, updateShootRecord } from "@/lib/firebase";
+import { saveShootRecord, saveShootRecordById, updateShootRecord, getPublicUserProfile, type UserProfile } from "@/lib/firebase";
 import { getPublicIdFromUrl } from "@/lib/cloudinary";
 
 interface ShootRecord {
@@ -46,6 +46,42 @@ function filenameFromUrl(url: string, index: number): string {
     // ignore
   }
   return `photo-${String(index + 1).padStart(3, "0")}.jpg`;
+}
+
+
+function WatermarkOverlay({ profile }: { profile: any }) {
+  if (!profile?.watermarkEnabled || profile.watermarkType === "none") return null;
+  const opacity = typeof profile.watermarkOpacity === "number" ? profile.watermarkOpacity : 0.35;
+  const offset = typeof profile.watermarkOffset === "number" ? profile.watermarkOffset : 0;
+  const pb = Math.max(0, Math.round(offset / 4));
+  const pr = Math.max(0, Math.round(offset / 4));
+  const positionClass =
+    profile.watermarkPosition === "center"
+      ? "inset-0 flex items-center justify-center"
+      : profile.watermarkPosition === "top-left"
+        ? "inset-0 flex items-start justify-start p-4"
+        : `inset-0 flex items-end justify-end pb-${pb} pr-${pr}`;
+  const fontFamily = profile?.watermarkFontFamily || "inherit";
+  const fontSize = typeof profile?.watermarkFontSize === "number" ? profile.watermarkFontSize : 14;
+  const fontWeight = profile?.watermarkFontWeight || "inherit";
+  const content =
+    profile.watermarkType === "image" && profile.watermarkImageUrl ? (
+      <img src={profile.watermarkImageUrl} alt="" className="max-h-16 max-w-[70%] object-contain" />
+    ) : (
+      <span
+        className="text-xs font-semibold tracking-wide text-white drop-shadow-md"
+        style={{ fontFamily, fontSize, fontWeight }}
+      >
+        {profile.watermarkText?.trim() || "Smart Gallery"}
+      </span>
+    );
+  return (
+    <div className={`pointer-events-none absolute ${positionClass}`}>
+      <div className="rounded-xl bg-black/20 backdrop-blur-sm p-2.5" style={{ opacity }}>
+        {content}
+      </div>
+    </div>
+  );
 }
 
 async function downloadAsZip(
@@ -125,6 +161,7 @@ function GalleryPage() {
   const [record, setRecord] = useState<ShootRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [watermarkProfile, setWatermarkProfile] = useState<UserProfile | null>(null);
 
   const currentLightboxIndex = useMemo(() => {
     if (lightboxUrl === null || !record) return null;
@@ -236,6 +273,21 @@ function GalleryPage() {
       cancelled = true;
     };
   }, [id]);
+
+  // Load watermark profile for owner
+  useEffect(() => {
+    if (!record?.userId) { setWatermarkProfile(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const p = await getPublicUserProfile(record.userId!);
+        if (!cancelled) setWatermarkProfile(p);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [record?.userId]);
 
   // Lightbox: lock body scroll + keyboard nav
   useEffect(() => {
@@ -921,6 +973,7 @@ function GalleryPage() {
         >
           <div className="d-lb-stage">
             <div className="d-lb-photo">
+              {watermarkProfile && <WatermarkOverlay profile={watermarkProfile} />}
               <img
                 src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
                 alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
