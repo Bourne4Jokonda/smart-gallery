@@ -1023,16 +1023,17 @@
 .d-lb-bar {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   justify-content: center;
+  flex-wrap: wrap;
   margin-top: 0;
   background: rgba(20, 20, 20, 0.75);
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  padding: 10px 18px;
-  width: max-content;
-  margin-left: auto;
-  margin-right: auto;
+  padding: 8px 14px;
+  width: 100%;
+  max-width: min(92vw, 860px);
+  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
