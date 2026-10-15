@@ -34,7 +34,7 @@ function SettingsPage() {
   const [watermarkFontFamily, setWatermarkFontFamily] = useState<string | null>(null);
   const [watermarkFontSize, setWatermarkFontSize] = useState<number | null>(14);
   const [watermarkFontWeight, setWatermarkFontWeight] = useState<string | null>(null);
-  const [watermarkOffset, setWatermarkOffset] = useState(0);
+  const [watermarkOffset, setWatermarkOffset] = useState(16);
 
   useEffect(() => {
     if (!watermarkImageFile) {
@@ -87,7 +87,7 @@ function SettingsPage() {
           setWatermarkFontFamily(data.watermarkFontFamily ?? null);
           setWatermarkFontSize(data.watermarkFontSize ?? null);
           setWatermarkFontWeight(data.watermarkFontWeight ?? null);
-          setWatermarkOffset(typeof data.watermarkOffset === "number" ? data.watermarkOffset : 0);
+          setWatermarkOffset(typeof data.watermarkOffset === "number" ? data.watermarkOffset : 16);
         }
       } catch {
         // ignore
@@ -345,6 +345,7 @@ function SettingsPage() {
                 setWatermarkFontFamily(null);
                 setWatermarkFontSize(14);
                 setWatermarkFontWeight("700");
+                setWatermarkOffset(16);
                 setWatermarkImageFile(null);
                 setWatermarkImagePreview(null);
               }}
