@@ -619,7 +619,23 @@ function PublicGalleryPage() {
                 </>
               )}
 
-
+              <div className="d-lb-bar">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownloadSingle();
+                  }}
+                  disabled={singleDownloading}
+                  className="inline-flex items-center gap-2 text-sm font-bold text-foreground transition-colors hover:text-primary disabled:opacity-50"
+                >
+                  <Download className="h-4 w-4" />
+                  {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
+                </button>
+                <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+                  {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
+                </span>
+              </div>
             </div>
           </div>
         </div>
