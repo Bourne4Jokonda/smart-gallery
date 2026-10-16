@@ -550,43 +550,6 @@ function PublicGalleryPage() {
         </div>
       </footer>
 
-      {lightboxUrl !== null && record.fileUrls[currentLightboxIndex ?? 0] && (
-        <div
-          className="d-lb-overlay"
-          onClick={() => setLightboxUrl(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Просмотр фото"
-        >
-          <div className="d-lb-stage">
-            <div className="d-lb-photo">
-              {watermarkProfile && <WatermarkOverlay profile={watermarkProfile} />}
-              <img
-                src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
-                alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
-                onClick={(e) => e.stopPropagation()}
-              />
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightboxUrl(null);
-                }}
-                className="d-lb-btn d-lb-close"
-                aria-label="Закрыть"
-              >
-                <X className="h-4 w-4" />
-              </button>
-
-              {(() => {
-                const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                const match = (record as any)?.aiResults?.find((r: any) => r.url === currentUrl);
-                return (
-                  <>
-                    {match?.score != null && (
-                      <span className="absolute bottom-14 left-4 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground shadow-lg">AI: {match.score}/10</span>
-                    )}
                     <span className="absolute bottom-4 left-4 text-xs font-bold text-white drop-shadow-md">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
                   </>
                 );
