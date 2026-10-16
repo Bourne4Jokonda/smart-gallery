@@ -548,10 +548,8 @@ function PublicGalleryPage() {
         <div className="mx-auto max-w-5xl text-center text-xs text-muted-foreground">
           © 2026 Умная галерея для фотографов
         </div>
-      </footer>
-
-                    <span className="absolute bottom-4 left-4 text-xs font-bold text-white drop-shadow-md">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
-                  </>
+      </footer>                    <span className="absolute bottom-4 left-4 text-xs font-bold text-white drop-shadow-md">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
+                                    </span>
                 );
               })()}
 
@@ -561,4 +559,3 @@ function PublicGalleryPage() {
           </div>
         </div>
       )}
-
