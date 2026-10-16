@@ -550,84 +550,71 @@ function PublicGalleryPage() {
         </div>
       </footer>
 
-      {/* Лайтбокс */}
       {lightboxUrl !== null && record.fileUrls[currentLightboxIndex ?? 0] && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
-          onClick={closeLightbox}
+          className="d-lb-overlay"
+          onClick={() => setLightboxUrl(null)}
           role="dialog"
           aria-modal="true"
+          aria-label="Просмотр фото"
         >
-          <div className="relative inline-block max-h-[85vh] max-w-[90vw]">
-            <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+          <div className="d-lb-stage">
+            <div className="d-lb-photo">
+              {watermarkProfile && <WatermarkOverlay profile={watermarkProfile} />}
+              <img
+                src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
+                alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
+                onClick={(e) => e.stopPropagation()}
+              />
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  closeLightbox();
+                  const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
+                  
                 }}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-colors hover:border-primary hover:text-primary"
+                disabled={false}
+                className="d-lb-btn d-lb-spark"
+                aria-label="Переоценить кадр"
+              >
+                {curating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxUrl(null);
+                }}
+                className="d-lb-btn d-lb-close"
                 aria-label="Закрыть"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
-            </div>
 
-            {record.fileUrls.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    lightboxPrev();
-                  }}
-                  className="absolute -left-10 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-colors hover:border-primary hover:text-primary"
-                  aria-label="Предыдущее фото"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    lightboxNext();
-                  }}
-                  className="absolute -right-10 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-colors hover:border-primary hover:text-primary"
-                  aria-label="Следующее фото"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              </>
-            )}
-
-            <img
-              src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
-              alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
-              onClick={(e) => e.stopPropagation()}
-              className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
-            />
-            <WatermarkOverlay profile={profile} />
-
-            <div className="absolute -bottom-8 left-1/2 flex -translate-x-1/2 items-center whitespace-nowrap justify-center gap-2 rounded-full border border-border bg-card/80 px-4 py-1.5">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDownloadSingle();
-                }}
-                disabled={singleDownloading}
-                className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                <Download className="h-4 w-4" />
-                {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
-              </button>
-              <div className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium text-foreground">
-                {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+              {record.fileUrls.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      lightboxPrev();
+                    }}
+                    className="d-lb-btn d-lb-prev"
+                    aria-label="Предыдущее фото"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      lightboxNext();
+                    }}
+                    className="d-lb-btn d-lb-next"
+                    aria-label="Следующее фото"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
 }
