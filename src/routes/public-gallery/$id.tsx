@@ -617,4 +617,8 @@ function PublicGalleryPage() {
                   </button>
                 </>
               )}
-}
+            </div>
+          </div>
+        </div>
+      )}
+
