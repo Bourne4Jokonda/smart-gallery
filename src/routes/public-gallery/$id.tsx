@@ -566,19 +566,7 @@ function PublicGalleryPage() {
                 alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
                 onClick={(e) => e.stopPropagation()}
               />
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                  
-                }}
-                disabled={false}
-                className="d-lb-btn d-lb-spark"
-                aria-label="Переоценить кадр"
-              >
-                {curating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              </button>
+
               <button
                 type="button"
                 onClick={(e) => {
