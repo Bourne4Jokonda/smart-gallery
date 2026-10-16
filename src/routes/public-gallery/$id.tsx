@@ -555,32 +555,6 @@ function PublicGalleryPage() {
                 );
               })()}
 
-              {record.fileUrls.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      lightboxPrev();
-                    }}
-                    className="d-lb-btn d-lb-prev"
-                    aria-label="Предыдущее фото"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      lightboxNext();
-                    }}
-                    className="d-lb-btn d-lb-next"
-                    aria-label="Следующее фото"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                </>
-              )}
 
 
             </div>
