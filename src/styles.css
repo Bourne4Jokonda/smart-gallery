@@ -967,9 +967,18 @@
   cursor: not-allowed;
 }
 
+.d-lb-header {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
 .d-lb-spark {
-  top: -16px;
-  left: -16px;
+  position: static;
 }
 
 .d-lb-close {
@@ -990,9 +999,6 @@
 }
 
 .d-ai-badge {
-  position: absolute;
-  right: 14px;
-  top: 14px;
   background: rgba(20, 20, 20, 0.75);
   border: 1px solid var(--color-border);
   color: var(--color-primary);
@@ -1000,14 +1006,12 @@
   font-weight: 800;
   padding: 5px 12px;
   border-radius: 999px;
-  z-index: 10;
   pointer-events: none;
 }
 
 .d-lb-frame {
-  display: block;
-  width: fit-content;
-  margin: 8px auto 0;
+  display: inline-block;
+  margin: 0 12px 0 0;
   background: rgba(20, 20, 20, 0.75);
   border: 1px solid var(--color-border);
   color: #fff;
