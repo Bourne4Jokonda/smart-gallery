@@ -560,7 +560,7 @@ function PublicGalleryPage() {
         >
           <div className="d-lb-stage">
             <div className="d-lb-photo">
-              {watermarkProfile && <WatermarkOverlay profile={watermarkProfile} />}
+              {/* {watermarkProfile && <WatermarkOverlay profile={watermarkProfile} />} */}
               <img
                 src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
                 alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
@@ -627,4 +627,5 @@ function PublicGalleryPage() {
           </div>
         </div>
       )}
+);
 
