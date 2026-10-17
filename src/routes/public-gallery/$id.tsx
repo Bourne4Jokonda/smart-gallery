@@ -548,14 +548,83 @@ function PublicGalleryPage() {
         <div className="mx-auto max-w-5xl text-center text-xs text-muted-foreground">
           © 2026 Умная галерея для фотографов
         </div>
-      </footer>                    <span className="absolute bottom-4 left-4 text-xs font-bold text-white drop-shadow-md">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
-                                    </span>
-                );
-              })()}
+      </footer>
 
+      {lightboxUrl !== null && record.fileUrls[currentLightboxIndex ?? 0] && (
+        <div
+          className="d-lb-overlay"
+          onClick={() => setLightboxUrl(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Просмотр фото"
+        >
+          <div className="d-lb-stage">
+            <div className="d-lb-photo">
+              {watermarkProfile && <WatermarkOverlay profile={watermarkProfile} />}
+              <img
+                src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
+                alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
+                onClick={(e) => e.stopPropagation()}
+              />
 
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxUrl(null);
+                }}
+                className="d-lb-btn d-lb-close"
+                aria-label="Закрыть"
+              >
+                <X className="h-4 w-4" />
+              </button>
 
+              {record.fileUrls.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      lightboxPrev();
+                    }}
+                    className="d-lb-btn d-lb-prev"
+                    aria-label="Предыдущее фото"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      lightboxNext();
+                    }}
+                    className="d-lb-btn d-lb-next"
+                    aria-label="Следующее фото"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+
+              <div className="d-lb-bar">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownloadSingle();
+                  }}
+                  disabled={singleDownloading}
+                  className="inline-flex items-center gap-2 text-sm font-bold text-foreground transition-colors hover:text-primary disabled:opacity-50"
+                >
+                  <Download className="h-4 w-4" />
+                  {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
+                </button>
+                <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+                  {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       )}
+

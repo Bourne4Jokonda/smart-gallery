@@ -986,11 +986,12 @@ function GalleryPage() {
                     {match?.score != null && (
                       <span className="d-ai-badge">AI: {match.score}/10</span>
                     )}
-                    <span className="d-lb-frame">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
                   </>
                 );
               })()}
             </div>
+
+            <span className="d-lb-frame">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
 
             <div className="d-lb-bar" onClick={(e) => e.stopPropagation()}>
               <button
