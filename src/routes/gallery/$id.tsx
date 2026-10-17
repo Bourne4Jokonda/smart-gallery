@@ -988,8 +988,9 @@ function GalleryPage() {
               )}
             </div>
 
+            <span className="d-lb-frame">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
+
             <div className="d-lb-bar" onClick={(e) => e.stopPropagation()}>
-              <span className="d-lb-frame">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
               <button
                 type="button"
                 onClick={deleteCurrentImage}
@@ -1009,7 +1010,7 @@ function GalleryPage() {
                 <Download className="h-4 w-4" />
                 {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
               </button>
-              <span className="text-xs font-bold text-muted-foreground">
+              <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">
                 {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
               </span>
             </div>
