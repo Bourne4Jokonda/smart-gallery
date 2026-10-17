@@ -988,8 +988,6 @@ function GalleryPage() {
               )}
             </div>
 
-            <span className="d-lb-frame">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
-
             <div className="d-lb-bar" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
