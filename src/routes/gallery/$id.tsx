@@ -926,28 +926,6 @@ function GalleryPage() {
                 alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
                 onClick={(e) => e.stopPropagation()}
               />
-              <div className="d-lb-header">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                    if (currentUrl) reindexSingleImage(currentUrl);
-                  }}
-                  disabled={curating}
-                  className="d-lb-btn d-lb-spark"
-                  aria-label="Переоценить кадр"
-                >
-                  {curating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                </button>
-                {(() => {
-                  const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                  const match = record.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(currentUrl));
-                  return match?.score != null ? (
-                    <span className="d-ai-badge">AI: {match.score}/10</span>
-                  ) : null;
-                })()}
-              </div>
               <button
                 type="button"
                 onClick={(e) => {
@@ -987,8 +965,6 @@ function GalleryPage() {
                 </>
               )}
             </div>
-
-            <span className="d-lb-frame">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
 
             <div className="d-lb-bar" onClick={(e) => e.stopPropagation()}>
               <button
