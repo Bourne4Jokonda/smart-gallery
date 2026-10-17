@@ -933,9 +933,12 @@
   overflow: hidden;
   background: var(--color-secondary);
   border: 1px solid var(--color-border);
+  width: fit-content;
+  display: block;
 }
 
 .d-lb-photo img {
+  width: auto;
   max-width: 100%;
   max-height: 76vh;
   object-fit: contain;
