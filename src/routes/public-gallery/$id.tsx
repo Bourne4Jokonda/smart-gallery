@@ -629,4 +629,3 @@ function PublicGalleryPage() {
       )}
       </div>
   );
-
