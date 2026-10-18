@@ -1096,20 +1096,17 @@
 }
 
 .d-lb-bar {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 10px;
   justify-content: center;
   flex-wrap: nowrap;
+  margin: 12px auto 0;
   background: rgba(20, 20, 20, 0.75);
   border: 1px solid var(--color-border);
   border-radius: 999px;
   padding: 8px 14px;
-  z-index: 10;
+  width: fit-content;
 }
 
 @media (max-width: 900px) {
