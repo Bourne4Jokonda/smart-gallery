@@ -986,6 +986,7 @@
   align-items: center;
   gap: 8px;
   z-index: 10;
+  margin-top: -8px;
 }
 
 .d-lb-spark {
