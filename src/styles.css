@@ -978,13 +978,13 @@
 }
 
 .d-lb-header {
-  position: absolute;
-  top: 12px;
-  left: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
   z-index: 10;
+  margin: 0 12px 8px 12px;
+  width: 100%;
+  justify-content: flex-start;
 }
 
 .d-lb-spark {

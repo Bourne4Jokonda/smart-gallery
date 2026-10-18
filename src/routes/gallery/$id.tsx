@@ -984,11 +984,6 @@ function GalleryPage() {
                   </div>
                 )}
               </div>
-              <img
-                src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
-                alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
-                onClick={(e) => e.stopPropagation()}
-              />
               <div className="d-lb-header">
                 <button
                   type="button"
@@ -1027,6 +1022,11 @@ function GalleryPage() {
                   )}
                 </button>
               </div>
+              <img
+                src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
+                alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
+                onClick={(e) => e.stopPropagation()}
+              />
               <button
                 type="button"
                 onClick={(e) => {
