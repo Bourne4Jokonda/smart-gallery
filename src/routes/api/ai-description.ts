@@ -270,9 +270,11 @@ export const Route = createFileRoute("/api/ai-description")({
 
           // 3. Parse response
           const descriptionMatch = resultText.match(
-            /Description:\s*([\s\S]*?)(?:\n|$)/i,
+            /(?:Description|Описание):\\s*([\\s\\S]*?)(?:\\n|$)/i,
           );
-          const tagsMatch = resultText.match(/Tags:\s*([\s\S]*?)(?:\n|$)/i);
+          const tagsMatch = resultText.match(
+            /(?:Tags|Теги):\\s*([\\s\\S]*?)(?:\\n|$)/i,
+          );
 
           const description =
             descriptionMatch?.[1]?.trim() ?? resultText.trim();
