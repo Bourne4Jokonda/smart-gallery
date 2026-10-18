@@ -261,6 +261,13 @@ function GalleryPage() {
     };
   }, [currentLightboxIndex, record, closeLightbox, lightboxNext, lightboxPrev]);
 
+  // Reset AI description when switching photos in lightbox so a description
+  // from a previous photo isn't shown for the new one.
+  useEffect(() => {
+    setAiDescription(null);
+    setAiDescriptionError(null);
+  }, [currentLightboxIndex]);
+
   const handleDownloadZip = useCallback(async () => {
     if (!record || zipping) return;
     setZipping(true);
