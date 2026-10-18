@@ -3,14 +3,6 @@ import { getDb } from "@/lib/firebase";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1/chat/completions";
-
-// Models in priority order: primary → fallback 1 → fallback 2
-const VISION_MODELS = [
-  "thinkingmachines/inkling:free",      // primary: 41B active MoE, 1M context
-  "nvidia/nemotron-3.5-super-vl:free",  // fallback: 12B active MoE, vision+video
-  "openrouter/free",                     // last resort: random free model
-];
-
 // Free Gemini endpoint accepts ~15 requests/min (throttled in caller).
 // Mirrors the working pattern from /api/curate.ts.
 const GEMINI_ENDPOINT =
@@ -18,6 +10,13 @@ const GEMINI_ENDPOINT =
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_MAX_OUTPUT_TOKENS = 400;
 const GEMINI_RETRY_ON_429 = true;
+
+// Models in priority order: primary -> fallback 1 -> fallback 2
+const VISION_MODELS = [
+  "thinkingmachines/inkling:free",      // primary: 41B active MoE, 1M context
+  "nvidia/nemotron-3.5-super-vl:free",  // fallback: 12B active MoE, vision+video
+  "openrouter/free",                     // last resort: random free model
+];
 
 async function describeWithGemini(photoUrl: string, apiKey: string): Promise<string> {
   const endpoint = `${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`;
@@ -34,7 +33,7 @@ async function describeWithGemini(photoUrl: string, apiKey: string): Promise<str
   const mimeType = contentType.split(";")[0].trim();
 
   const prompt =
-    "Опиши это фото для профессионального фотографа на русском языке. Выведи описание одним предложением (профессиональным, не поэ siчным), затем пять тегов через запятую. Формат: \"Описание: <одно предложение>\\nТеги: <тэг1>, <тэг2>, <тэг3>, <тэг4>, <тэг5>\".";
+    'Опиши это фото для профессионального фотографа на русском языке. Выведи описание одним предложением (профессиональным, не поэтичным), затем пять тегов через запятую. Формат: "Описание: <одно предложение>\\nТеги: <тэг1>, <тэг2>, <тэг3>, <тэг4>, <тэг5>".';
 
   const payload = {
     contents: [
@@ -84,34 +83,53 @@ async function describeWithGemini(photoUrl: string, apiKey: string): Promise<str
   throw new Error("Превышен лимит Gemini");
 }
 
-const SYSTEM_PROMPT = `
+const SYSTEM_PROMPT = `\
 You are a professional photo assistant for a photographer's gallery.
 Your task: describe the image in Russian in ONE short sentence (professional, not poetic), then list exactly 5 comma-separated keywords/tags describing what's in the photo.
 Output format:
 Description: <one sentence in Russian>
-Tags: <tag1>, <tag2>, <tag3>, <tag4>, <tag5>
-`.trim();
+Tags: <tag1>, <tag2>, <tag3>, <tag4>, <tag5>`;
 
-async function getCachedDescription(db: any, photoUrl: string): Promise<{ description: string; tags: string[] } | null> {
-  const q = query(collection(db, "aiDescriptions"), where("photoUrl", "==", photoUrl));
-  const snap = await getDocs(q);
-  if (!snap.empty) {
-    const docData = snap.docs[0].data();
-    return {
-      description: docData.description as string,
-      tags: (docData.tags as string[]) ?? [],
-    };
+// ---------- Firebase cache: BEST-EFFORT only, never blocks the AI response ----------
+
+async function getCachedDescription(
+  db: any,
+  photoUrl: string,
+): Promise<{ description: string; tags: string[] } | null> {
+  try {
+    const q = query(collection(db, "aiDescriptions"), where("photoUrl", "==", photoUrl));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const docData = snap.docs[0].data();
+      return {
+        description: docData.description as string,
+        tags: (docData.tags as string[]) ?? [],
+      };
+    }
+  } catch (e) {
+    // Cache read failure (e.g. Firestore permissions) is non-fatal: treat as miss.
+    console.error("[ai-description] cache read failed:", e);
   }
   return null;
 }
 
-async function saveDescription(db: any, photoUrl: string, description: string, tags: string[]): Promise<void> {
-  await addDoc(collection(db, "aiDescriptions"), {
-    photoUrl,
-    description,
-    tags,
-    createdAt: new Date(),
-  });
+async function saveDescription(
+  db: any,
+  photoUrl: string,
+  description: string,
+  tags: string[],
+): Promise<void> {
+  try {
+    await addDoc(collection(db, "aiDescriptions"), {
+      photoUrl,
+      description,
+      tags,
+      createdAt: new Date(),
+    });
+  } catch (e) {
+    // non-fatal: cache write failure shouldn't block the response
+    console.error("[ai-description] cache save failed:", e);
+  }
 }
 
 export const Route = createFileRoute("/api/ai-description")({
@@ -122,17 +140,28 @@ export const Route = createFileRoute("/api/ai-description")({
           const url = new URL(request.url);
           const photoUrl = url.searchParams.get("photoUrl")?.trim();
           if (!photoUrl) {
-            return Response.json({ ok: false, error: "photoUrl required" }, { status: 400 });
+            return Response.json(
+              { ok: false, error: "photoUrl required" },
+              { status: 400 },
+            );
           }
           const db = getDb();
           const cached = await getCachedDescription(db, photoUrl);
           if (cached) {
             return Response.json({ ok: true, cached: true, ...cached });
           }
-          return Response.json({ ok: true, cached: false, description: null, tags: [] });
+          return Response.json({
+            ok: true,
+            cached: false,
+            description: null,
+            tags: [],
+          });
         } catch (err) {
           return Response.json(
-            { ok: false, error: err instanceof Error ? err.message : "Unknown error" },
+            {
+              ok: false,
+              error: err instanceof Error ? err.message : "Unknown error",
+            },
             { status: 500 },
           );
         }
@@ -141,21 +170,24 @@ export const Route = createFileRoute("/api/ai-description")({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { photoUrl, shootId } = body;
+          const { photoUrl } = body ?? {};
 
           if (!photoUrl || typeof photoUrl !== "string") {
-            return Response.json({ ok: false, error: "photoUrl required" }, { status: 400 });
+            return Response.json(
+              { ok: false, error: "photoUrl required" },
+              { status: 400 },
+            );
           }
 
           const db = getDb();
 
-          // 1. Check cache first
+          // 1. Check cache first (best-effort)
           const cached = await getCachedDescription(db, photoUrl);
           if (cached) {
             return Response.json({ ok: true, cached: true, ...cached });
           }
 
-          // 2. Try models in order until one succeeds
+          // 2a. Try OpenRouter models in order until one succeeds
           let lastError: string | null = null;
           let resultText = "";
 
@@ -166,20 +198,22 @@ export const Route = createFileRoute("/api/ai-description")({
                 headers: {
                   Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
                   "Content-Type": "application/json",
-                  "HTTP-Referer": process.env.VITE_SITE_URL ?? "https://aleksandr-faraonov.vercel.app",
+                  "HTTP-Referer":
+                    process.env.VITE_SITE_URL ??
+                    "https://aleksandr-faraonov.vercel.app",
                   "X-Title": "Smart Gallery",
                 },
                 body: JSON.stringify({
                   model,
                   messages: [
-                    {
-                      role: "system",
-                      content: SYSTEM_PROMPT,
-                    },
+                    { role: "system", content: SYSTEM_PROMPT },
                     {
                       role: "user",
                       content: [
-                        { type: "text", text: "Опиши это фото для фотографа на русском языке. Выведи описание одним предложением и 5 тегов через запятую." },
+                        {
+                          type: "text",
+                          text: "Опиши это фото для фотографа на русском языке. Выведи описание одним предложением и 5 тегов через запятую.",
+                        },
                         { type: "image_url", image_url: { url: photoUrl } },
                       ],
                     },
@@ -211,9 +245,7 @@ export const Route = createFileRoute("/api/ai-description")({
           if (!resultText) {
             try {
               const geminiKey =
-                (process.env.GEMINI_API_KEY ?? "")
-                  .trim()
-                  .replace(/^sk-|REPLACE/, "");
+                (process.env.GEMINI_API_KEY ?? "").trim().replace(/^sk-|REPLACE/, "");
               if (!geminiKey) {
                 lastError = "Gemini_API_KEY not configured on server";
               } else {
@@ -230,26 +262,24 @@ export const Route = createFileRoute("/api/ai-description")({
             return Response.json(
               {
                 ok: false,
-                error: `All providers failed. Last error: ${lastError}`,
+                error: `Все провайдеры недоступны. Последняя ошибка: ${lastError}`,
               },
               { status: 502 },
             );
           }
 
           // 3. Parse response
-          const descriptionMatch = resultText.match(/Description:\s*([\s\S]*?)(?:\n|$)/i);
+          const descriptionMatch = resultText.match(
+            /Description:\s*([\s\S]*?)(?:\n|$)/i,
+          );
           const tagsMatch = resultText.match(/Tags:\s*([\s\S]*?)(?:\n|$)/i);
 
-          const description = descriptionMatch?.[1]?.trim() ?? resultText.trim();
+          const description =
+            descriptionMatch?.[1]?.trim() ?? resultText.trim();
           const rawTags = tagsMatch?.[1]?.split(",").map((t) => t.trim()).filter(Boolean) ?? [];
 
-          // 4. Save to Firebase
-          try {
-            await saveDescription(db, photoUrl, description, rawTags);
-          } catch (e) {
-            // non-fatal: cache write failure shouldn't block the response
-            console.error("[ai-description] cache save failed:", e);
-          }
+          // 4. Save to Firebase cache (best-effort)
+          await saveDescription(db, photoUrl, description, rawTags);
 
           return Response.json({
             ok: true,
@@ -259,8 +289,11 @@ export const Route = createFileRoute("/api/ai-description")({
           });
         } catch (err) {
           return Response.json(
-            { ok: false, error: err instanceof Error ? err.message : "Unknown error" },
-            { status: 500 }
+            {
+              ok: false,
+              error: err instanceof Error ? err.message : "Unknown error",
+            },
+            { status: 500 },
           );
         }
       },
