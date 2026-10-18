@@ -1030,15 +1030,14 @@
 }
 
 .d-lb-desc {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  right: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   z-index: 10;
   max-width: calc(100% - 24px);
+  width: 100%;
+  padding: 0 12px 8px 12px;
+  text-align: left;
 }
 
 .d-ai-desc-text {
