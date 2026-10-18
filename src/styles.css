@@ -933,6 +933,7 @@
 }
 
 .d-lb-photo {
+  position: relative;
   border-radius: 20px;
   overflow: hidden;
   background: var(--color-secondary);
@@ -978,13 +979,12 @@
 }
 
 .d-lb-header {
-  position: absolute;
-  top: 12px;
-  left: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
   z-index: 10;
+  align-self: flex-start;
+  margin: 0 0 8px 12px;
 }
 
 .d-lb-spark {
@@ -1096,18 +1096,20 @@
 }
 
 .d-lb-bar {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 10px;
   justify-content: center;
   flex-wrap: nowrap;
-  margin: 12px auto 0;
   background: rgba(20, 20, 20, 0.75);
   border: 1px solid var(--color-border);
   border-radius: 999px;
   padding: 8px 14px;
-  width: fit-content;
-  box-sizing: border-box;
+  z-index: 10;
 }
 
 @media (max-width: 900px) {
