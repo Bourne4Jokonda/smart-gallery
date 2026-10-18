@@ -12,6 +12,7 @@ import {
   Trash2,
   RefreshCcw,
   AlertCircle,
+  MessageSquareText,
 } from "lucide-react";
 import JSZip from "jszip";
 import { toast } from "sonner";
@@ -154,6 +155,11 @@ function GalleryPage() {
   const [curateProgress, setCurateProgress] = useState({ done: 0, total: 0 });
   const [publicGallery, setPublicGallery] = useState(false);
   const [showHint, setShowHint] = useState(false);
+
+  // ADD: States for AI description in lightbox
+  const [aiDescription, setAiDescription] = useState<{ description: string; tags: string[] } | null>(null);
+  const [aiDescriptionLoading, setAiDescriptionLoading] = useState(false);
+  const [aiDescriptionError, setAiDescriptionError] = useState<string | null>(null);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -528,6 +534,42 @@ function GalleryPage() {
       setCurating(false);
     }
   }, [record, curating, saveShoot, updateShootRecord]);
+
+  // ADD: Fetch AI description for current photo
+  const fetchAiDescription = useCallback(async () => {
+    if (!record || currentLightboxIndex === null) return;
+    const photoUrl = record.fileUrls[currentLightboxIndex];
+    setAiDescriptionLoading(true);
+    setAiDescriptionError(null);
+    try {
+      const response = await fetch("/api/ai-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoUrl }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.ok) {
+        setAiDescription({
+          description: data.description,
+          tags: data.tags,
+        });
+        setAiDescriptionError(null);
+      } else {
+        throw new Error(data.error || "Failed to get AI description");
+      }
+    } catch (err) {
+      setAiDescriptionError(
+        err instanceof Error
+          ? err.message
+          : "Не удалось получить описание фото"
+      );
+    } finally {
+      setAiDescriptionLoading(false);
+    }
+  }, [record, currentLightboxIndex]);
 
   const clearCloudinaryFolder = useCallback(async () => {
     if (!record) return;
@@ -947,6 +989,43 @@ function GalleryPage() {
                     <span className="d-ai-badge">AI: {match.score}/10</span>
                   ) : null;
                 })()}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fetchAiDescription();
+                  }}
+                  disabled={aiDescriptionLoading || !record || currentLightboxIndex === null}
+                  className="d-lb-btn d-lb-ai-desc"
+                  aria-label="Получить AI-описание"
+                >
+                  {aiDescriptionLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <MessageSquareText className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              <div className="d-lb-desc">
+                {aiDescription && (
+                  <div className="d-ai-desc-text">
+                    <Sparkles className="h-3 w-3 text-primary" />
+                    <p className="text-sm leading-relaxed">{aiDescription.description}</p>
+                  </div>
+                )}
+                {aiDescription?.tags && aiDescription.tags.length > 0 && (
+                  <div className="d-ai-desc-tags">
+                    {aiDescription.tags.map((tag, idx) => (
+                      <span key={idx} className="d-ai-tag">#{tag}</span>
+                    ))}
+                  </div>
+                )}
+                {aiDescriptionError && (
+                  <div className="d-ai-desc-error">
+                    <AlertCircle className="h-3 w-3" />
+                    <p className="text-xs text-destructive/80">{aiDescriptionError}</p>
+                  </div>
+                )}
               </div>
               <button
                 type="button"
