@@ -1006,27 +1006,6 @@ function GalleryPage() {
                   )}
                 </button>
               </div>
-              <div className="d-lb-desc">
-                {aiDescription && (
-                  <div className="d-ai-desc-text">
-                    <Sparkles className="h-3 w-3 text-primary" />
-                    <p className="text-sm leading-relaxed">{aiDescription.description}</p>
-                  </div>
-                )}
-                {aiDescription?.tags && aiDescription.tags.length > 0 && (
-                  <div className="d-ai-desc-tags">
-                    {aiDescription.tags.map((tag, idx) => (
-                      <span key={idx} className="d-ai-tag">#{tag}</span>
-                    ))}
-                  </div>
-                )}
-                {aiDescriptionError && (
-                  <div className="d-ai-desc-error">
-                    <AlertCircle className="h-3 w-3" />
-                    <p className="text-xs text-destructive/80">{aiDescriptionError}</p>
-                  </div>
-                )}
-              </div>
               <button
                 type="button"
                 onClick={(e) => {
@@ -1090,6 +1069,27 @@ function GalleryPage() {
               <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">
                 {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
               </span>
+            </div>
+            <div className="d-lb-desc">
+              {aiDescription && (
+                <div className="d-ai-desc-text">
+                  <Sparkles className="h-3 w-3 text-primary" />
+                  <p className="text-sm leading-relaxed">{aiDescription.description}</p>
+                </div>
+              )}
+              {aiDescription?.tags && aiDescription.tags.length > 0 && (
+                <div className="d-ai-desc-tags">
+                  {aiDescription.tags.map((tag, idx) => (
+                    <span key={idx} className="d-ai-tag">#{tag}</span>
+                  ))}
+                </div>
+              )}
+              {aiDescriptionError && (
+                <div className="d-ai-desc-error">
+                  <AlertCircle className="h-3 w-3" />
+                  <p className="text-xs text-destructive/80">{aiDescriptionError}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
