@@ -6,7 +6,7 @@ const OPENROUTER_BASE = "https://openrouter.ai/api/v1/chat/completions";
 // Free Gemini endpoint accepts ~15 requests/min (throttled in caller).
 // Mirrors the working pattern from /api/curate.ts.
 const GEMINI_ENDPOINT =
-  "https://generativanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_MAX_OUTPUT_TOKENS = 400;
 const GEMINI_RETRY_ON_429 = true;
