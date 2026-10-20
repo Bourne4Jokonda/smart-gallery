@@ -962,7 +962,7 @@ function GalleryPage() {
       {/* LIGHTBOX */}
       {lightboxUrl !== null && record.fileUrls[currentLightboxIndex ?? 0] && (
         <div
-          className="d-lb-overlay"
+          className="d-lb-overlay d-lb-overlay--stack"
           onClick={() => setLightboxUrl(null)}
           role="dialog"
           aria-modal="true"
@@ -975,18 +975,16 @@ function GalleryPage() {
                 alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
                 onClick={(e) => e.stopPropagation()}
               />
-              
-              {/* AI badge */}
-              {(() => {
-                const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                const match = record.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(currentUrl));
-                return match?.score != null ? (
-                  <span className="d-ai-badge">AI: {match.score}/10</span>
-                ) : null;
-              })()}
-              
-              {/* Header buttons */}
+
+              {/* Header: AI-бейдж + кнопки переоценки и AI-описания (поверх фото) */}
               <div className="d-lb-header">
+                {(() => {
+                  const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
+                  const match = record.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(currentUrl));
+                  return match?.score != null ? (
+                    <span className="d-ai-badge">AI: {match.score}/10</span>
+                  ) : null;
+                })()}
                 <button
                   type="button"
                   onClick={(e) => {
@@ -1017,30 +1015,7 @@ function GalleryPage() {
                   )}
                 </button>
               </div>
-              
-              {/* Description */}
-              <div className="d-lb-desc">
-                {aiDescription && (
-                  <div className="d-ai-desc-text">
-                    <Sparkles className="h-3 w-3 text-primary" />
-                    <p className="text-sm leading-relaxed">{aiDescription.description}</p>
-                  </div>
-                )}
-                {aiDescription?.tags && aiDescription.tags.length > 0 && (
-                  <div className="d-ai-desc-tags">
-                    {aiDescription.tags.map((tag, idx) => (
-                      <span key={idx} className="d-ai-tag">#{tag}</span>
-                    ))}
-                  </div>
-                )}
-                {aiDescriptionError && (
-                  <div className="d-ai-desc-error">
-                    <AlertCircle className="h-3 w-3" />
-                    <p className="text-xs text-destructive/80">{aiDescriptionError}</p>
-                  </div>
-                )}
-              </div>
-              
+
               {/* Close button */}
               <button
                 type="button"
@@ -1081,34 +1056,57 @@ function GalleryPage() {
                   </button>
                 </>
               )}
-              
-              {/* Frame counter */}
-              <span className="d-lb-frame">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
-            </div>
 
-            <div className="d-lb-bar" onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                onClick={deleteCurrentImage}
-                disabled={deleting || currentLightboxIndex === null}
-                className="d-lb-bar button d-lb-trash"
-                aria-label="Удалить из Cloudinary"
-                title="Удалить фото"
-              >
-                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              </button>
-              <button
-                type="button"
-                onClick={handleDownloadSingle}
-                disabled={singleDownloading}
-                className="d-lb-dl"
-              >
-                <Download className="h-4 w-4" />
-                {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
-              </button>
-              <span className="d-lb-count">
-                {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
-              </span>
+              {/* AI-описание: под фото, в потоке рамки (не absolute — иначе обрезается) */}
+              {(aiDescription || aiDescriptionError) && (
+                <div className="d-lb-desc">
+                  {aiDescription && (
+                    <div className="d-ai-desc-text">
+                      <Sparkles className="h-3 w-3 text-primary" />
+                      <p className="text-sm leading-relaxed">{aiDescription.description}</p>
+                    </div>
+                  )}
+                  {aiDescription?.tags && aiDescription.tags.length > 0 && (
+                    <div className="d-ai-desc-tags">
+                      {aiDescription.tags.map((tag, idx) => (
+                        <span key={idx} className="d-ai-tag">#{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  {aiDescriptionError && (
+                    <div className="d-ai-desc-error">
+                      <AlertCircle className="h-3 w-3" />
+                      <p className="text-xs text-destructive/80">{aiDescriptionError}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Нижняя панель внутри рамки фото: корзина + скачать + счётчик */}
+              <div className="d-lb-bar" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={deleteCurrentImage}
+                  disabled={deleting || currentLightboxIndex === null}
+                  className="d-lb-trash"
+                  aria-label="Удалить из Cloudinary"
+                  title="Удалить фото"
+                >
+                  {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadSingle}
+                  disabled={singleDownloading}
+                  className="d-lb-dl"
+                >
+                  <Download className="h-4 w-4" />
+                  {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
+                </button>
+                <span className="d-lb-count">
+                  {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
+                </span>
+              </div>
             </div>
           </div>
         </div>
