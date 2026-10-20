@@ -16,6 +16,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as UploadRouteImport } from './routes/upload'
+import { Route as ApiAiDescriptionRouteImport } from './routes/api/ai-description'
 import { Route as ApiCurateRouteImport } from './routes/api/curate'
 import { Route as ApiDeleteImageRouteImport } from './routes/api/delete-image'
 import { Route as ApiDeleteShootRouteImport } from './routes/api/delete-shoot'
@@ -59,6 +60,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
   path: '/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiDescriptionRoute = ApiAiDescriptionRouteImport.update({
+  id: '/api/ai-description',
+  path: '/api/ai-description',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCurateRoute = ApiCurateRouteImport.update({
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/upload': typeof UploadRoute
+  '/api/ai-description': typeof ApiAiDescriptionRoute
   '/api/curate': typeof ApiCurateRoute
   '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/delete-shoot': typeof ApiDeleteShootRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/upload': typeof UploadRoute
+  '/api/ai-description': typeof ApiAiDescriptionRoute
   '/api/curate': typeof ApiCurateRoute
   '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/delete-shoot': typeof ApiDeleteShootRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/upload': typeof UploadRoute
+  '/api/ai-description': typeof ApiAiDescriptionRoute
   '/api/curate': typeof ApiCurateRoute
   '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/delete-shoot': typeof ApiDeleteShootRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/upload'
+    | '/api/ai-description'
     | '/api/curate'
     | '/api/delete-image'
     | '/api/delete-shoot'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/upload'
+    | '/api/ai-description'
     | '/api/curate'
     | '/api/delete-image'
     | '/api/delete-shoot'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/upload'
+    | '/api/ai-description'
     | '/api/curate'
     | '/api/delete-image'
     | '/api/delete-shoot'
@@ -227,6 +239,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   UploadRoute: typeof UploadRoute
+  ApiAiDescriptionRoute: typeof ApiAiDescriptionRoute
   ApiCurateRoute: typeof ApiCurateRoute
   ApiDeleteImageRoute: typeof ApiDeleteImageRoute
   ApiDeleteShootRoute: typeof ApiDeleteShootRoute
@@ -287,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/upload'
       fullPath: '/upload'
       preLoaderRoute: typeof UploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai-description': {
+      id: '/api/ai-description'
+      path: '/api/ai-description'
+      fullPath: '/api/ai-description'
+      preLoaderRoute: typeof ApiAiDescriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/curate': {
@@ -363,6 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   UploadRoute: UploadRoute,
+  ApiAiDescriptionRoute: ApiAiDescriptionRoute,
   ApiCurateRoute: ApiCurateRoute,
   ApiDeleteImageRoute: ApiDeleteImageRoute,
   ApiDeleteShootRoute: ApiDeleteShootRoute,

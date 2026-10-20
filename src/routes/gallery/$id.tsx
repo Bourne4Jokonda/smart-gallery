@@ -970,6 +970,55 @@ function GalleryPage() {
         >
           <div className="d-lb-stage">
             <div className="d-lb-photo">
+              <img
+                src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
+                alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
+                onClick={(e) => e.stopPropagation()}
+              />
+              
+              {/* AI badge */}
+              {(() => {
+                const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
+                const match = record.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(currentUrl));
+                return match?.score != null ? (
+                  <span className="d-ai-badge">AI: {match.score}/10</span>
+                ) : null;
+              })()}
+              
+              {/* Header buttons */}
+              <div className="d-lb-header">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
+                    if (currentUrl) reindexSingleImage(currentUrl);
+                  }}
+                  disabled={curating}
+                  className="d-lb-btn d-lb-spark"
+                  aria-label="Переоценить кадр"
+                >
+                  {curating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fetchAiDescription();
+                  }}
+                  disabled={aiDescriptionLoading || !record || currentLightboxIndex === null}
+                  className="d-lb-btn d-lb-ai-desc"
+                  aria-label="Получить AI-описание"
+                >
+                  {aiDescriptionLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <MessageSquareText className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              
+              {/* Description */}
               <div className="d-lb-desc">
                 {aiDescription && (
                   <div className="d-ai-desc-text">
@@ -991,49 +1040,8 @@ function GalleryPage() {
                   </div>
                 )}
               </div>
-              <div className="d-lb-header">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                    if (currentUrl) reindexSingleImage(currentUrl);
-                  }}
-                  disabled={curating}
-                  className="d-lb-btn d-lb-spark"
-                  aria-label="Переоценить кадр"
-                >
-                  {curating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                </button>
-                {(() => {
-                  const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                  const match = record.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(currentUrl));
-                  return match?.score != null ? (
-                    <span className="d-ai-badge">AI: {match.score}/10</span>
-                  ) : null;
-                })()}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fetchAiDescription();
-                  }}
-                  disabled={aiDescriptionLoading || !record || currentLightboxIndex === null}
-                  className="d-lb-btn d-lb-ai-desc"
-                  aria-label="Получить AI-описание"
-                >
-                  {aiDescriptionLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <MessageSquareText className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              <img
-                src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
-                alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
-                onClick={(e) => e.stopPropagation()}
-              />
+              
+              {/* Close button */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -1046,6 +1054,7 @@ function GalleryPage() {
                 <X className="h-4 w-4" />
               </button>
 
+              {/* Navigation buttons */}
               {record.fileUrls.length > 1 && (
                 <>
                   <button
@@ -1072,6 +1081,9 @@ function GalleryPage() {
                   </button>
                 </>
               )}
+              
+              {/* Frame counter */}
+              <span className="d-lb-frame">Кадр {(currentLightboxIndex ?? 0) + 1}</span>
             </div>
 
             <div className="d-lb-bar" onClick={(e) => e.stopPropagation()}>
@@ -1079,7 +1091,7 @@ function GalleryPage() {
                 type="button"
                 onClick={deleteCurrentImage}
                 disabled={deleting || currentLightboxIndex === null}
-                className="inline-flex items-center justify-center rounded-full p-2 text-foreground transition-colors hover:text-primary disabled:opacity-50"
+                className="d-lb-bar button d-lb-trash"
                 aria-label="Удалить из Cloudinary"
                 title="Удалить фото"
               >
@@ -1089,12 +1101,12 @@ function GalleryPage() {
                 type="button"
                 onClick={handleDownloadSingle}
                 disabled={singleDownloading}
-                className="inline-flex items-center gap-2 text-sm font-bold text-foreground transition-colors hover:text-primary disabled:opacity-50"
+                className="d-lb-dl"
               >
                 <Download className="h-4 w-4" />
                 {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
               </button>
-              <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+              <span className="d-lb-count">
                 {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
               </span>
             </div>
