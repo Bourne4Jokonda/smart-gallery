@@ -284,26 +284,25 @@ function GalleryPage() {
     if (aiDescriptionsChecked.current.has(lightboxUrl)) return; // уже проверяли
     aiDescriptionsChecked.current.add(lightboxUrl);
 
-    const controller = new AbortController();
-    fetch(`/api/ai-description?photoUrl=${encodeURIComponent(lightboxUrl)}`, {
-      signal: controller.signal,
-    })
+    // Запрос НЕ отменяем при смене кадра: ответ придёт в кэш по своему URL
+    // и описание сохранится для того фото, к которому относится.
+    const requestedUrl = lightboxUrl;
+    fetch(`/api/ai-description?photoUrl=${encodeURIComponent(requestedUrl)}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data || !data.ok || !data.description) return;
         setAiDescriptions((prev) =>
-          prev[lightboxUrl]
+          prev[requestedUrl]
             ? prev
             : {
                 ...prev,
-                [lightboxUrl]: { description: data.description, tags: data.tags ?? [] },
+                [requestedUrl]: { description: data.description, tags: data.tags ?? [] },
               },
         );
       })
       .catch(() => {
         /* нет кэша / сеть недоступна — описание просто не покажется, кнопка остаётся */
       });
-    return () => controller.abort();
   }, [lightboxUrl, aiDescriptions]);
 
   const handleDownloadZip = useCallback(async () => {
