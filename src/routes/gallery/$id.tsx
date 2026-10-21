@@ -968,102 +968,18 @@ function GalleryPage() {
           aria-modal="true"
           aria-label="Просмотр фото"
         >
-          <div className="d-lb-stage">
-            <div className="d-lb-photo">
-              <img
-                src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
-                alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
-                onClick={(e) => e.stopPropagation()}
-              />
-
-              {/* Header: AI-бейдж + кнопки переоценки и AI-описания (поверх фото) */}
-              <div className="d-lb-header">
-                {(() => {
-                  const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                  const match = record.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(currentUrl));
-                  return match?.score != null ? (
-                    <span className="d-ai-badge">AI: {match.score}/10</span>
-                  ) : null;
-                })()}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                    if (currentUrl) reindexSingleImage(currentUrl);
-                  }}
-                  disabled={curating}
-                  className="d-lb-btn d-lb-spark"
-                  aria-label="Переоценить кадр"
-                >
-                  {curating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fetchAiDescription();
-                  }}
-                  disabled={aiDescriptionLoading || !record || currentLightboxIndex === null}
-                  className="d-lb-btn d-lb-ai-desc"
-                  aria-label="Получить AI-описание"
-                >
-                  {aiDescriptionLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <MessageSquareText className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-
-              {/* Close button */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightboxUrl(null);
-                }}
-                className="d-lb-btn d-lb-close"
-                aria-label="Закрыть"
-              >
-                <X className="h-4 w-4" />
-              </button>
-
-              {/* Navigation buttons */}
-              {record.fileUrls.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      lightboxPrev();
-                    }}
-                    className="d-lb-btn d-lb-prev"
-                    aria-label="Предыдущее фото"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      lightboxNext();
-                    }}
-                    className="d-lb-btn d-lb-next"
-                    aria-label="Следующее фото"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                </>
-              )}
-
-              {/* AI-описание: под фото, в потоке рамки (не absolute — иначе обрезается) */}
+          <div className="d-lb-stage d-lb-stage--desc">
+            {/* Рамка = ширина фото. Описание (absolute, bottom:100%) выезжает из-за фото вверх,
+                занимает ровно ширину фото и не меняет её. */}
+            <div className="d-lb-wrap">
+              {/* AI-описание: отдельный слой НАД фото. Выезжает из-за фото вверх,
+                  ширина фото при этом не меняется. */}
               {(aiDescription || aiDescriptionError) && (
                 <div className="d-lb-desc">
                   {aiDescription && (
                     <div className="d-ai-desc-text">
                       <Sparkles className="h-3 w-3 text-primary" />
-                      <p className="text-sm leading-relaxed">{aiDescription.description}</p>
+                      <p>{aiDescription.description}</p>
                     </div>
                   )}
                   {aiDescription?.tags && aiDescription.tags.length > 0 && (
@@ -1082,31 +998,120 @@ function GalleryPage() {
                 </div>
               )}
 
-              {/* Нижняя панель внутри рамки фото: корзина + скачать + счётчик */}
-              <div className="d-lb-bar" onClick={(e) => e.stopPropagation()}>
+              <div className="d-lb-photo">
+                <img
+                  src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
+                  alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
+                  onClick={(e) => e.stopPropagation()}
+                />
+
+                {/* Header: AI-бейдж + кнопки переоценки и AI-описания (поверх фото) */}
+                <div className="d-lb-header">
+                  {(() => {
+                    const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
+                    const match = record.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(currentUrl));
+                    return match?.score != null ? (
+                      <span className="d-ai-badge">AI: {match.score}/10</span>
+                    ) : null;
+                  })()}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
+                      if (currentUrl) reindexSingleImage(currentUrl);
+                    }}
+                    disabled={curating}
+                    className="d-lb-btn d-lb-spark"
+                    aria-label="Переоценить кадр"
+                  >
+                    {curating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fetchAiDescription();
+                    }}
+                    disabled={aiDescriptionLoading || !record || currentLightboxIndex === null}
+                    className="d-lb-btn d-lb-ai-desc"
+                    aria-label="Получить AI-описание"
+                  >
+                    {aiDescriptionLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <MessageSquareText className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Close button */}
                 <button
                   type="button"
-                  onClick={deleteCurrentImage}
-                  disabled={deleting || currentLightboxIndex === null}
-                  className="d-lb-trash"
-                  aria-label="Удалить из Cloudinary"
-                  title="Удалить фото"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxUrl(null);
+                  }}
+                  className="d-lb-btn d-lb-close"
+                  aria-label="Закрыть"
                 >
-                  {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  <X className="h-4 w-4" />
                 </button>
-                <button
-                  type="button"
-                  onClick={handleDownloadSingle}
-                  disabled={singleDownloading}
-                  className="d-lb-dl"
-                >
-                  <Download className="h-4 w-4" />
-                  {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
-                </button>
-                <span className="d-lb-count">
-                  {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
-                </span>
+
+                {/* Navigation buttons */}
+                {record.fileUrls.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        lightboxPrev();
+                      }}
+                      className="d-lb-btn d-lb-prev"
+                      aria-label="Предыдущее фото"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        lightboxNext();
+                      }}
+                      className="d-lb-btn d-lb-next"
+                      aria-label="Следующее фото"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </>
+                )}
+
+                {/* Нижняя панель внутри рамки фото: скачать слева, счётчик по центру, корзина справа */}
+                <div className="d-lb-bar" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={handleDownloadSingle}
+                    disabled={singleDownloading}
+                    className="d-lb-dl"
+                  >
+                    <Download className="h-4 w-4" />
+                    {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
+                  </button>
+                  <span className="d-lb-count">
+                    {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={deleteCurrentImage}
+                    disabled={deleting || currentLightboxIndex === null}
+                    className="d-lb-trash"
+                    aria-label="Удалить из Cloudinary"
+                    title="Удалить фото"
+                  >
+                    {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  </button>
               </div>
+            </div>
             </div>
           </div>
         </div>
