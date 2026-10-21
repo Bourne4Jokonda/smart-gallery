@@ -1204,13 +1204,21 @@
 }
 
 .d-lb-bar button {
-  width: 38px;
-  height: 38px;
   background: transparent;
   border: none;
   color: #fff;
-  display: grid;
-  place-items: center;
+}
+
+/* Кнопка «Скачать это фото»: иконка и текст в одну строку.
+   Базовое .d-lb-bar button больше не задаёт размер — иначе иконка с текстом
+   складывались в колонку внутри 38px. */
+.d-lb-bar button.d-lb-dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  height: auto;
+  white-space: nowrap;
 }
 
 .d-lb-bar button:hover {
@@ -1218,9 +1226,6 @@
 }
 
 .d-lb-dl {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   color: #fff;
   font-size: 14px;
   font-weight: 700;
@@ -1233,6 +1238,8 @@
 }
 
 .d-lb-bar button.d-lb-trash {
+  display: grid;
+  place-items: center;
   width: 34px;
   height: 34px;
   border-radius: 50%;

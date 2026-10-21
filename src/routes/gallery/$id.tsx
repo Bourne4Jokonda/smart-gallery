@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
 import {
   Camera,
@@ -157,9 +157,17 @@ function GalleryPage() {
   const [showHint, setShowHint] = useState(false);
 
   // ADD: States for AI description in lightbox
-  const [aiDescription, setAiDescription] = useState<{ description: string; tags: string[] } | null>(null);
+  // Описания кэшируются по URL фото: переключение кадра не теряет уже полученное
+  // описание — возвращаясь к кадру, оно показывается сразу, без повторного запроса.
+  const [aiDescriptions, setAiDescriptions] = useState<Record<string, { description: string; tags: string[] }>>({});
   const [aiDescriptionLoading, setAiDescriptionLoading] = useState(false);
   const [aiDescriptionError, setAiDescriptionError] = useState<string | null>(null);
+
+  // Описание текущего кадра (из кэша)
+  const aiDescription = lightboxUrl ? aiDescriptions[lightboxUrl] ?? null : null;
+
+  // URL, для которых уже проверяли серверный кэш — чтобы не долбить GET при каждом кадре
+  const aiDescriptionsChecked = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -261,12 +269,42 @@ function GalleryPage() {
     };
   }, [currentLightboxIndex, record, closeLightbox, lightboxNext, lightboxPrev]);
 
-  // Reset AI description when switching photos in lightbox so a description
-  // from a previous photo isn't shown for the new one.
+  // При смене кадра чистим только ошибку. Само описание хранится в кэше по URL,
+  // поэтому уже полученное описание не пропадает и не запрашивается заново.
   useEffect(() => {
-    setAiDescription(null);
     setAiDescriptionError(null);
   }, [currentLightboxIndex]);
+
+  // При смене кадра подтягиваем описание из серверного кэша (Firestore), если оно там
+  // уже есть. Без AI-запроса — только чтение кэша, поэтому дёшево и безопасно.
+  // Благодаря этому описание сохраняется и между открытиями лайтбокса.
+  useEffect(() => {
+    if (!lightboxUrl) return;
+    if (aiDescriptions[lightboxUrl]) return;          // уже есть в клиентском кэше
+    if (aiDescriptionsChecked.current.has(lightboxUrl)) return; // уже проверяли
+    aiDescriptionsChecked.current.add(lightboxUrl);
+
+    const controller = new AbortController();
+    fetch(`/api/ai-description?photoUrl=${encodeURIComponent(lightboxUrl)}`, {
+      signal: controller.signal,
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data || !data.ok || !data.description) return;
+        setAiDescriptions((prev) =>
+          prev[lightboxUrl]
+            ? prev
+            : {
+                ...prev,
+                [lightboxUrl]: { description: data.description, tags: data.tags ?? [] },
+              },
+        );
+      })
+      .catch(() => {
+        /* нет кэша / сеть недоступна — описание просто не покажется, кнопка остаётся */
+      });
+    return () => controller.abort();
+  }, [lightboxUrl, aiDescriptions]);
 
   const handleDownloadZip = useCallback(async () => {
     if (!record || zipping) return;
@@ -559,10 +597,13 @@ function GalleryPage() {
       }
       const data = await response.json();
       if (data.ok) {
-        setAiDescription({
-          description: data.description,
-          tags: data.tags,
-        });
+        setAiDescriptions((prev) => ({
+          ...prev,
+          [photoUrl]: {
+            description: data.description,
+            tags: data.tags,
+          },
+        }));
         setAiDescriptionError(null);
       } else {
         throw new Error(data.error || "Failed to get AI description");
