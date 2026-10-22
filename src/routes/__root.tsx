@@ -199,7 +199,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <header className="border-b border-border">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4 sm:px-8">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
           <Link to="/" className="inline-flex items-center gap-2 font-bold tracking-tight">
             <span className="inline-flex rounded-lg bg-primary p-1.5 text-primary-foreground">SG</span>
             Smart Gallery
