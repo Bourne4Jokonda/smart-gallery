@@ -17,7 +17,7 @@ import {
 import JSZip from "jszip";
 import { toast } from "sonner";
 import { Copy } from "lucide-react";
-import { getAuthInstance, onUserChange, getDb } from "@/lib/firebase";
+import { getAuthInstance, onUserChange, getDb, getIdToken } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { saveShoot, readShoots } from "@/lib/storage";
 import { saveShootRecord, saveShootRecordById, updateShootRecord } from "@/lib/firebase";
@@ -361,8 +361,11 @@ function GalleryPage() {
     try {
       const res = await fetch("/api/delete-image", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ publicId }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${(await getIdToken()) ?? ""}`,
+        },
+        body: JSON.stringify({ publicId, shootId: record.shootId }),
       });
       if (!res.ok) {
         const text = await res.text().catch(() => "");
@@ -421,8 +424,11 @@ function GalleryPage() {
     try {
       const res = await fetch("/api/delete-image", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ publicId }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${(await getIdToken()) ?? ""}`,
+        },
+        body: JSON.stringify({ publicId, shootId: record.shootId }),
       });
       if (!res.ok) {
         const text = await res.text().catch(() => "");
@@ -637,7 +643,10 @@ function GalleryPage() {
     try {
       const res = await fetch("/api/delete-shoot", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${(await getIdToken()) ?? ""}`,
+        },
         body: JSON.stringify({ email: record.email, shootId: record.shootId }),
       });
       const data = await res.json();

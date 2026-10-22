@@ -1,6 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getDb } from "@/lib/firebase";
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1/chat/completions";
 // Free Gemini endpoint accepts ~15 requests/min (throttled in caller).
@@ -93,19 +91,22 @@ Tags: <tag1>, <tag2>, <tag3>, <tag4>, <tag5>`;
 // ---------- Firebase cache: BEST-EFFORT only, never blocks the AI response ----------
 
 async function getCachedDescription(
-  db: any,
   photoUrl: string,
 ): Promise<{ description: string; tags: string[] } | null> {
   try {
-    const q = query(collection(db, "aiDescriptions"), where("photoUrl", "==", photoUrl));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const docData = snap.docs[0].data();
-      return {
-        description: docData.description as string,
-        tags: (docData.tags as string[]) ?? [],
-      };
-    }
+    const { getAdminDb } = await import("@/lib/firebase-admin");
+    const db = getAdminDb();
+    const snap = await db
+      .collection("aiDescriptions")
+      .where("photoUrl", "==", photoUrl)
+      .limit(1)
+      .get();
+    if (snap.empty) return null;
+    const docData = snap.docs[0]!.data();
+    return {
+      description: docData.description as string,
+      tags: (docData.tags as string[]) ?? [],
+    };
   } catch (e) {
     // Cache read failure (e.g. Firestore permissions) is non-fatal: treat as miss.
     console.error("[ai-description] cache read failed:", e);
@@ -114,13 +115,14 @@ async function getCachedDescription(
 }
 
 async function saveDescription(
-  db: any,
   photoUrl: string,
   description: string,
   tags: string[],
 ): Promise<void> {
   try {
-    await addDoc(collection(db, "aiDescriptions"), {
+    const { getAdminDb } = await import("@/lib/firebase-admin");
+    const db = getAdminDb();
+    await db.collection("aiDescriptions").add({
       photoUrl,
       description,
       tags,
@@ -145,8 +147,7 @@ export const Route = createFileRoute("/api/ai-description")({
               { status: 400 },
             );
           }
-          const db = getDb();
-          const cached = await getCachedDescription(db, photoUrl);
+          const cached = await getCachedDescription(photoUrl);
           if (cached) {
             return Response.json({ ok: true, cached: true, ...cached });
           }
@@ -179,10 +180,8 @@ export const Route = createFileRoute("/api/ai-description")({
             );
           }
 
-          const db = getDb();
-
           // 1. Check cache first (best-effort)
-          const cached = await getCachedDescription(db, photoUrl);
+          const cached = await getCachedDescription(photoUrl);
           if (cached) {
             return Response.json({ ok: true, cached: true, ...cached });
           }
@@ -281,7 +280,7 @@ export const Route = createFileRoute("/api/ai-description")({
           const rawTags = tagsMatch?.[1]?.split(",").map((t) => t.trim()).filter(Boolean) ?? [];
 
           // 4. Save to Firebase cache (best-effort)
-          await saveDescription(db, photoUrl, description, rawTags);
+          await saveDescription(photoUrl, description, rawTags);
 
           return Response.json({
             ok: true,

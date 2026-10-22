@@ -1,7 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { doc, getDoc } from "firebase/firestore";
-import { getDb } from "@/lib/firebase";
 
+/**
+ * Public gallery access.
+ *
+ * The shoot document (photos, password) is NOT readable by anonymous clients
+ * anymore — Firestore rules only allow the owner to read `shoots/{id}`.
+ * Everything the visitor sees comes through this route, which:
+ *   1. reads the shoot with Admin SDK (server-side, bypasses rules),
+ *   2. checks the gallery password server-side,
+ *   3. only then returns the photo list.
+ */
 export const Route = createFileRoute("/api/public-shoot")({
   server: {
     handlers: {
@@ -13,10 +21,10 @@ export const Route = createFileRoute("/api/public-shoot")({
         }
 
         try {
-          const db = getDb();
-          const shootRef = doc(db, "shoots", id);
-          const snap = await getDoc(shootRef);
-          if (!snap.exists()) {
+          const { getAdminDb } = await import("@/lib/firebase-admin");
+          const db = getAdminDb();
+          const snap = await db.collection("shoots").doc(id).get();
+          if (!snap.exists) {
             return Response.json({ ok: false, error: "not found" }, { status: 404 });
           }
           const data = snap.data() as Record<string, unknown>;
@@ -38,7 +46,7 @@ export const Route = createFileRoute("/api/public-shoot")({
             shootId: id,
             hasPassword,
             title: (data.title as string | undefined),
-            email: (data.email as string | undefined) ?? null,
+            email: null,
             createdAt,
             userId,
             fileUrls: [],
@@ -64,10 +72,10 @@ export const Route = createFileRoute("/api/public-shoot")({
         }
 
         try {
-          const db = getDb();
-          const shootRef = doc(db, "shoots", id);
-          const snap = await getDoc(shootRef);
-          if (!snap.exists()) {
+          const { getAdminDb } = await import("@/lib/firebase-admin");
+          const db = getAdminDb();
+          const snap = await db.collection("shoots").doc(id).get();
+          if (!snap.exists) {
             return Response.json({ ok: false, error: "not found" }, { status: 404 });
           }
           const data = snap.data() as Record<string, unknown>;
@@ -97,11 +105,11 @@ export const Route = createFileRoute("/api/public-shoot")({
             shootId: id,
             hasPassword: stored.length > 0,
             title: (data.title as string | undefined),
-            email: (data.email as string | undefined) ?? null,
+            email: null,
             createdAt,
             userId,
             fileUrls: (data.fileUrls as string[]) ?? [],
-            aiResults: (data.aiResults as Array<{ url: string; score: number | null; status: string; error?: string }>) ?? [],
+            aiResults: [],
             public: isPublic,
           });
         } catch (err) {

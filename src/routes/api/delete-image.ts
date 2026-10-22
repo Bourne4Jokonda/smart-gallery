@@ -1,16 +1,55 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+/**
+ * Owner-only single-photo delete.
+ *
+ * The caller must be the shoot owner, and the photo must belong to that shoot —
+ * otherwise anyone could delete arbitrary Cloudinary assets by guessing a publicId.
+ */
 export const Route = createFileRoute("/api/delete-image")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { publicId } = body as { publicId?: string };
+          const { publicId, shootId } = body as { publicId?: string; shootId?: string };
           if (!publicId || typeof publicId !== "string") {
             return Response.json(
               { ok: false, error: "publicId is required and must be a string" },
               { status: 400 }
+            );
+          }
+          if (!shootId || typeof shootId !== "string") {
+            return Response.json(
+              { ok: false, error: "shootId is required" },
+              { status: 400 }
+            );
+          }
+
+          const { verifyShootOwner } = await import("@/lib/server-auth");
+          const ownerUid = await verifyShootOwner(request, shootId);
+          if (!ownerUid) {
+            return Response.json(
+              { ok: false, error: "forbidden" },
+              { status: 403 }
+            );
+          }
+
+          // Фото должно принадлежать этой съёмке — иначе можно было бы удалить
+          // чужой файл, зная его publicId.
+          const { getAdminDb } = await import("@/lib/firebase-admin");
+          const db = getAdminDb();
+          const snap = await db.collection("shoots").doc(shootId).get();
+          const fileUrls = snap.exists
+            ? ((snap.data()?.fileUrls as string[]) ?? [])
+            : [];
+          const belongsToShoot = fileUrls.some(
+            (url) => url.includes(publicId) || url.includes(encodeURIComponent(publicId)),
+          );
+          if (!belongsToShoot) {
+            return Response.json(
+              { ok: false, error: "photo does not belong to this shoot" },
+              { status: 403 }
             );
           }
 

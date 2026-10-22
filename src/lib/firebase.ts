@@ -59,6 +59,20 @@ export function getAuthInstance() {
   return authInstance;
 }
 
+/**
+ * Текущий ID-токен пользователя — серверные маршруты удаления требуют его,
+ * чтобы подтвердить, что запрос пришёл от владельца съёмки.
+ */
+export async function getIdToken(): Promise<string | null> {
+  try {
+    const user = getAuthInstance().currentUser;
+    if (!user) return null;
+    return await user.getIdToken();
+  } catch {
+    return null;
+  }
+}
+
 export function onUserChange(cb: (user: User | null) => void) {
   const auth = getAuthInstance();
   return onAuthStateChanged(auth, cb);

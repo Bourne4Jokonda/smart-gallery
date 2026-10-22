@@ -1,30 +1,50 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+/**
+ * Owner-only Cloudinary folder wipe.
+ *
+ * These routes destroy data, so every request must carry the caller's Firebase
+ * ID token and the shoot must belong to that caller. Previously anyone who
+ * knew a shootId could wipe a photographer's whole Cloudinary folder.
+ */
 export const Route = createFileRoute("/api/delete-shoot")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { folder, email, shootId } = body as {
-            folder?: string;
+          const { email, shootId } = body as {
             email?: string;
             shootId?: string;
           };
 
-          let targetFolder: string | undefined = folder;
-
-          if (!targetFolder && email && shootId) {
-            const emailSafe = email.replace(/@/g, "_at_").replace(/\./g, "_dot_");
-            targetFolder = `smart-gallery/${emailSafe}/${shootId}`;
-          }
-
-          if (!targetFolder) {
+          if (!shootId) {
             return Response.json(
-              { ok: false, error: "folder (or email + shootId) is required" },
+              { ok: false, error: "shootId is required" },
               { status: 400 }
             );
           }
+
+          const { verifyShootOwner } = await import("@/lib/server-auth");
+          const ownerUid = await verifyShootOwner(request, shootId);
+          if (!ownerUid) {
+            return Response.json(
+              { ok: false, error: "forbidden" },
+              { status: 403 }
+            );
+          }
+
+          // Папка вычисляется из проверенного shootId — клиент не может
+          // подсунуть произвольный префикс для удаления.
+          const { getAdminDb } = await import("@/lib/firebase-admin");
+          const db = getAdminDb();
+          const snap = await db.collection("shoots").doc(shootId).get();
+          const storedEmail = snap.exists
+            ? ((snap.data()?.email as string | undefined) ?? "")
+            : "";
+          const effectiveEmail = storedEmail || email || "";
+          const emailSafe = effectiveEmail.replace(/@/g, "_at_").replace(/\./g, "_dot_");
+          const targetFolder = `smart-gallery/${emailSafe}/${shootId}`;
 
           const { v2: cloudinary } = await import("cloudinary");
           cloudinary.config({

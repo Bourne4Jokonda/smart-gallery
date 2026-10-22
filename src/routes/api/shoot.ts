@@ -1,6 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { doc, getDoc } from "firebase/firestore";
-import { getAuthInstance, getDb } from "@/lib/firebase";
 
 export const Route = createFileRoute("/api/shoot")({
   server: {
@@ -17,43 +15,41 @@ export const Route = createFileRoute("/api/shoot")({
         let createdAt = Date.now();
 
         try {
-          const auth = getAuthInstance();
-          const user = auth.currentUser;
-          const db = getDb();
-          const shootRef = doc(db, "shoots", id);
-          const snap = await getDoc(shootRef);
-          if (!snap.exists()) {
+          const { getAdminDb } = await import("@/lib/firebase-admin");
+          const db = getAdminDb();
+          const snap = await db.collection("shoots").doc(id).get();
+          if (!snap.exists) {
             return Response.json({ ok: false, error: "not found" }, { status: 404 });
           }
           const data = snap.data() as Record<string, unknown>;
-          const isPublic = Boolean(data.public);
-          if (!isPublic) {
-            const ownerId = data.userId as string | undefined;
-            if (!user || user.uid !== ownerId) {
-              return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
-            }
-          }
           fileUrls = (data.fileUrls as string[]) ?? [];
-          email = (data.email as string | undefined) ?? user?.email ?? "";
-          createdAt = (data.createdAt as number) ?? Date.now();
+          email = (data.email as string | undefined) ?? "";
+          const rawTs = data["createdAt"];
+          if (rawTs && typeof (rawTs as { toMillis?: () => number }).toMillis === "function") {
+            createdAt = (rawTs as { toMillis: () => number }).toMillis();
+          } else if (typeof rawTs === "number") {
+            createdAt = rawTs;
+          }
           const aiResults = (data.aiResults as Array<{
             url: string;
             score: number | null;
             status: string;
             error?: string;
           }>) ?? [];
-        } catch {
-          // ignore cloud read errors
+          return Response.json({
+            ok: true,
+            shootId: id,
+            fileUrls,
+            email,
+            createdAt,
+            aiResults,
+          });
+        } catch (err) {
+          return Response.json(
+            { ok: false, error: err instanceof Error ? err.message : "Unknown error" },
+            { status: 500 },
+          );
         }
-
-        return Response.json({
-          ok: true,
-          shootId: id,
-          fileUrls,
-          email,
-          createdAt,
-          aiResults,
-        });
       },
     },
   },

@@ -5,25 +5,43 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Профиль фотографа — только свой.
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Публичная часть профиля (водяной знак) — читается всеми.
     match /public-profiles/{userId} {
       allow read: if true;
       allow write: if isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Съёмка читается ТОЛЬКО владельцем.
+    // Публичная галерея отдаётся исключительно через серверный маршрут
+    // /api/public-shoot, который проверяет пароль на сервере (Admin SDK).
+    // Прямой клиентский доступ к документу с фото и паролем закрыт.
     match /shoots/{shootId} {
-      allow read: if resource.data.public == true
-                   || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
+    // Заявка с лендинга: анонимный посетитель оставляет email.
+    // Поля ограничены по типу и длине, чтобы в коллекцию нельзя было
+    // записать произвольный документ.
     match /leads/{leadId} {
-      allow create: if isAuthenticated();
+      allow create: if request.resource.data.email is string
+                    && request.resource.data.email.size() > 3
+                    && request.resource.data.email.size() < 320
+                    && request.resource.data.source is string
+                    && request.resource.data.source.size() > 0
+                    && request.resource.data.source.size() < 40;
       allow read, update, delete: if false;
+    }
+
+    // Кэш AI-описаний: читает и пишет только сервер (Admin SDK).
+    match /aiDescriptions/{docId} {
+      allow read, write: if false;
     }
   }
 }
