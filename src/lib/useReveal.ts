@@ -29,7 +29,7 @@ export function useReveal(): void {
     }
 
     // Таймеры-фолбэки: WeakMap<Element, timerId>
-    const timers = new WeakMap<Element, number>();
+    const timers = new Map<Element, number>();
 
     let io: IntersectionObserver | null = null;
     if ("IntersectionObserver" in window) {

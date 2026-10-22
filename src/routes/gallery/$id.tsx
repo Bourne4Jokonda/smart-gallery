@@ -169,7 +169,7 @@ function GalleryPage() {
   // URL, для которых уже проверяли серверный кэш — чтобы не долбить GET при каждом кадре
   const aiDescriptionsChecked = useRef<Set<string>>(new Set());
 
-  useEffect(() => {
+useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     if (showHint) {
       timer = setTimeout(() => setShowHint(false), 3500);
@@ -178,6 +178,10 @@ function GalleryPage() {
       if (timer) clearTimeout(timer);
     };
   }, [showHint]);
+
+  useEffect(() => {
+    if (record) setPublicGallery(Boolean(record.public));
+  }, [record?.shootId, record?.public]);
 
   const publicUrl = useMemo(() => {
     if (!record || !publicGallery) return "";
@@ -230,12 +234,15 @@ function GalleryPage() {
           return;
         }
         const data = snap.data() as Record<string, unknown>;
-        const cloudRecord: ShootRecord = {
+const cloudRecord: ShootRecord = {
           shootId: id,
           fileUrls: (data.fileUrls as string[]) ?? [],
           email: (data.email as string | undefined) ?? user.email ?? "",
           createdAt: (data.createdAt as number) ?? Date.now(),
           aiResults: (data.aiResults as ShootRecord["aiResults"]) ?? [],
+          public: (data.public as boolean) ?? false,
+          password: (data.password as string | undefined),
+          title: (data.title as string | undefined),
         };
         setRecord(cloudRecord);
       } catch {
@@ -771,31 +778,12 @@ function GalleryPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={async () => {
-                      if (!record) return;
-                      const nextPublic = !publicGallery;
-                      setPublicGallery(nextPublic);
-                      try {
-                        await updateShootRecord(record.shootId, {
-                          public: nextPublic,
-                        });
-                        toast.success(nextPublic ? "Публичная ссылка обновлена" : "Публичная ссылка отключена");
-                      } catch {
-                        toast.error("Не удалось обновить статус съёмки");
-                      }
-                    }}
-                    className={`d-btn-ghost disabled:opacity-60 ${publicGallery ? "d-pill-on" : ""}`}
-                  >
-                    {publicGallery ? "Публичная ссылка включена" : "Сделать публичной"}
-                  </button>
-                  <button
-                    type="button"
                     onClick={clearCloudinaryFolder}
                     disabled={deleting || !record.email}
                     className="d-btn-ghost !border-destructive/40 !text-destructive disabled:opacity-60"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Очистить папку
+                    Удалить все фото сессии
                   </button>
                 </div>
               </div>
