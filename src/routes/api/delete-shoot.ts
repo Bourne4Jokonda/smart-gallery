@@ -36,12 +36,9 @@ export const Route = createFileRoute("/api/delete-shoot")({
 
           // Папка вычисляется из проверенного shootId — клиент не может
           // подсунуть произвольный префикс для удаления.
-          const { getAdminDb } = await import("@/lib/firebase-admin");
-          const db = getAdminDb();
-          const snap = await db.collection("shoots").doc(shootId).get();
-          const storedEmail = snap.exists
-            ? ((snap.data()?.email as string | undefined) ?? "")
-            : "";
+          const { adminGetDoc } = await import("@/lib/firestore-admin");
+          const shootData = await adminGetDoc("shoots", shootId);
+          const storedEmail = (shootData?.email as string | undefined) ?? "";
           const effectiveEmail = storedEmail || email || "";
           const emailSafe = effectiveEmail.replace(/@/g, "_at_").replace(/\./g, "_dot_");
           const targetFolder = `smart-gallery/${emailSafe}/${shootId}`;

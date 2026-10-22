@@ -21,13 +21,11 @@ export const Route = createFileRoute("/api/public-shoot")({
         }
 
         try {
-          const { getAdminDb } = await import("@/lib/firebase-admin");
-          const db = getAdminDb();
-          const snap = await db.collection("shoots").doc(id).get();
-          if (!snap.exists) {
+          const { adminGetDoc } = await import("@/lib/firestore-admin");
+          const data = await adminGetDoc("shoots", id);
+          if (!data) {
             return Response.json({ ok: false, error: "not found" }, { status: 404 });
           }
-          const data = snap.data() as Record<string, unknown>;
           const isPublic = Boolean(data.public);
           if (!isPublic) {
             return Response.json({ ok: false, error: "not found" }, { status: 404 });
@@ -72,13 +70,11 @@ export const Route = createFileRoute("/api/public-shoot")({
         }
 
         try {
-          const { getAdminDb } = await import("@/lib/firebase-admin");
-          const db = getAdminDb();
-          const snap = await db.collection("shoots").doc(id).get();
-          if (!snap.exists) {
+          const { adminGetDoc } = await import("@/lib/firestore-admin");
+          const data = await adminGetDoc("shoots", id);
+          if (!data) {
             return Response.json({ ok: false, error: "not found" }, { status: 404 });
           }
-          const data = snap.data() as Record<string, unknown>;
           const isPublic = Boolean(data.public);
           if (!isPublic) {
             return Response.json({ ok: false, error: "not found" }, { status: 404 });

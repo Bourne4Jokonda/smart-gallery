@@ -24,9 +24,8 @@ export const Route = createFileRoute("/api/set-shoot-password")({
           if (!ownerUid) {
             return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
           }
-          const { getAdminDb } = await import("@/lib/firebase-admin");
-          const db = getAdminDb();
-          await db.collection("shoots").doc(id).set({ password: pw }, { merge: true });
+          const { adminSetDoc } = await import("@/lib/firestore-admin");
+          await adminSetDoc("shoots", id, { password: pw }, true);
           return Response.json({ ok: true, shootId: id });
         } catch (err) {
           return Response.json({ ok: false, error: err instanceof Error ? err.message : "Unknown error" }, { status: 500 });
@@ -43,9 +42,8 @@ export const Route = createFileRoute("/api/set-shoot-password")({
           if (!ownerUid) {
             return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
           }
-          const { getAdminDb } = await import("@/lib/firebase-admin");
-          const db = getAdminDb();
-          await db.collection("shoots").doc(id).set({ password: "" }, { merge: true });
+          const { adminSetDoc } = await import("@/lib/firestore-admin");
+          await adminSetDoc("shoots", id, { password: "" }, true);
           return Response.json({ ok: true, shootId: id });
         } catch (err) {
           return Response.json({ ok: false, error: err instanceof Error ? err.message : "Unknown error" }, { status: 500 });

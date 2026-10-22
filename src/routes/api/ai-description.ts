@@ -94,15 +94,10 @@ async function getCachedDescription(
   photoUrl: string,
 ): Promise<{ description: string; tags: string[] } | null> {
   try {
-    const { getAdminDb } = await import("@/lib/firebase-admin");
-    const db = getAdminDb();
-    const snap = await db
-      .collection("aiDescriptions")
-      .where("photoUrl", "==", photoUrl)
-      .limit(1)
-      .get();
-    if (snap.empty) return null;
-    const docData = snap.docs[0]!.data();
+    const { adminQueryByField } = await import("@/lib/firestore-admin");
+    const rows = await adminQueryByField("aiDescriptions", "photoUrl", photoUrl, 1);
+    if (rows.length === 0) return null;
+    const docData = rows[0]!;
     return {
       description: docData.description as string,
       tags: (docData.tags as string[]) ?? [],
@@ -120,13 +115,12 @@ async function saveDescription(
   tags: string[],
 ): Promise<void> {
   try {
-    const { getAdminDb } = await import("@/lib/firebase-admin");
-    const db = getAdminDb();
-    await db.collection("aiDescriptions").add({
+    const { adminAddDoc } = await import("@/lib/firestore-admin");
+    await adminAddDoc("aiDescriptions", {
       photoUrl,
       description,
       tags,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     });
   } catch (e) {
     // non-fatal: cache write failure shouldn't block the response

@@ -37,12 +37,9 @@ export const Route = createFileRoute("/api/delete-image")({
 
           // Фото должно принадлежать этой съёмке — иначе можно было бы удалить
           // чужой файл, зная его publicId.
-          const { getAdminDb } = await import("@/lib/firebase-admin");
-          const db = getAdminDb();
-          const snap = await db.collection("shoots").doc(shootId).get();
-          const fileUrls = snap.exists
-            ? ((snap.data()?.fileUrls as string[]) ?? [])
-            : [];
+          const { adminGetDoc } = await import("@/lib/firestore-admin");
+          const shootData = await adminGetDoc("shoots", shootId);
+          const fileUrls = (shootData?.fileUrls as string[]) ?? [];
           const belongsToShoot = fileUrls.some(
             (url) => url.includes(publicId) || url.includes(encodeURIComponent(publicId)),
           );

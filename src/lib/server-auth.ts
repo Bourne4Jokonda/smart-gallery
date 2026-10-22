@@ -56,11 +56,10 @@ export async function verifyShootOwner(
   const uid = await verifyIdToken(extractBearer(request));
   if (!uid) return null;
   try {
-    const { getAdminDb } = await import("@/lib/firebase-admin");
-    const db = getAdminDb();
-    const snap = await db.collection("shoots").doc(shootId).get();
-    if (!snap.exists) return null;
-    const ownerId = snap.data()?.userId;
+    const { adminGetDoc } = await import("@/lib/firestore-admin");
+    const data = await adminGetDoc("shoots", shootId);
+    if (!data) return null;
+    const ownerId = data.userId;
     if (typeof ownerId !== "string" || ownerId !== uid) return null;
     return uid;
   } catch {
