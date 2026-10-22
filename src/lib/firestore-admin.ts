@@ -279,6 +279,16 @@ export async function adminQueryByField(
   value: string,
   limit = 1,
 ): Promise<AdminDocument[]> {
+  return adminQueryByFieldValues(collection, field, [value], limit);
+}
+
+/** Query documents where a field equals one of several values. */
+export async function adminQueryByFieldValues(
+  collection: string,
+  field: string,
+  values: string[],
+  limit = 50,
+): Promise<AdminDocument[]> {
   const token = await getAccessToken();
   const res = await fetch(`${FIRESTORE_BASE}:runQuery`, {
     method: "POST",
@@ -292,8 +302,8 @@ export async function adminQueryByField(
         where: {
           fieldFilter: {
             field: { fieldPath: field },
-            op: "EQUAL",
-            value: { stringValue: value },
+            op: "IN",
+            value: { arrayValue: { values: values.map((v) => ({ stringValue: v })) } },
           },
         },
         limit,
@@ -308,7 +318,12 @@ export async function adminQueryByField(
   const out: AdminDocument[] = [];
   for (const row of rows) {
     const doc = decodeDocument(row.document);
-    if (doc) out.push(doc);
+    if (doc) {
+      // Сохраняем ID документа, чтобы по нему можно было удалить запись.
+      const name = (row.document as { name?: string } | undefined)?.name;
+      if (name) doc.__id = name.split("/").pop();
+      out.push(doc);
+    }
   }
   return out;
 }
