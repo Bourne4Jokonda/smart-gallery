@@ -18,6 +18,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as ApiAiDescriptionRouteImport } from './routes/api/ai-description'
 import { Route as ApiCurateRouteImport } from './routes/api/curate'
+import { Route as ApiCuratedZipRouteImport } from './routes/api/curated-zip'
 import { Route as ApiDeleteImageRouteImport } from './routes/api/delete-image'
 import { Route as ApiDeleteShootRouteImport } from './routes/api/delete-shoot'
 import { Route as ApiNotifyLeadRouteImport } from './routes/api/notify-lead'
@@ -72,6 +73,11 @@ const ApiCurateRoute = ApiCurateRouteImport.update({
   path: '/api/curate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCuratedZipRoute = ApiCuratedZipRouteImport.update({
+  id: '/api/curated-zip',
+  path: '/api/curated-zip',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDeleteImageRoute = ApiDeleteImageRouteImport.update({
   id: '/api/delete-image',
   path: '/api/delete-image',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/upload': typeof UploadRoute
   '/api/ai-description': typeof ApiAiDescriptionRoute
   '/api/curate': typeof ApiCurateRoute
+  '/api/curated-zip': typeof ApiCuratedZipRoute
   '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/delete-shoot': typeof ApiDeleteShootRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/upload': typeof UploadRoute
   '/api/ai-description': typeof ApiAiDescriptionRoute
   '/api/curate': typeof ApiCurateRoute
+  '/api/curated-zip': typeof ApiCuratedZipRoute
   '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/delete-shoot': typeof ApiDeleteShootRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/upload': typeof UploadRoute
   '/api/ai-description': typeof ApiAiDescriptionRoute
   '/api/curate': typeof ApiCurateRoute
+  '/api/curated-zip': typeof ApiCuratedZipRoute
   '/api/delete-image': typeof ApiDeleteImageRoute
   '/api/delete-shoot': typeof ApiDeleteShootRoute
   '/api/notify-lead': typeof ApiNotifyLeadRoute
@@ -183,6 +192,7 @@ export interface FileRouteTypes {
     | '/upload'
     | '/api/ai-description'
     | '/api/curate'
+    | '/api/curated-zip'
     | '/api/delete-image'
     | '/api/delete-shoot'
     | '/api/notify-lead'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/upload'
     | '/api/ai-description'
     | '/api/curate'
+    | '/api/curated-zip'
     | '/api/delete-image'
     | '/api/delete-shoot'
     | '/api/notify-lead'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/upload'
     | '/api/ai-description'
     | '/api/curate'
+    | '/api/curated-zip'
     | '/api/delete-image'
     | '/api/delete-shoot'
     | '/api/notify-lead'
@@ -241,6 +253,7 @@ export interface RootRouteChildren {
   UploadRoute: typeof UploadRoute
   ApiAiDescriptionRoute: typeof ApiAiDescriptionRoute
   ApiCurateRoute: typeof ApiCurateRoute
+  ApiCuratedZipRoute: typeof ApiCuratedZipRoute
   ApiDeleteImageRoute: typeof ApiDeleteImageRoute
   ApiDeleteShootRoute: typeof ApiDeleteShootRoute
   ApiNotifyLeadRoute: typeof ApiNotifyLeadRoute
@@ -316,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCurateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/curated-zip': {
+      id: '/api/curated-zip'
+      path: '/api/curated-zip'
+      fullPath: '/api/curated-zip'
+      preLoaderRoute: typeof ApiCuratedZipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/delete-image': {
       id: '/api/delete-image'
       path: '/api/delete-image'
@@ -385,6 +405,7 @@ const rootRouteChildren: RootRouteChildren = {
   UploadRoute: UploadRoute,
   ApiAiDescriptionRoute: ApiAiDescriptionRoute,
   ApiCurateRoute: ApiCurateRoute,
+  ApiCuratedZipRoute: ApiCuratedZipRoute,
   ApiDeleteImageRoute: ApiDeleteImageRoute,
   ApiDeleteShootRoute: ApiDeleteShootRoute,
   ApiNotifyLeadRoute: ApiNotifyLeadRoute,
