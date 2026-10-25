@@ -13,10 +13,11 @@ import {
   RefreshCcw,
   AlertCircle,
   MessageSquareText,
+  Copy,
 } from "lucide-react";
 import JSZip from "jszip";
 import { toast } from "sonner";
-import { Copy } from "lucide-react";
+import { SpeedDial } from "./SpeedDial"; // ДОБАВИТЬ SpeedDial
 import { getAuthInstance, onUserChange, getDb, getIdToken } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { saveShoot, readShoots } from "@/lib/storage";
