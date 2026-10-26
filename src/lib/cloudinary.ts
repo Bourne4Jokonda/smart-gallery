@@ -33,6 +33,78 @@ export function getPublicIdFromUrl(url: string): string | null {
   }
 }
 
+interface WatermarkOptions {
+  type?: "text" | "image";
+  text?: string;
+  imageUrl?: string | null;
+  position?: "center" | "bottom-right" | "top-left";
+  opacity?: number;
+  fontFamily?: string | null;
+  fontSize?: number | null;
+  fontWeight?: string | null;
+  offset?: number;
+}
+
+/**
+ * Возвращает Cloudinary URL с водяным знаком (text или image overlay).
+ * Используется для скачивания фото клиентом — только с водяным знаком.
+ */
+export function getWatermarkedUrl(
+  imageUrl: string,
+  opts: WatermarkOptions,
+): string {
+  // Если Cloudinary не задействован или водяной знак отключён — возвращаем оригинал
+  if (!isCloudinaryConfigured()) return imageUrl;
+  const publicId = getPublicIdFromUrl(imageUrl);
+  if (!publicId) return imageUrl;
+
+  const opacity = Math.round((opts.opacity ?? 0.35) * 100);
+  const offset = opts.offset ?? 0;
+  const fontSize = opts.fontSize ?? 14;
+  const fontFamily = (opts.fontFamily || "Arial").replace(/[^a-zA-Z0-9_]+/g, "_");
+  const fontWeight = opts.fontWeight === "bold" ? "_bold" : "";
+
+  let gravity = "south_east";
+  let x = 10 + Math.round(offset / 4);
+  let y = 10 + Math.round(offset / 4);
+  let align = "end";
+
+  if (opts.position === "center") {
+    gravity = "center";
+    x = 0;
+    y = 0;
+  } else if (opts.position === "top-left") {
+    gravity = "north_west";
+    x = 10 + Math.round(offset / 4);
+    y = 10 + Math.round(offset / 4);
+  }
+
+  const transformations: string[] = [];
+
+  if (opts.type === "image" && opts.imageUrl) {
+    // Image watermark overlay
+    const watermarkPublicId = getPublicIdFromUrl(opts.imageUrl);
+    if (watermarkPublicId) {
+      transformations.push(
+        `l_image:${encodeURIComponent(watermarkPublicId)},o_${opacity},g_${gravity},x_${x},y_${y}`,
+      );
+    }
+  } else if (opts.type === "text") {
+    const text = encodeURIComponent(opts.text?.trim() || "Smart Gallery");
+    const font = `${fontFamily}_${fontSize}${fontWeight}`;
+    transformations.push(
+      `l_text:${font}:${text},co_white,o_${opacity},g_${gravity},x_${x},y_${y}`,
+    );
+  }
+
+  // Apply quality optimization for download
+  transformations.push("q_auto");
+
+  const transform = transformations.join(",");
+
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${transform}/${publicId}`;
+}
+
 export async function uploadToCloudinary(
   file: File,
   options?: {

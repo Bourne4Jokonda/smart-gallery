@@ -14,6 +14,7 @@ import {
 import JSZip from "jszip";
 import { toast } from "sonner";
 import { getPublicUserProfile, type UserProfile } from "@/lib/firebase";
+import { getWatermarkedUrl } from "@/lib/cloudinary";
 
 type ShootRecord = {
   shootId: string;
@@ -75,20 +76,24 @@ function WatermarkOverlay({ profile }: { profile: UserProfile }) {
 async function downloadAsZip(
   urls: string[],
   shootId: string,
+  profile?: UserProfile,
   onProgress?: (done: number, total: number) => void,
 ) {
   const zip = new JSZip();
   const folder = zip.folder(`gallery-${shootId.slice(-6)}`) ?? zip;
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i]!;
+    const downloadUrl = profile?.watermarkEnabled && profile.watermarkType !== "none"
+      ? getWatermarkedUrl(url, profile)
+      : url;
     const name = filenameFromUrl(url, i);
     try {
-      const resp = await fetch(url);
+      const resp = await fetch(downloadUrl);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const blob = await resp.blob();
       folder.file(name, blob);
     } catch (err) {
-      console.error("zip fetch failed", url, err);
+      console.error("zip fetch failed", downloadUrl, err);
     }
     onProgress?.(i + 1, urls.length);
   }
@@ -103,18 +108,21 @@ async function downloadAsZip(
   setTimeout(() => URL.revokeObjectURL(archiveUrl), 1000);
 }
 
-async function downloadSinglePhoto(url: string, index: number) {
-  const resp = await fetch(url);
+async function downloadSinglePhoto(url: string, index: number, profile?: UserProfile) {
+  const downloadUrl = profile?.watermarkEnabled && profile.watermarkType !== "none"
+    ? getWatermarkedUrl(url, profile)
+    : url;
+  const resp = await fetch(downloadUrl);
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const blob = await resp.blob();
-  const downloadUrl = URL.createObjectURL(blob);
+  const blobUrl = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = downloadUrl;
+  a.href = blobUrl;
   a.download = filenameFromUrl(url, index);
   document.body.appendChild(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
 }
 
 export const Route = createFileRoute("/public-gallery/$id")({
@@ -337,7 +345,7 @@ function PublicGalleryPage() {
     setZipProgress({ done: 0, total: record.fileUrls.length });
     const toastId = toast.loading("Собираем ZIP…");
     try {
-      await downloadAsZip(record.fileUrls, record.shootId, (done, total) =>
+      await downloadAsZip(record.fileUrls, record.shootId, profile, (done, total) =>
         setZipProgress({ done, total }),
       );
       toast.success(`ZIP готов — ${record.fileUrls.length} фото`, { id: toastId });
@@ -347,7 +355,7 @@ function PublicGalleryPage() {
     } finally {
       setZipping(false);
     }
-  }, [record, zipping]);
+  }, [record, zipping, profile]);
 
   const handleDownloadSingle = useCallback(async () => {
     if (!record || currentLightboxIndex === null || singleDownloading) return;
@@ -355,7 +363,7 @@ function PublicGalleryPage() {
     if (!url) return;
     try {
       setSingleDownloading(true);
-      await downloadSinglePhoto(url, currentLightboxIndex);
+      await downloadSinglePhoto(url, currentLightboxIndex, profile);
       toast.success("Фото сохранено");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Неизвестная ошибка";
@@ -363,7 +371,7 @@ function PublicGalleryPage() {
     } finally {
       setSingleDownloading(false);
     }
-  }, [record, currentLightboxIndex, singleDownloading]);
+  }, [record, currentLightboxIndex, singleDownloading, profile]);
 
   if (phase === "loading") {
     return (
