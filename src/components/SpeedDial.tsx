@@ -1,82 +1,140 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Brain, Download, Link, X, Sparkles } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { 
+  Brain, 
+  Download, 
+  Trash2, 
+  X, 
+  Sparkles, 
+  Copy, 
+  MessageSquareText 
+} from 'lucide-react'
+import { toast } from 'sonner'
 
-export const SpeedDial = () => {
+interface SpeedDialProps {
+  shootId: string
+  hasAiResults?: boolean
+  publicUrl?: string
+  loading?: {
+    curate: boolean
+    describe: boolean
+    download: boolean
+    deleteAll: boolean
+  }
+  onCurate: () => void
+  onDescribeAll: () => void
+  onDownloadZip: () => void
+  onDeleteAll: () => void
+}
+
+export const SpeedDial = ({
+  shootId,
+  hasAiResults = false,
+  publicUrl,
+  loading = { curate: false, describe: false, download: false, deleteAll: false },
+  onCurate,
+  onDescribeAll,
+  onDownloadZip,
+  onDeleteAll,
+}: SpeedDialProps) => {
   const [isOpen, setIsOpen] = useState(false)
-  const navigate = useNavigate()
-  
+
   const actions = [
     {
-      icon: <Brain className="h-5 w-5" />,
-      label: "AI оценка",
-      action: () => {
-        // Выполнить запрос к API для оценки всех фото
-        fetch('/api/all-photos-with-ai', { method: 'POST' })
-          .then(res => res.json())
-          .then(data => {
-            console.log('AI оценка результата:', data)
-            // Здесь можно обработать данные оценки
-          })
-          .catch(err => console.error('Ошибка AI оценки:', err))
-      }
+      icon: loading.curate ? (
+        <span className="block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+      ) : <Brain className="h-5 w-5" />,
+      label: hasAiResults ? "Перезапустить AI-отбор" : "AI-отбор",
+      onClick: onCurate,
+      disabled: loading.curate,
+      color: "bg-purple-500 hover:bg-purple-600",
     },
     {
-      icon: <Download className="h-5 w-5" />,
-      label: "Скачать всё",
-      action: () => {
-        // Скачивание всех фото через существующий API
-        window.open('/api/download-all', '_blank')
-      }
+      icon: loading.describe ? (
+        <span className="block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+      ) : <MessageSquareText className="h-5 w-5" />,
+      label: "AI-описание",
+      onClick: onDescribeAll,
+      disabled: loading.describe,
+      color: "bg-cyan-500 hover:bg-cyan-600",
     },
     {
-      icon: <Link className="h-5 w-5" />,
+      icon: loading.download ? (
+        <span className="block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+      ) : <Download className="h-5 w-5" />,
+      label: "Скачать ZIP",
+      onClick: onDownloadZip,
+      disabled: loading.download,
+      color: "bg-blue-500 hover:bg-blue-600",
+    },
+    {
+      icon: <Copy className="h-5 w-5" />,
       label: "Публичная ссылка",
-      action: () => {
-        // Копировать URL публичной галереи
-        const currentUrl = window.location.href
-        navigator.clipboard.writeText(currentUrl)
-        console.log('Скопирована ссылка:', currentUrl)
-      }
+      onClick: () => {
+        if (publicUrl) {
+          navigator.clipboard.writeText(publicUrl)
+          toast.success("Ссылка скопирована")
+        }
+      },
+      disabled: !publicUrl,
+      color: "bg-green-500 hover:bg-green-600",
+    },
+    {
+      icon: loading.deleteAll ? (
+        <span className="block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+      ) : <Trash2 className="h-5 w-5" />,
+      label: "Удалить всё",
+      onClick: () => {
+        if (confirm(`Удалить ВСЕ фото сессии ${shootId.slice(-6)}? Это необратимо.`)) {
+          onDeleteAll()
+        }
+      },
+      disabled: loading.deleteAll,
+      color: "bg-red-500 hover:bg-red-600",
     },
   ]
-  
+
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col-reverse items-end gap-2">
       {/* Выпадающий список действий */}
-      {isOpen && (
-        <div className="mb-2 flex flex-col gap-2">
-          {actions.map((item, index) => (
-            <motion.button
-              key={index}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
-              onClick={() => {
-                item.action()
-                setIsOpen(false)
-              }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {item.icon}
-            </motion.button>
-          ))}
-        </div>
-      )}
-      
-      {/* Основная кнопка speed dial */}
-      <motion.button
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
-        onClick={() => setIsOpen(!isOpen)}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <div
+        className={
+          "mb-2 flex flex-col gap-2 transition-all duration-200" +
+          (isOpen ? " scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0")
+        }
       >
-        {isOpen ? (
-          <X className="h-6 w-6" />
-        ) : (
-          <Sparkles className="h-6 w-6" />
-        )}
-      </motion.button>
+        {actions.map((action) => (
+          <div key={action.label} className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">
+              {action.label}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                if (!action.disabled) {
+                  action.onClick()
+                  setIsOpen(false)
+                }
+              }}
+              disabled={action.disabled}
+              className={
+                "flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-60 " +
+                action.color
+              }
+            >
+              {action.icon}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Основная кнопка speed dial */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-200"
+      >
+        {isOpen ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
+      </button>
     </div>
   )
 }
