@@ -756,37 +756,7 @@ const cloudRecord: ShootRecord = {
                     · {dateStr}
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleDownloadZip}
-                    disabled={zipping || record.fileUrls.length === 0}
-                    className="d-btn-ghost disabled:opacity-60"
-                  >
-                    {zipping ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                        {zipProgress.total > 0
-                          ? `${zipProgress.done} / ${zipProgress.total}`
-                          : "Собираем…"}
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-4 w-4 text-primary" />
-                        Скачать всё (ZIP)
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearCloudinaryFolder}
-                    disabled={deleting || !record.email}
-                    className="d-btn-ghost !border-destructive/40 !text-destructive disabled:opacity-60"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Удалить все фото сессии
-                  </button>
-                </div>
+                {/* SpeedDial handles download/delete/etc */}
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="inline-flex rounded-full border border-border bg-card p-1">
