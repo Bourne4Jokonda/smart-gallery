@@ -13,8 +13,7 @@ import {
   RefreshCcw,
   AlertCircle,
   MessageSquareText,
-  Copy,
-} from "lucide-react";
+} from "lucide-react"
 import JSZip from "jszip";
 import { toast } from "sonner";
 import { SpeedDial } from "../../components/SpeedDial";
