@@ -880,34 +880,30 @@ const cloudRecord: ShootRecord = {
               ))}
             </div>
 
-          <div className="fixed bottom-4 left-1/2 z-30 -translate-x-1/2">
-                      <div className="group relative flex flex-col items-center gap-2">
-                        {showHint && (
-                          <span className="rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-2">
-                              <RefreshCcw className="h-3.5 w-3.5" />
-                              <span>Если видите ошибку — подождите 1–2 минуты и снова запустите AI-отбор.</span>
-                            </span>
-                          </span>
-                        )}
-                                        </div>
-                                        {/* SpeedDial with all AI actions, download, public link, delete */}
-                                        <SpeedDial
-                                          shootId={record.shootId}
-                                          hasAiResults={!!record?.aiResults?.length}
-                                          publicUrl={publicUrl}
-                                          loading={{
-                                            curate: curating,
-                                            describe: aiDescriptionLoading,
-                                            download: zipping,
-                                            deleteAll: deleting,
-                                          }}
-                                          onCurate={runCurate}
-                                          onDescribeAll={fetchAiDescription}
-                                          onDownloadZip={handleDownloadZip}
-                                          onDeleteAll={clearCloudinaryFolder}
-                                        />
-                              </div>
+          {showHint && (
+            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground shadow-lg">
+              <span className="inline-flex items-center gap-2">
+                <RefreshCcw className="h-3.5 w-3.5" />
+                Если видите ошибку — подождите 1–2 минуты и снова запустите AI-отбор.
+              </span>
+            </div>
+          )}
+          {/* SpeedDial with all AI actions, download, public link, delete */}
+          <SpeedDial
+            shootId={record.shootId}
+            hasAiResults={!!record?.aiResults?.length}
+            publicUrl={publicUrl}
+            loading={{
+              curate: curating,
+              describe: aiDescriptionLoading,
+              download: zipping,
+              deleteAll: deleting,
+            }}
+            onCurate={runCurate}
+            onDescribeAll={fetchAiDescription}
+            onDownloadZip={handleDownloadZip}
+            onDeleteAll={clearCloudinaryFolder}
+          />
                             </main>
 
                             <footer className="border-t border-border px-5 py-10 sm:px-8">
