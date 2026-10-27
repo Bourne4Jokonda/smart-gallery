@@ -104,9 +104,6 @@ export const SpeedDial = ({
       >
         {actions.map((action) => (
           <div key={action.label} className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">
-              {action.label}
-            </span>
             <button
               type="button"
               onClick={() => {
@@ -117,11 +114,12 @@ export const SpeedDial = ({
               }}
               disabled={action.disabled}
               className={
-                "flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-60 " +
-                action.color
+                "inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-bold text-foreground transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40" +
+                (isOpen ? " shadow-md" : " shadow-none")
               }
             >
-              {action.icon}
+              <span className="text-primary">{action.icon}</span>
+              <span className="text-xs">{action.label}</span>
             </button>
           </div>
         ))}
