@@ -94,11 +94,11 @@ export const SpeedDial = ({
   ]
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col-reverse items-end gap-2">
-      {/* Выпадающий список действий */}
+    <div className="fixed bottom-6 right-6 z-50">
+      {/* Action buttons - positioned ABOVE main button, expanding UP */}
       <div
         className={
-          "mb-2 flex flex-col gap-2 transition-all duration-200" +
+          "absolute bottom-full right-0 mb-2 flex flex-col-reverse items-end gap-2 transition-all duration-200" +
           (isOpen ? " scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0")
         }
       >
@@ -127,11 +127,11 @@ export const SpeedDial = ({
         ))}
       </div>
 
-      {/* Основная кнопка speed dial */}
+      {/* Main button - always at bottom */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-200"
+        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-200"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
       </button>
