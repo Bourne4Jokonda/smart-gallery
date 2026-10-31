@@ -645,7 +645,9 @@ const cloudRecord: ShootRecord = {
     const urls = record.fileUrls;
     setAiDescriptionProgress({ done: 0, total: urls.length });
     setAiDescriptionExpanded(false);
-    const toastId = toast.loading(`AI-описание фото… 0/${urls.length}`);
+    const toastId = toast.loading("AI-описание фото…", {
+      description: `0/${urls.length}`,
+    });
     let failed = 0;
     try {
       let done = 0;
@@ -653,7 +655,10 @@ const cloudRecord: ShootRecord = {
         if (aiDescriptions[url]) {
           done++;
           setAiDescriptionProgress({ done, total: urls.length });
-          toast.loading(`AI-описание: ${done}/${urls.length} фото…`, { id: toastId });
+          toast.loading("AI-описание фото…", {
+            id: toastId,
+            description: `${done}/${urls.length}`,
+          });
           continue;
         }
         try {
@@ -678,7 +683,10 @@ const cloudRecord: ShootRecord = {
         }
         done++;
         setAiDescriptionProgress({ done, total: urls.length });
-        toast.loading(`AI-описание: ${done}/${urls.length} фото…`, { id: toastId });
+        toast.loading("AI-описание фото…", {
+          id: toastId,
+          description: `${done}/${urls.length}`,
+        });
       }
       if (failed > 0) {
         toast.error(`AI-описание: ${failed} фото не удалось`, { id: toastId });
