@@ -1046,7 +1046,7 @@
   font-size: 12px;
   font-weight: 800;
   padding: 5px 12px;
-  border-radius: 999px;
+  border-radius: 8px;
   pointer-events: none;
   white-space: nowrap;
 }
@@ -1110,7 +1110,7 @@
   color: var(--color-foreground);
   font-size: 13px;
   line-height: 1.45;
-  max-height: 48px;
+  max-height: 120px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
