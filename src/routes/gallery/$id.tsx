@@ -153,6 +153,7 @@ function GalleryPage() {
   const [filter, setFilter] = useState<"all" | "best">("all");
   const [curating, setCurating] = useState(false);
   const [curateProgress, setCurateProgress] = useState({ done: 0, total: 0 });
+  const [curateExpanded, setCurateExpanded] = useState(false);
   const [publicGallery, setPublicGallery] = useState(false);
   const [showHint, setShowHint] = useState(false);
 
@@ -477,68 +478,71 @@ const cloudRecord: ShootRecord = {
     }
     setCurating(true);
     setCurateProgress({ done: 0, total: urls.length });
+    setCurateExpanded(false);
     setShowHint(true);
-    const toastId = toast.loading(`AI-отбор: ${urls.length} фото…`);
-    console.log("[runCurate] starting", { urls, recordId: record.shootId });
+    const toastId = toast.loading(`AI-отбор: 0/${urls.length} фото…`);
+    const BATCH_SIZE = 10;
     try {
-      const res = await fetch("/api/curate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shootId: record.shootId, fileUrls: urls }),
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(`Ошибка: ${res.status} ${text.slice(0, 200)}`);
-      }
-      const data = (await res.json()) as { ok: boolean; results?: Array<{ url: string; score: number | null; status: string; error?: string }> };
-      console.log("[runCurate] response data:", data);
-      if (!data.ok || !Array.isArray(data.results)) {
-        throw new Error(data?.error || "AI не вернул результаты");
-      }
-      const incoming = new Map(
-        data.results.map((r) => [
-          r.url,
-          {
-            url: r.url,
-            score: r.score,
-            status: r.status,
-            ...(r.error ? { error: r.error } : {}),
-          },
-        ]),
-      );
-      const merged = (record.aiResults ?? []).map((old) => {
-        const next = incoming.get(old.url);
-        if (!next) return old;
-        // Keep existing ok scores; replace errors or empty statuses
-        if (old.status === "ok" && old.score != null) {
-          return old;
+      let merged = [...(record.aiResults ?? [])];
+      for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+        const batch = urls.slice(i, i + BATCH_SIZE);
+        const res = await fetch("/api/curate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shootId: record.shootId, fileUrls: batch }),
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          throw new Error(`Ошибка: ${res.status} ${text.slice(0, 200)}`);
         }
-        return next;
-      });
-      for (const [url, result] of incoming) {
-        if (!merged.some((item) => item.url === url)) {
-          merged.push(result);
+        const data = (await res.json()) as { ok: boolean; results?: Array<{ url: string; score: number | null; status: string; error?: string }> };
+        if (!data.ok || !Array.isArray(data.results)) {
+          throw new Error(data?.error || "AI не вернул результаты");
         }
+        const incoming = new Map(
+          data.results.map((r) => [
+            r.url,
+            {
+              url: r.url,
+              score: r.score,
+              status: r.status,
+              ...(r.error ? { error: r.error } : {}),
+            },
+          ]),
+        );
+        merged = merged.map((old) => {
+          const next = incoming.get(old.url);
+          if (!next) return old;
+          if (old.status === "ok" && old.score != null) return old;
+          return next;
+        });
+        for (const [url, result] of incoming) {
+          if (!merged.some((item) => item.url === url)) {
+            merged.push(result);
+          }
+        }
+        const scored = merged.filter((a) => a.score != null).length;
+        setRecord((prev) => (prev ? { ...prev, aiResults: merged } : prev));
+        setCurateProgress({ done: scored, total: urls.length });
+        toast.loading(`AI-отбор: ${scored}/${urls.length} фото…`, { id: toastId });
       }
-      const aiResults = merged;
-      const updated = { ...record, aiResults };
+      const updated = { ...record, aiResults: merged };
       setRecord(updated);
       saveShoot(updated);
       try {
-        await updateShootRecord(record.shootId, { aiResults });
+        await updateShootRecord(record.shootId, { aiResults: merged });
       } catch {
         // ignore cloud write errors
       }
-      const scored = aiResults.filter((a) => a.score != null).length;
-      const errored = aiResults.filter((a) => a.status === "error").length;
-      const unscored = urls.length - scored - errored;
-      setCurateProgress({ done: scored, total: urls.length });
+      const scoredFinal = merged.filter((a) => a.score != null).length;
+      const errored = merged.filter((a) => a.status === "error").length;
+      const unscored = urls.length - scoredFinal - errored;
       if (errored > 0) {
-        toast.warning(`AI-отбор: ${scored} оценено, ${errored} ошибок, ${unscored} без оценки`, { id: toastId });
+        toast.warning(`AI-отбор: ${scoredFinal} оценено, ${errored} ошибок, ${unscored} без оценки`, { id: toastId });
       } else if (unscored > 0) {
-        toast.warning(`AI-отбор: ${scored} оценено, ${unscored} не оценено`, { id: toastId });
+        toast.warning(`AI-отбор: ${scoredFinal} оценено, ${unscored} не оценено`, { id: toastId });
       } else {
-        toast.success(`AI-отбор завершён: ${scored}/${urls.length} фото оценены`, { id: toastId });
+        toast.success(`AI-отбор завершён: ${scoredFinal}/${urls.length} фото оценены`, { id: toastId });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Неизвестная ошибка";
@@ -847,6 +851,24 @@ const cloudRecord: ShootRecord = {
                   </div>
                 </div>
               )}
+              {curating && curateProgress.total > 0 && (
+                <div className="mt-1">
+                  <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>AI-отбор</span>
+                    <span>
+                      {curateProgress.done}/{curateProgress.total}
+                    </span>
+                  </div>
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{
+                        width: `${curateProgress.total ? (curateProgress.done / curateProgress.total) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -953,9 +975,48 @@ const cloudRecord: ShootRecord = {
               </span>
             </div>
           )}
+          {/* Компактный индикатор AI-отбора (сворачиваемый) */}
+          {curating && curateProgress.total > 0 && (
+            <div className="fixed bottom-6 left-6 z-50">
+              {!curateExpanded ? (
+                <button
+                  type="button"
+                  onClick={() => setCurateExpanded(true)}
+                  className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md transition-colors hover:bg-muted/30"
+                >
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <span>Отбор {curateProgress.done}/{curateProgress.total}</span>
+                </button>
+              ) : (
+                <div className="w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-foreground">AI-отбор</span>
+                    <button
+                      type="button"
+                      onClick={() => setCurateExpanded(false)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {curateProgress.done}/{curateProgress.total} фото
+                  </p>
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{
+                        width: `${curateProgress.total ? (curateProgress.done / curateProgress.total) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           {/* Компактный индикатор массового AI-описания (сворачиваемый) */}
           {aiDescriptionProgress && (
-            <div className="fixed bottom-6 left-6 z-50">
+            <div className={`fixed ${curating ? "bottom-20" : "bottom-6"} left-6 z-50`}>
               {!aiDescriptionExpanded ? (
                 <button
                   type="button"
