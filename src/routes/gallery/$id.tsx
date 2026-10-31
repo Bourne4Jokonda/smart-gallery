@@ -874,20 +874,20 @@ const cloudRecord: ShootRecord = {
           <div className="flex flex-wrap items-center gap-3">
                 {record && record.fileUrls.length > 0 && (() => {
                   const scored = record.aiResults?.filter((a) => a.score != null).length ?? 0;
-                  const errored = record.aiResults?.filter((a) => a.status === "error").length ?? 0;
-                  const unscored = record.fileUrls.length - scored - errored;
-                  const pct = Math.round((scored / record.fileUrls.length) * 100);
+                  const total = record.fileUrls.length;
                   return (
-                    <p className="d-shoot-meta">
-                      Всего: <b className="text-foreground">{record.fileUrls.length}</b>
-                      {" · "}лучших: <b className="text-foreground">{bestUrls.length || (record.aiResults?.filter((r) => r.status === "ok" && r.score != null && r.score >= 7).length ?? 0)}</b>
-                      {" · "}оценено: <b className="text-foreground">{pct}%</b>
-                      {errored > 0 && (
-                        <>
-                          {" · "}ошибок: <b className="text-foreground">{errored}</b>
-                        </>
-                      )}
-                    </p>
+                    <div className="w-full max-w-xs">
+                      <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                        <span>AI-отбор</span>
+                        <span>{scored}/{total}</span>
+                      </div>
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full bg-primary transition-all duration-300"
+                          style={{ width: `${total ? (scored / total) * 100 : 0}%` }}
+                        />
+                      </div>
+                    </div>
                   );
                 })()}
               </div>
