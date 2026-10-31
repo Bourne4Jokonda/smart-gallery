@@ -631,6 +631,46 @@ const cloudRecord: ShootRecord = {
     }
   }, [record, currentLightboxIndex]);
 
+  // Массовое AI-описание всех фото сессии (SpeedDial → "AI-описание")
+  const fetchAllAiDescriptions = useCallback(async () => {
+    if (!record) return;
+    setAiDescriptionLoading(true);
+    setAiDescriptionError(null);
+    const toastId = toast.loading("AI-описание фото…");
+    try {
+      const urls = record.fileUrls;
+      let done = 0;
+      for (const url of urls) {
+        if (aiDescriptions[url]) {
+          done++;
+          toast.loading(`AI-описание фото… ${done}/${urls.length}`, { id: toastId });
+          continue;
+        }
+        try {
+          const res = await fetch("/api/ai-description", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ photoUrl: url }),
+          });
+          const data = await res.json();
+          if (data.ok) {
+            setAiDescriptions((prev) => ({
+              ...prev,
+              [url]: { description: data.description, tags: data.tags },
+            }));
+          }
+        } catch (err) {
+          console.error("ai description failed", url, err);
+        }
+        done++;
+        toast.loading(`AI-описание фото… ${done}/${urls.length}`, { id: toastId });
+      }
+      toast.success("AI-описание готово", { id: toastId });
+    } finally {
+      setAiDescriptionLoading(false);
+    }
+  }, [record, aiDescriptions]);
+
   const clearCloudinaryFolder = useCallback(async () => {
     if (!record) return;
     if (!record.email) {
@@ -900,7 +940,7 @@ const cloudRecord: ShootRecord = {
               deleteAll: deleting,
             }}
             onCurate={runCurate}
-            onDescribeAll={fetchAiDescription}
+            onDescribeAll={fetchAllAiDescriptions}
             onDownloadZip={handleDownloadZip}
             onDeleteAll={clearCloudinaryFolder}
           />

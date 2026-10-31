@@ -1326,3 +1326,17 @@ body {
     transition: none;
   }
 }
+
+/* Touch-устройства: элементы, видимые только при hover, показываем всегда */
+@media (hover: none) {
+  .d-shoot-del,
+  .d-cell-action {
+    opacity: 1;
+  }
+  .d-shoot-card:hover {
+    transform: none;
+  }
+  .d-photo-cell:hover img {
+    transform: none;
+  }
+}
