@@ -261,6 +261,53 @@ const cloudRecord: ShootRecord = {
     };
   }, [id]);
 
+  // При загрузке съёмки подтягиваем описания из серверного кэша (Firestore),
+  // чтобы счётчик AI-описание показывал реальное количество сразу,
+  // а не только после открытия лайтбокса.
+  const descriptionsLoadedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!record || descriptionsLoadedRef.current === record.shootId) return;
+    descriptionsLoadedRef.current = record.shootId;
+    const urls = record.fileUrls;
+    if (!urls.length) return;
+    const loadDescriptions = async () => {
+      const BATCH = 20;
+      for (let i = 0; i < urls.length; i += BATCH) {
+        const batch = urls.slice(i, i + BATCH);
+        await Promise.all(
+          batch.map(async (url) => {
+            try {
+              const res = await fetch(
+                `/api/ai-description?photoUrl=${encodeURIComponent(url)}`,
+              );
+              if (!res.ok) return;
+              const data = await res.json();
+              if (data?.ok && data.description) {
+                aiDescriptionsChecked.current.add(url);
+                setAiDescriptions((prev) =>
+                  prev[url]
+                    ? prev
+                    : {
+                        ...prev,
+                        [url]: {
+                          description: data.description,
+                          tags: data.tags ?? [],
+                        },
+                      },
+                );
+              } else {
+                aiDescriptionsChecked.current.add(url);
+              }
+            } catch {
+              // ignore
+            }
+          }),
+        );
+      }
+    };
+    loadDescriptions();
+  }, [record?.shootId]);
+
   // Lightbox: lock body scroll + keyboard nav
   useEffect(() => {
     if (currentLightboxIndex === null) return;
