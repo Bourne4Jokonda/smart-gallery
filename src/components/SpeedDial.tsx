@@ -114,7 +114,7 @@ export const SpeedDial = ({
               }}
               disabled={action.disabled}
               className={
-                "inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-bold text-foreground transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40" +
+                "inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-bold text-foreground transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40 w-[190px] min-h-[2.5rem]" +
                 (isOpen ? " shadow-md" : " shadow-none")
               }
             >
@@ -129,7 +129,7 @@ export const SpeedDial = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-200"
+        className="relative flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-200"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
       </button>
