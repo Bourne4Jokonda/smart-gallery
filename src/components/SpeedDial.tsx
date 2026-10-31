@@ -7,7 +7,8 @@ import {
   X, 
   Sparkles, 
   Copy, 
-  MessageSquareText 
+  MessageSquareText,
+  Upload,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -20,26 +21,38 @@ interface SpeedDialProps {
     describe: boolean
     download: boolean
     deleteAll: boolean
+    adding: boolean
   }
   onCurate: () => void
   onDescribeAll: () => void
   onDownloadZip: () => void
   onDeleteAll: () => void
+  onAddPhotos: () => void
 }
 
 export const SpeedDial = ({
   shootId,
   hasAiResults = false,
   publicUrl,
-  loading = { curate: false, describe: false, download: false, deleteAll: false },
+  loading = { curate: false, describe: false, download: false, deleteAll: false, adding: false },
   onCurate,
   onDescribeAll,
   onDownloadZip,
   onDeleteAll,
+  onAddPhotos,
 }: SpeedDialProps) => {
   const [isOpen, setIsOpen] = useState(false)
 
   const actions = [
+    {
+      icon: loading.adding ? (
+        <span className="block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+      ) : <Upload className="h-5 w-5" />,
+      label: "Добавить фото",
+      onClick: onAddPhotos,
+      disabled: loading.adding,
+      color: "bg-emerald-500 hover:bg-emerald-600",
+    },
     {
       icon: loading.curate ? (
         <span className="block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />

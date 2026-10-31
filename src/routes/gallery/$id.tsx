@@ -23,6 +23,7 @@ import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { saveShoot, readShoots } from "@/lib/storage";
 import { saveShootRecord, saveShootRecordById, updateShootRecord } from "@/lib/firebase";
 import { getPublicIdFromUrl, getLowQualityUrl } from "@/lib/cloudinary";
+import { uploadShoot, isCloudinaryConfigured } from "@/lib/uploads";
 
 interface ShootRecord {
   shootId: string;
@@ -151,6 +152,8 @@ function GalleryPage() {
   const [zipProgress, setZipProgress] = useState({ done: 0, total: 0 });
   const [singleDownloading, setSingleDownloading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState<"all" | "best">("all");
   const [curating, setCurating] = useState(false);
   const [curateProgress, setCurateProgress] = useState({ done: 0, total: 0 });
@@ -597,8 +600,44 @@ const cloudRecord: ShootRecord = {
       setCurating(false);
       setCurateProgress({ done: 0, total: 0 });
     }
-  }, [record, curating, saveShoot, updateShootRecord]);
+  }, [record, deleting, saveShoot, updateShootRecord]);
 
+  const handleAddPhotos = useCallback(
+    async (files: FileList | null) => {
+      if (!files || !files.length || !record) return;
+      if (!isCloudinaryConfigured()) {
+        toast.error("Хранилище недоступно");
+        return;
+      }
+      setAdding(true);
+      const toastId = toast.loading(`Добавляем ${files.length} фото…`);
+      try {
+        const newUrls: string[] = [];
+        const arr = Array.from(files);
+        for (let i = 0; i < arr.length; i++) {
+          const file = arr[i]!;
+          const result = await uploadShoot(record.shootId, file, undefined, record.email ?? undefined);
+          if (result?.secure_url) newUrls.push(result.secure_url);
+        }
+        const updated = { ...record, fileUrls: [...record.fileUrls, ...newUrls] };
+        setRecord(updated);
+        saveShoot(updated);
+        try {
+          await updateShootRecord(record.shootId, { fileUrls: updated.fileUrls });
+        } catch {
+          // ignore cloud write errors
+        }
+        toast.success(`Добавлено ${newUrls.length} фото`, { id: toastId });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Неизвестная ошибка";
+        toast.error("Не удалось добавить фото", { id: toastId, description: message });
+      } finally {
+        setAdding(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    },
+    [record, saveShoot, updateShootRecord],
+  );
   const reindexSingleImage = useCallback(async (url: string) => {
     if (!record || curating) return;
     const toastId = toast.loading("Переоценка фото…");
@@ -1092,6 +1131,14 @@ const cloudRecord: ShootRecord = {
             </>,
             document.body,
           )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => handleAddPhotos(e.target.files)}
+          />
           {/* SpeedDial with all AI actions, download, public link, delete */}
           <SpeedDial
             shootId={record.shootId}
@@ -1102,11 +1149,13 @@ const cloudRecord: ShootRecord = {
               describe: aiDescriptionLoading,
               download: zipping,
               deleteAll: deleting,
+              adding: adding,
             }}
             onCurate={runCurate}
             onDescribeAll={fetchAllAiDescriptions}
             onDownloadZip={handleDownloadZip}
             onDeleteAll={clearCloudinaryFolder}
+            onAddPhotos={() => fileInputRef.current?.click()}
           />
           </div>
           </div>
