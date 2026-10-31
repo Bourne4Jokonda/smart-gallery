@@ -128,7 +128,8 @@ export const SpeedDial = ({
               }}
               disabled={action.disabled}
               className={
-                "group inline-flex items-center justify-end gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-bold text-foreground transition-colors hover:bg-primary hover:border-[var(--background)] hover:text-[var(--background)] disabled:cursor-not-allowed disabled:opacity-40 w-[190px] h-[2.5rem]" +
+                "group inline-flex items-center justify-end gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-bold text-foreground transition-colors hover:bg-primary hover:border-[var(--background)] hover:text-[var(--background)] disabled:cursor-not-allowed disabled:opacity-40 w-[190px] h-[2.5rem] " +
+                (isOpen ? "pointer-events-auto" : "pointer-events-none") +
                 (isOpen ? " shadow-md" : " shadow-none")
               }
             >
