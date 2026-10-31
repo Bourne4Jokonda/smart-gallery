@@ -272,6 +272,8 @@ const cloudRecord: ShootRecord = {
     if (!urls.length) return;
     const loadDescriptions = async () => {
       const BATCH = 20;
+      let loaded = 0;
+      const accumulated: Record<string, { description: string; tags: string[] }> = {};
       for (let i = 0; i < urls.length; i += BATCH) {
         const batch = urls.slice(i, i + BATCH);
         await Promise.all(
@@ -284,17 +286,10 @@ const cloudRecord: ShootRecord = {
               const data = await res.json();
               if (data?.ok && data.description) {
                 aiDescriptionsChecked.current.add(url);
-                setAiDescriptions((prev) =>
-                  prev[url]
-                    ? prev
-                    : {
-                        ...prev,
-                        [url]: {
-                          description: data.description,
-                          tags: data.tags ?? [],
-                        },
-                      },
-                );
+                accumulated[url] = {
+                  description: data.description,
+                  tags: data.tags ?? [],
+                };
               } else {
                 aiDescriptionsChecked.current.add(url);
               }
@@ -303,6 +298,9 @@ const cloudRecord: ShootRecord = {
             }
           }),
         );
+        loaded += batch.length;
+        setAiDescriptions((prev) => ({ ...prev, ...accumulated }));
+        setAiDescriptionProgress({ done: Object.keys(accumulated).length, total: urls.length });
       }
     };
     loadDescriptions();
