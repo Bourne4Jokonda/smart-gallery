@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { 
   Brain, 
   Download, 
@@ -93,7 +94,7 @@ export const SpeedDial = ({
     },
   ]
 
-  return (
+  return createPortal(
     <div className="fixed bottom-6 right-6 z-50">
       {/* Action buttons - positioned ABOVE main button, expanding UP */}
       <div
@@ -133,6 +134,7 @@ export const SpeedDial = ({
       >
         {isOpen ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
       </button>
-    </div>
-  )
+    </div>,
+    document.body,
+  );
 }

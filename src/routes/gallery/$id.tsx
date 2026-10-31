@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
 import {
   Camera,
@@ -1008,83 +1009,88 @@ const cloudRecord: ShootRecord = {
               </span>
             </div>
           )}
-          {/* Компактный индикатор AI-отбора (сворачиваемый) */}
-          {curating && curateProgress.total > 0 && (
-            <div className="fixed bottom-6 left-6 z-50">
-              {!curateExpanded ? (
-                <button
-                  type="button"
-                  onClick={() => setCurateExpanded(true)}
-                  className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md transition-colors hover:bg-muted/30"
-                >
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  <span>Отбор {curateProgress.done}/{curateProgress.total}</span>
-                </button>
-              ) : (
-                <div className="w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-foreground">AI-отбор</span>
+          {createPortal(
+            <>
+              {/* Компактный индикатор AI-отбора (сворачиваемый) */}
+              {curating && curateProgress.total > 0 && (
+                <div className="fixed bottom-6 left-6 z-50">
+                  {!curateExpanded ? (
                     <button
                       type="button"
-                      onClick={() => setCurateExpanded(false)}
-                      className="text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setCurateExpanded(true)}
+                      className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md transition-colors hover:bg-muted/30"
                     >
-                      ✕
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      <span>Отбор {curateProgress.done}/{curateProgress.total}</span>
                     </button>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {curateProgress.done}/{curateProgress.total} фото
-                  </p>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full bg-primary transition-all duration-300"
-                      style={{
-                        width: `${curateProgress.total ? (curateProgress.done / curateProgress.total) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
+                  ) : (
+                    <div className="w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-foreground">AI-отбор</span>
+                        <button
+                          type="button"
+                          onClick={() => setCurateExpanded(false)}
+                          className="text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {curateProgress.done}/{curateProgress.total} фото
+                      </p>
+                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full bg-primary transition-all duration-300"
+                          style={{
+                            width: `${curateProgress.total ? (curateProgress.done / curateProgress.total) * 100 : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
-          {/* Компактный индикатор массового AI-описания (сворачиваемый) */}
-          {aiDescriptionProgress && (
-            <div className={`fixed ${curating ? "bottom-20" : "bottom-6"} left-6 z-50`}>
-              {!aiDescriptionExpanded ? (
-                <button
-                  type="button"
-                  onClick={() => setAiDescriptionExpanded(true)}
-                  className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md transition-colors hover:bg-muted/30"
-                >
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  <span>AI {aiDescriptionProgress.done}/{aiDescriptionProgress.total}</span>
-                </button>
-              ) : (
-                <div className="w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-foreground">AI-описание</span>
+              {/* Компактный индикатор массового AI-описания (сворачиваемый) */}
+              {aiDescriptionProgress && (
+                <div className={`fixed ${curating ? "bottom-20" : "bottom-6"} left-6 z-50`}>
+                  {!aiDescriptionExpanded ? (
                     <button
                       type="button"
-                      onClick={() => setAiDescriptionExpanded(false)}
-                      className="text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setAiDescriptionExpanded(true)}
+                      className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md transition-colors hover:bg-muted/30"
                     >
-                      ✕
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      <span>AI {aiDescriptionProgress.done}/{aiDescriptionProgress.total}</span>
                     </button>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {aiDescriptionProgress.done}/{aiDescriptionProgress.total} фото
-                  </p>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full bg-primary transition-all duration-300"
-                      style={{
-                        width: `${aiDescriptionProgress.total ? (aiDescriptionProgress.done / aiDescriptionProgress.total) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
+                  ) : (
+                    <div className="w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-foreground">AI-описание</span>
+                        <button
+                          type="button"
+                          onClick={() => setAiDescriptionExpanded(false)}
+                          className="text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {aiDescriptionProgress.done}/{aiDescriptionProgress.total} фото
+                      </p>
+                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full bg-primary transition-all duration-300"
+                          style={{
+                            width: `${aiDescriptionProgress.total ? (aiDescriptionProgress.done / aiDescriptionProgress.total) * 100 : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>,
+            document.body,
           )}
           {/* SpeedDial with all AI actions, download, public link, delete */}
           <SpeedDial
