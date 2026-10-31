@@ -810,7 +810,7 @@ const cloudRecord: ShootRecord = {
                     лучших
                   </span>
                 </h1>
-                <div className="inline-flex rounded-full border border-border bg-card p-1">
+                <div className="inline-flex w-fit rounded-full border border-border bg-card p-1">
                   <button
                     type="button"
                     onClick={() => setFilter("all")}
@@ -835,59 +835,37 @@ const cloudRecord: ShootRecord = {
                   </button>
                 </div>
               </div>
-              {record && (
-                <div className="mt-1">
-                  <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>AI-описание</span>
-                    <span>
-                      {Object.keys(aiDescriptions).length}/{record.fileUrls.length}
-                    </span>
-                  </div>
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full bg-primary transition-all duration-300"
-                      style={{
-                        width: `${record.fileUrls.length ? (Object.keys(aiDescriptions).length / record.fileUrls.length) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-              {record && (
-                <div className="mt-1">
-                  <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>AI-отбор</span>
-                    <span>
-                      {record.aiResults?.filter((a) => a.score != null).length ?? 0}/{record.fileUrls.length}
-                    </span>
-                  </div>
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full bg-primary transition-all duration-300"
-                      style={{
-                        width: `${record.fileUrls.length ? ((record.aiResults?.filter((a) => a.score != null).length ?? 0) / record.fileUrls.length) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
                 {record && record.fileUrls.length > 0 && (() => {
+                  const described = Object.keys(aiDescriptions).length;
                   const scored = record.aiResults?.filter((a) => a.score != null).length ?? 0;
                   const total = record.fileUrls.length;
                   return (
-                    <div className="w-full max-w-xs">
-                      <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>AI-отбор</span>
-                        <span>{scored}/{total}</span>
+                    <div className="flex w-full flex-col gap-2">
+                      <div className="w-full max-w-xs">
+                        <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                          <span>AI-описание</span>
+                          <span>{described}/{total}</span>
+                        </div>
+                        <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full bg-primary transition-all duration-300"
+                            style={{ width: `${total ? (described / total) * 100 : 0}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full bg-primary transition-all duration-300"
-                          style={{ width: `${total ? (scored / total) * 100 : 0}%` }}
-                        />
+                      <div className="w-full max-w-xs">
+                        <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                          <span>AI-отбор</span>
+                          <span>{scored}/{total}</span>
+                        </div>
+                        <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full bg-primary transition-all duration-300"
+                            style={{ width: `${total ? (scored / total) * 100 : 0}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
                   );
@@ -1071,6 +1049,7 @@ const cloudRecord: ShootRecord = {
             onDownloadZip={handleDownloadZip}
             onDeleteAll={clearCloudinaryFolder}
           />
+          </div>
           </div>
                             </main>
 
