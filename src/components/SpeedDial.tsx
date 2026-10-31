@@ -108,7 +108,7 @@ export const SpeedDial = ({
   ]
 
   return createPortal(
-    <div className="fixed-widget-right">
+    <div className="fixed-widget-right pointer-events-none">
       {/* Action buttons - positioned ABOVE main button, expanding UP */}
       <div
         className={
@@ -144,7 +144,7 @@ export const SpeedDial = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-200"
+        className="relative flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-200 pointer-events-auto"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
       </button>

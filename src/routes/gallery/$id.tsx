@@ -1049,21 +1049,21 @@ const cloudRecord: ShootRecord = {
             </div>
           )}
           {createPortal(
-            <>
+            <div className="pointer-events-none">
               {/* Компактный индикатор AI-отбора (сворачиваемый) */}
               {curating && curateProgress.total > 0 && (
                 <div className="fixed-widget-left">
                   {!curateExpanded ? (
                     <button
-                      type="button"
-                      onClick={() => setCurateExpanded(true)}
-                      className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md transition-colors hover:bg-muted/30"
-                    >
+                        type="button"
+                        onClick={() => setCurateExpanded(true)}
+                        className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md transition-colors hover:bg-muted/30"
+                      >
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                       <span>Отбор {curateProgress.done}/{curateProgress.total}</span>
                     </button>
                   ) : (
-                    <div className="w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
+                    <div className="pointer-events-auto w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-foreground">AI-отбор</span>
                         <button
@@ -1096,13 +1096,13 @@ const cloudRecord: ShootRecord = {
                     <button
                       type="button"
                       onClick={() => setAiDescriptionExpanded(true)}
-                      className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md transition-colors hover:bg-muted/30"
+                      className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md transition-colors hover:bg-muted/30"
                     >
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                       <span>AI {aiDescriptionProgress.done}/{aiDescriptionProgress.total}</span>
                     </button>
                   ) : (
-                    <div className="w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
+                    <div className="pointer-events-auto w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-foreground">AI-описание</span>
                         <button
@@ -1128,7 +1128,7 @@ const cloudRecord: ShootRecord = {
                   )}
                 </div>
               )}
-            </>,
+            </div>,
             document.body,
           )}
           <input
