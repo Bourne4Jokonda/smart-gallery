@@ -1312,7 +1312,22 @@
   }
 }
 
-/* Глобальная защита от горизонтального переполнения на любом экране */
+/* Виджеты, закреплённые по краям контейнера max-w-5xl (1024px), а не экрана */
+.fixed-widget-right {
+  position: fixed;
+  right: max(1.5rem, calc((100vw - 64rem) / 2 + 1.5rem));
+  bottom: 1.5rem;
+  z-index: 50;
+}
+.fixed-widget-left {
+  position: fixed;
+  left: max(1.5rem, calc((100vw - 64rem) / 2 + 1.5rem));
+  bottom: 1.5rem;
+  z-index: 50;
+}
+.fixed-widget-left--up {
+  bottom: 5rem;
+}
 html,
 body {
   overflow-x: clip;

@@ -853,7 +853,6 @@ const cloudRecord: ShootRecord = {
                   <ChevronLeft className="h-4 w-4" />
                   Назад в кабинет
                 </Link>
-                <p className="shoot-title d-kicker mt-0">Съёмка #{record.shootId.slice(-6)}</p>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className="d-display text-[clamp(1.4rem,3vw,2rem)]">
@@ -864,30 +863,6 @@ const cloudRecord: ShootRecord = {
                     лучших
                   </span>
                 </h1>
-                <div className="inline-flex w-fit rounded-full border border-border bg-card p-1">
-                  <button
-                    type="button"
-                    onClick={() => setFilter("all")}
-                    className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
-                      filter === "all"
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Все
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilter("best")}
-                    className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
-                      filter === "best"
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Лучшие
-                  </button>
-                </div>
               </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -897,6 +872,31 @@ const cloudRecord: ShootRecord = {
                   const total = record.fileUrls.length;
                   return (
                     <div className="flex w-full flex-col gap-2">
+                      <p className="shoot-title d-kicker mt-0">Съёмка #{record.shootId.slice(-6)}</p>
+                      <div className="inline-flex w-fit rounded-full border border-border bg-card p-1">
+                        <button
+                          type="button"
+                          onClick={() => setFilter("all")}
+                          className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                            filter === "all"
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          Все
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFilter("best")}
+                          className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                            filter === "best"
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          Лучшие
+                        </button>
+                      </div>
                       <div className="w-full max-w-xs">
                         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                           <span>AI-описание</span>
@@ -1013,7 +1013,7 @@ const cloudRecord: ShootRecord = {
             <>
               {/* Компактный индикатор AI-отбора (сворачиваемый) */}
               {curating && curateProgress.total > 0 && (
-                <div className="fixed bottom-6 left-6 z-50">
+                <div className="fixed-widget-left">
                   {!curateExpanded ? (
                     <button
                       type="button"
@@ -1052,7 +1052,7 @@ const cloudRecord: ShootRecord = {
               )}
               {/* Компактный индикатор массового AI-описания (сворачиваемый) */}
               {aiDescriptionProgress && (
-                <div className={`fixed ${curating ? "bottom-20" : "bottom-6"} left-6 z-50`}>
+                <div className={`fixed-widget-left ${curating ? "fixed-widget-left--up" : ""}`}>
                   {!aiDescriptionExpanded ? (
                     <button
                       type="button"

@@ -95,7 +95,7 @@ export const SpeedDial = ({
   ]
 
   return createPortal(
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed-widget-right">
       {/* Action buttons - positioned ABOVE main button, expanding UP */}
       <div
         className={
