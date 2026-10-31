@@ -8,6 +8,12 @@ export function isCloudinaryConfigured(): boolean {
   return Boolean(CLOUDINARY_CLOUD_NAME);
 }
 
+export function getLowQualityUrl(imageUrl: string): string {
+  if (!imageUrl.includes("res.cloudinary.com")) return imageUrl;
+  // Insert transformation after /upload/
+  return imageUrl.replace("/image/upload/", "/image/upload/w_400,q_auto:low/");
+}
+
 export function getPublicIdFromUrl(url: string): string | null {
   try {
     const urlObj = new URL(url);

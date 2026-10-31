@@ -22,7 +22,7 @@ import { getAuthInstance, onUserChange, getDb, getIdToken } from "@/lib/firebase
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { saveShoot, readShoots } from "@/lib/storage";
 import { saveShootRecord, saveShootRecordById, updateShootRecord } from "@/lib/firebase";
-import { getPublicIdFromUrl } from "@/lib/cloudinary";
+import { getPublicIdFromUrl, getLowQualityUrl } from "@/lib/cloudinary";
 
 interface ShootRecord {
   shootId: string;
@@ -933,7 +933,7 @@ const cloudRecord: ShootRecord = {
                   className="d-photo-cell group"
                 >
                   <img
-                    src={url}
+                    src={getLowQualityUrl(url)}
                     alt={`Кадр ${i + 1}`}
                     loading="lazy"
                     onClick={() => setLightboxUrl(url)}
