@@ -783,51 +783,27 @@ const cloudRecord: ShootRecord = {
     <div className="min-h-screen bg-background text-foreground antialiased">
       <main className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-5xl">
-          <div className="sticky top-0 z-30 -mx-5 bg-background/90 px-5 py-4 backdrop-blur sm:-mx-8 sm:px-8">
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div className="flex items-center gap-2">
-                  <Link
-                    to="/profile"
-                    className="back-to-cabinet inline-flex items-center gap-1.5 text-sm font-bold text-primary transition-colors hover:text-foreground"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Назад в кабинет
-                  </Link>
-                  <p className="shoot-title d-kicker mt-0">
-                    Съёмка #{record.shootId.slice(-6)}
-                  </p>
-                </div>
-                {aiDescriptionProgress && (
-                  <div className="mt-2 w-full max-w-xs">
-                    <p className="text-xs text-muted-foreground">
-                      AI-описание: {aiDescriptionProgress.done}/{aiDescriptionProgress.total}
-                    </p>
-                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full bg-primary transition-all duration-300"
-                        style={{
-                          width: `${aiDescriptionProgress.total ? (aiDescriptionProgress.done / aiDescriptionProgress.total) * 100 : 0}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-                <h1 className="d-display text-[clamp(1.8rem,3.5vw,2.6rem)]">
-                    Загружено{" "}
-                    <span className="text-primary">{record.fileUrls.length} фото</span>
-                  </h1>
-                  <p className="d-shoot-meta mt-2 sm:text-sm">
-                    ИИ отметил{" "}
-                    <b className="text-foreground">
-                      {record.aiResults?.filter((r) => r.status === "ok" && r.score != null && r.score >= 7).length ?? 0} лучших кадров
-                    </b>{" "}
-                    · {dateStr}
-                  </p>
-                </div>
-                {/* SpeedDial handles download/delete/etc */}
+          <div className="sticky top-0 z-30 -mx-5 bg-background/90 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-3">
+                <Link
+                  to="/profile"
+                  className="back-to-cabinet inline-flex items-center gap-1.5 text-sm font-bold text-primary transition-colors hover:text-foreground"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Назад в кабинет
+                </Link>
+                <p className="shoot-title d-kicker mt-0">Съёмка #{record.shootId.slice(-6)}</p>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <h1 className="d-display text-[clamp(1.4rem,3vw,2rem)]">
+                  {record.fileUrls.length} фото{" "}
+                  <span className="text-muted-foreground font-normal">·</span>{" "}
+                  <span className="text-primary">
+                    {record.aiResults?.filter((r) => r.status === "ok" && r.score != null && r.score >= 7).length ?? 0}{" "}
+                    лучших
+                  </span>
+                </h1>
                 <div className="inline-flex rounded-full border border-border bg-card p-1">
                   <button
                     type="button"
@@ -852,6 +828,28 @@ const cloudRecord: ShootRecord = {
                     Лучшие
                   </button>
                 </div>
+              </div>
+              {aiDescriptionProgress && (
+                <div className="mt-1">
+                  <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>AI-описание</span>
+                    <span>
+                      {aiDescriptionProgress.done}/{aiDescriptionProgress.total}
+                    </span>
+                  </div>
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{
+                        width: `${aiDescriptionProgress.total ? (aiDescriptionProgress.done / aiDescriptionProgress.total) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
                 {record && record.fileUrls.length > 0 && (() => {
                   const scored = record.aiResults?.filter((a) => a.score != null).length ?? 0;
                   const errored = record.aiResults?.filter((a) => a.status === "error").length ?? 0;
@@ -871,8 +869,6 @@ const cloudRecord: ShootRecord = {
                   );
                 })()}
               </div>
-            </div>
-          </div>
 
           <div className="d-photo-grid mt-8">
               {visibleUrls.map((url, i) => (
@@ -1012,6 +1008,7 @@ const cloudRecord: ShootRecord = {
             onDownloadZip={handleDownloadZip}
             onDeleteAll={clearCloudinaryFolder}
           />
+          </div>
                             </main>
 
                             <footer className="border-t border-border px-5 py-10 sm:px-8">
