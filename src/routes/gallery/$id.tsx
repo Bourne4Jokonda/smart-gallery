@@ -163,6 +163,7 @@ function GalleryPage() {
   const [aiDescriptionLoading, setAiDescriptionLoading] = useState(false);
   const [aiDescriptionError, setAiDescriptionError] = useState<string | null>(null);
   const [aiDescriptionProgress, setAiDescriptionProgress] = useState<{ done: number; total: number } | null>(null);
+  const [aiDescriptionExpanded, setAiDescriptionExpanded] = useState(false);
 
   // Описание текущего кадра (из кэша)
   const aiDescription = lightboxUrl ? aiDescriptions[lightboxUrl] ?? null : null;
@@ -639,6 +640,7 @@ const cloudRecord: ShootRecord = {
     setAiDescriptionError(null);
     const urls = record.fileUrls;
     setAiDescriptionProgress({ done: 0, total: urls.length });
+    setAiDescriptionExpanded(false);
     const toastId = toast.loading(`AI-описание фото… 0/${urls.length}`);
     let failed = 0;
     try {
@@ -647,7 +649,6 @@ const cloudRecord: ShootRecord = {
         if (aiDescriptions[url]) {
           done++;
           setAiDescriptionProgress({ done, total: urls.length });
-          toast.loading(`AI-описание фото… ${done}/${urls.length}`, { id: toastId });
           continue;
         }
         try {
@@ -672,7 +673,6 @@ const cloudRecord: ShootRecord = {
         }
         done++;
         setAiDescriptionProgress({ done, total: urls.length });
-        toast.loading(`AI-описание фото… ${done}/${urls.length}`, { id: toastId });
       }
       if (failed > 0) {
         toast.error(`AI-описание: ${failed} фото не удалось`, { id: toastId });
@@ -955,6 +955,45 @@ const cloudRecord: ShootRecord = {
                 <RefreshCcw className="h-3.5 w-3.5" />
                 Если видите ошибку — подождите 1–2 минуты и снова запустите AI-отбор.
               </span>
+            </div>
+          )}
+          {/* Компактный индикатор массового AI-описания (сворачиваемый) */}
+          {aiDescriptionProgress && (
+            <div className="fixed bottom-6 left-6 z-50">
+              {!aiDescriptionExpanded ? (
+                <button
+                  type="button"
+                  onClick={() => setAiDescriptionExpanded(true)}
+                  className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md transition-colors hover:bg-muted/30"
+                >
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <span>AI {aiDescriptionProgress.done}/{aiDescriptionProgress.total}</span>
+                </button>
+              ) : (
+                <div className="w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-foreground">AI-описание</span>
+                    <button
+                      type="button"
+                      onClick={() => setAiDescriptionExpanded(false)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {aiDescriptionProgress.done}/{aiDescriptionProgress.total} фото
+                  </p>
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{
+                        width: `${aiDescriptionProgress.total ? (aiDescriptionProgress.done / aiDescriptionProgress.total) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {/* SpeedDial with all AI actions, download, public link, delete */}
