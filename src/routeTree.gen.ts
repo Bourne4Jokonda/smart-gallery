@@ -25,6 +25,7 @@ import { Route as ApiNotifyLeadRouteImport } from './routes/api/notify-lead'
 import { Route as ApiPublicShootRouteImport } from './routes/api/public-shoot'
 import { Route as ApiSetShootPasswordRouteImport } from './routes/api/set-shoot-password'
 import { Route as ApiShootRouteImport } from './routes/api/shoot'
+import { Route as ApiTestFirestoreRouteImport } from './routes/api/test-firestore'
 import { Route as GalleryIdRouteImport } from './routes/gallery/$id'
 import { Route as PublicGalleryIdRouteImport } from './routes/public-gallery/$id'
 
@@ -108,6 +109,11 @@ const ApiShootRoute = ApiShootRouteImport.update({
   path: '/api/shoot',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTestFirestoreRoute = ApiTestFirestoreRouteImport.update({
+  id: '/api/test-firestore',
+  path: '/api/test-firestore',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GalleryIdRoute = GalleryIdRouteImport.update({
   id: '/gallery/$id',
   path: '/gallery/$id',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/api/public-shoot': typeof ApiPublicShootRoute
   '/api/set-shoot-password': typeof ApiSetShootPasswordRoute
   '/api/shoot': typeof ApiShootRoute
+  '/api/test-firestore': typeof ApiTestFirestoreRoute
   '/gallery/$id': typeof GalleryIdRoute
   '/public-gallery/$id': typeof PublicGalleryIdRoute
 }
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/api/public-shoot': typeof ApiPublicShootRoute
   '/api/set-shoot-password': typeof ApiSetShootPasswordRoute
   '/api/shoot': typeof ApiShootRoute
+  '/api/test-firestore': typeof ApiTestFirestoreRoute
   '/gallery/$id': typeof GalleryIdRoute
   '/public-gallery/$id': typeof PublicGalleryIdRoute
 }
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/api/public-shoot': typeof ApiPublicShootRoute
   '/api/set-shoot-password': typeof ApiSetShootPasswordRoute
   '/api/shoot': typeof ApiShootRoute
+  '/api/test-firestore': typeof ApiTestFirestoreRoute
   '/gallery/$id': typeof GalleryIdRoute
   '/public-gallery/$id': typeof PublicGalleryIdRoute
 }
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/api/public-shoot'
     | '/api/set-shoot-password'
     | '/api/shoot'
+    | '/api/test-firestore'
     | '/gallery/$id'
     | '/public-gallery/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/api/public-shoot'
     | '/api/set-shoot-password'
     | '/api/shoot'
+    | '/api/test-firestore'
     | '/gallery/$id'
     | '/public-gallery/$id'
   id:
@@ -239,6 +250,7 @@ export interface FileRouteTypes {
     | '/api/public-shoot'
     | '/api/set-shoot-password'
     | '/api/shoot'
+    | '/api/test-firestore'
     | '/gallery/$id'
     | '/public-gallery/$id'
   fileRoutesById: FileRoutesById
@@ -260,6 +272,7 @@ export interface RootRouteChildren {
   ApiPublicShootRoute: typeof ApiPublicShootRoute
   ApiSetShootPasswordRoute: typeof ApiSetShootPasswordRoute
   ApiShootRoute: typeof ApiShootRoute
+  ApiTestFirestoreRoute: typeof ApiTestFirestoreRoute
   GalleryIdRoute: typeof GalleryIdRoute
   PublicGalleryIdRoute: typeof PublicGalleryIdRoute
 }
@@ -378,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiShootRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/test-firestore': {
+      id: '/api/test-firestore'
+      path: '/api/test-firestore'
+      fullPath: '/api/test-firestore'
+      preLoaderRoute: typeof ApiTestFirestoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gallery/$id': {
       id: '/gallery/$id'
       path: '/gallery/$id'
@@ -412,6 +432,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShootRoute: ApiPublicShootRoute,
   ApiSetShootPasswordRoute: ApiSetShootPasswordRoute,
   ApiShootRoute: ApiShootRoute,
+  ApiTestFirestoreRoute: ApiTestFirestoreRoute,
   GalleryIdRoute: GalleryIdRoute,
   PublicGalleryIdRoute: PublicGalleryIdRoute,
 }
