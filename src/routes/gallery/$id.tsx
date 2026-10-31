@@ -653,6 +653,7 @@ const cloudRecord: ShootRecord = {
         if (aiDescriptions[url]) {
           done++;
           setAiDescriptionProgress({ done, total: urls.length });
+          toast.loading(`AI-описание: ${done}/${urls.length} фото…`, { id: toastId });
           continue;
         }
         try {
@@ -677,6 +678,7 @@ const cloudRecord: ShootRecord = {
         }
         done++;
         setAiDescriptionProgress({ done, total: urls.length });
+        toast.loading(`AI-описание: ${done}/${urls.length} фото…`, { id: toastId });
       }
       if (failed > 0) {
         toast.error(`AI-описание: ${failed} фото не удалось`, { id: toastId });
@@ -833,37 +835,37 @@ const cloudRecord: ShootRecord = {
                   </button>
                 </div>
               </div>
-              {aiDescriptionProgress && (
+              {record && (
                 <div className="mt-1">
                   <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                     <span>AI-описание</span>
                     <span>
-                      {aiDescriptionProgress.done}/{aiDescriptionProgress.total}
+                      {Object.keys(aiDescriptions).length}/{record.fileUrls.length}
                     </span>
                   </div>
                   <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full bg-primary transition-all duration-300"
                       style={{
-                        width: `${aiDescriptionProgress.total ? (aiDescriptionProgress.done / aiDescriptionProgress.total) * 100 : 0}%`,
+                        width: `${record.fileUrls.length ? (Object.keys(aiDescriptions).length / record.fileUrls.length) * 100 : 0}%`,
                       }}
                     />
                   </div>
                 </div>
               )}
-              {curating && curateProgress.total > 0 && (
+              {record && (
                 <div className="mt-1">
                   <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                     <span>AI-отбор</span>
                     <span>
-                      {curateProgress.done}/{curateProgress.total}
+                      {record.aiResults?.filter((a) => a.score != null).length ?? 0}/{record.fileUrls.length}
                     </span>
                   </div>
                   <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full bg-primary transition-all duration-300"
                       style={{
-                        width: `${curateProgress.total ? (curateProgress.done / curateProgress.total) * 100 : 0}%`,
+                        width: `${record.fileUrls.length ? ((record.aiResults?.filter((a) => a.score != null).length ?? 0) / record.fileUrls.length) * 100 : 0}%`,
                       }}
                     />
                   </div>
