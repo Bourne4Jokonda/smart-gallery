@@ -67,8 +67,9 @@ async function describeWithGemini(photoUrl: string, apiKey: string): Promise<str
       return text;
     }
 
-    if (response.status === 429 && GEMINI_RETRY_ON_429 && attempt < 3) {
-      await new Promise((r) => setTimeout(r, 1500 * attempt));
+    const isRetryable = response.status === 429 || response.status === 503 || response.status === 500;
+    if (isRetryable && attempt < 3) {
+      await new Promise((r) => setTimeout(r, 2000 * attempt));
       continue;
     }
 

@@ -162,6 +162,7 @@ function GalleryPage() {
   const [aiDescriptions, setAiDescriptions] = useState<Record<string, { description: string; tags: string[] }>>({});
   const [aiDescriptionLoading, setAiDescriptionLoading] = useState(false);
   const [aiDescriptionError, setAiDescriptionError] = useState<string | null>(null);
+  const [aiDescriptionProgress, setAiDescriptionProgress] = useState<{ done: number; total: number } | null>(null);
 
   // Описание текущего кадра (из кэша)
   const aiDescription = lightboxUrl ? aiDescriptions[lightboxUrl] ?? null : null;
@@ -636,13 +637,16 @@ const cloudRecord: ShootRecord = {
     if (!record) return;
     setAiDescriptionLoading(true);
     setAiDescriptionError(null);
-    const toastId = toast.loading("AI-описание фото…");
+    const urls = record.fileUrls;
+    setAiDescriptionProgress({ done: 0, total: urls.length });
+    const toastId = toast.loading(`AI-описание фото… 0/${urls.length}`);
+    let failed = 0;
     try {
-      const urls = record.fileUrls;
       let done = 0;
       for (const url of urls) {
         if (aiDescriptions[url]) {
           done++;
+          setAiDescriptionProgress({ done, total: urls.length });
           toast.loading(`AI-описание фото… ${done}/${urls.length}`, { id: toastId });
           continue;
         }
@@ -658,16 +662,26 @@ const cloudRecord: ShootRecord = {
               ...prev,
               [url]: { description: data.description, tags: data.tags },
             }));
+          } else {
+            failed++;
+            console.error("ai description failed", url, data.error);
           }
         } catch (err) {
+          failed++;
           console.error("ai description failed", url, err);
         }
         done++;
+        setAiDescriptionProgress({ done, total: urls.length });
         toast.loading(`AI-описание фото… ${done}/${urls.length}`, { id: toastId });
       }
-      toast.success("AI-описание готово", { id: toastId });
+      if (failed > 0) {
+        toast.error(`AI-описание: ${failed} фото не удалось`, { id: toastId });
+      } else {
+        toast.success("AI-описание готово", { id: toastId });
+      }
     } finally {
       setAiDescriptionLoading(false);
+      setTimeout(() => setAiDescriptionProgress(null), 3000);
     }
   }, [record, aiDescriptions]);
 
@@ -784,7 +798,22 @@ const cloudRecord: ShootRecord = {
                     Съёмка #{record.shootId.slice(-6)}
                   </p>
                 </div>
-                  <h1 className="d-display text-[clamp(1.8rem,3.5vw,2.6rem)]">
+                {aiDescriptionProgress && (
+                  <div className="mt-2 w-full max-w-xs">
+                    <p className="text-xs text-muted-foreground">
+                      AI-описание: {aiDescriptionProgress.done}/{aiDescriptionProgress.total}
+                    </p>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full bg-primary transition-all duration-300"
+                        style={{
+                          width: `${aiDescriptionProgress.total ? (aiDescriptionProgress.done / aiDescriptionProgress.total) * 100 : 0}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                <h1 className="d-display text-[clamp(1.8rem,3.5vw,2.6rem)]">
                     Загружено{" "}
                     <span className="text-primary">{record.fileUrls.length} фото</span>
                   </h1>

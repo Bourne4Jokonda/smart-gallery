@@ -173,10 +173,11 @@ async function scoreImageWithGemini(imageUrl: string, apiKey: string): Promise<n
 
     const errorText = await response.text().catch(() => "");
     const isQuota = response.status === 429;
+    const isOverloaded = response.status === 503 || response.status === 500;
     const isLast = attempt === maxAttempts;
 
-    if (isQuota && !isLast) {
-      const delayMs = 1500 * attempt;
+    if ((isQuota || isOverloaded) && !isLast) {
+      const delayMs = 2000 * attempt;
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       continue;
     }
