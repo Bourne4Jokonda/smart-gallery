@@ -15,6 +15,7 @@ import {
   AlertCircle,
   MessageSquareText,
   Brain,
+  Contrast,
 } from "lucide-react"
 import JSZip from "jszip";
 import { toast } from "sonner";
@@ -668,6 +669,37 @@ const cloudRecord: ShootRecord = {
     }
   }, [record, curating, saveShoot, updateShootRecord]);
 
+  const makeBlackAndWhite = useCallback(async (idx: number) => {
+    if (!record || deleting) return;
+    const url = record.fileUrls[idx];
+    if (!url) return;
+    if (url.includes("e_grayscale")) {
+      toast.info("Фото уже ч/б");
+      return;
+    }
+    const bwUrl = url.replace("/image/upload/", "/image/upload/e_grayscale/");
+    setDeleting(true);
+    try {
+      const newFileUrls = [...record.fileUrls];
+      newFileUrls[idx] = bwUrl;
+      const newAiResults = (record.aiResults ?? []).filter((r) => r.url !== url);
+      const updated = { ...record, fileUrls: newFileUrls, aiResults: newAiResults };
+      setRecord(updated);
+      saveShoot(updated);
+      try {
+        await updateShootRecord(record.shootId, { fileUrls: newFileUrls, aiResults: newAiResults });
+      } catch {
+        // ignore cloud write errors
+      }
+      toast.success("Фото сделано ч/б");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка";
+      toast.error(message);
+    } finally {
+      setDeleting(false);
+    }
+  }, [record, deleting, saveShoot, updateShootRecord]);
+
   // ADD: Fetch AI description for current photo
   const fetchAiDescription = useCallback(async () => {
     if (!record || currentLightboxIndex === null) return;
@@ -1025,6 +1057,19 @@ const cloudRecord: ShootRecord = {
                       </button>
                     );
                   })()}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      makeBlackAndWhite(i);
+                    }}
+                    disabled={deleting}
+                    className="d-cell-action d-cell-action-3"
+                    aria-label={`Сделать ч/б кадр ${i + 1}`}
+                    title="Сделать ч/б"
+                  >
+                    <Contrast className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               ))}
             </div>
