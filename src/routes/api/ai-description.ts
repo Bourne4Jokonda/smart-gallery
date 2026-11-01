@@ -110,6 +110,19 @@ async function getCachedDescription(
   return null;
 }
 
+async function deleteCachedDescription(photoUrl: string): Promise<void> {
+  try {
+    const { adminQueryByField, adminDeleteDoc } = await import("@/lib/firestore-admin");
+    const rows = await adminQueryByField("aiDescriptions", "photoUrl", photoUrl, 5);
+    for (const row of rows) {
+      const id = row.__id as string | undefined;
+      if (id) await adminDeleteDoc("aiDescriptions", id);
+    }
+  } catch (e) {
+    console.error("[ai-description] cache delete failed:", e);
+  }
+}
+
 async function saveDescription(
   photoUrl: string,
   description: string,
@@ -166,7 +179,8 @@ export const Route = createFileRoute("/api/ai-description")({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { photoUrl } = body ?? {};
+          const { photoUrl, force } = body ?? {};
+          const isForce = force === true;
 
           if (!photoUrl || typeof photoUrl !== "string") {
             return Response.json(
@@ -175,10 +189,12 @@ export const Route = createFileRoute("/api/ai-description")({
             );
           }
 
-          // 1. Check cache first (best-effort)
-          const cached = await getCachedDescription(photoUrl);
-          if (cached) {
-            return Response.json({ ok: true, cached: true, ...cached });
+          // 1. Check cache first (best-effort), unless force regen
+          if (!isForce) {
+            const cached = await getCachedDescription(photoUrl);
+            if (cached) {
+              return Response.json({ ok: true, cached: true, ...cached });
+            }
           }
 
           // 2a. Try OpenRouter models in order until one succeeds
@@ -274,7 +290,8 @@ export const Route = createFileRoute("/api/ai-description")({
             descriptionMatch?.[1]?.trim() ?? resultText.trim();
           const rawTags = tagsMatch?.[1]?.split(",").map((t) => t.trim()).filter(Boolean) ?? [];
 
-          // 4. Save to Firebase cache (best-effort)
+          // 4. Save to Firebase cache (best-effort). On force, delete old first.
+          if (isForce) await deleteCachedDescription(photoUrl);
           await saveDescription(photoUrl, description, rawTags);
 
           return Response.json({

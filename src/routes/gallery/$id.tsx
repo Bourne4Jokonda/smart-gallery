@@ -274,6 +274,22 @@ const cloudRecord: ShootRecord = {
   // чтобы счётчик AI-описание показывал реальное количество сразу,
   // а не только после открытия лайтбокса.
   const descriptionsLoadedRef = useRef<string | null>(null);
+
+  // Восстановление промежуточного прогресса AI-описания из localStorage (подстраховка при перезагрузке)
+  useEffect(() => {
+    if (!record) return;
+    try {
+      const saved = localStorage.getItem(`ai-desc-progress-${record.shootId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.done === "number" && typeof parsed.total === "number") {
+          setAiDescriptionProgress(parsed);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [record?.shootId]);
   useEffect(() => {
     if (!record || descriptionsLoadedRef.current === record.shootId) return;
     descriptionsLoadedRef.current = record.shootId;
@@ -313,6 +329,16 @@ const cloudRecord: ShootRecord = {
     };
     loadDescriptions();
   }, [record?.shootId]);
+
+  // Сохранение промежуточного прогресса AI-описания в localStorage
+  useEffect(() => {
+    if (!record || !aiDescriptionProgress) return;
+    try {
+      localStorage.setItem(`ai-desc-progress-${record.shootId}`, JSON.stringify(aiDescriptionProgress));
+    } catch {
+      // ignore
+    }
+  }, [record?.shootId, aiDescriptionProgress]);
 
   // Lightbox: lock body scroll + keyboard nav
   useEffect(() => {
@@ -709,18 +735,18 @@ const cloudRecord: ShootRecord = {
   }, [record, deleting, saveShoot, updateShootRecord]);
 
   // ADD: Fetch AI description for current photo
-  const fetchAiDescription = useCallback(async () => {
+  const fetchAiDescription = useCallback(async (force = false) => {
     if (!record || currentLightboxIndex === null) return;
     if (activeOp) return;
     const photoUrl = record.fileUrls[currentLightboxIndex];
     setAiDescriptionLoading(true);
     setAiDescriptionError(null);
-    setActiveOp({ type: "describe", scope: "single", label: "AI описание…", url: photoUrl });
+    setActiveOp({ type: "describe", scope: "single", label: force ? "Перегенерация…" : "AI описание…", url: photoUrl });
     try {
       const response = await fetch("/api/ai-description", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoUrl }),
+        body: JSON.stringify({ photoUrl, force }),
       });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -800,6 +826,7 @@ const cloudRecord: ShootRecord = {
     } finally {
       setAiDescriptionLoading(false);
       setTimeout(() => setAiDescriptionProgress(null), 3000);
+      try { if (record) localStorage.removeItem(`ai-desc-progress-${record.shootId}`); } catch {}
       setActiveOp(null);
     }
   }, [record, aiDescriptions]);
@@ -1340,6 +1367,17 @@ const cloudRecord: ShootRecord = {
                                             title="Сделать ч/б"
                                           >
                                             <Contrast className="h-4 w-4" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              fetchAiDescription(true);
+                                              setLbSpeedDialOpen(false);
+                                            }}
+                                            disabled={aiDescriptionLoading}
+                                            title="Перегенерировать описание"
+                                          >
+                                            <RefreshCcw className="h-4 w-4" />
                                           </button>
                                         </div>
                                       </div>
