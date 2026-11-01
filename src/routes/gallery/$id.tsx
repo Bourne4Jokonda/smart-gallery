@@ -721,8 +721,6 @@ const cloudRecord: ShootRecord = {
       let done = urls.filter((u) => aiDescriptions[u]).length;
       for (const url of urls) {
         if (aiDescriptions[url]) {
-          done++;
-          setAiDescriptionProgress({ done, total: urls.length });
           continue;
         }
         try {
@@ -737,15 +735,18 @@ const cloudRecord: ShootRecord = {
               ...prev,
               [url]: { description: data.description, tags: data.tags },
             }));
+            done = Math.min(done + 1, urls.length);
+            setAiDescriptionProgress({ done, total: urls.length });
           } else {
             failed++;
+            done = Math.min(done + 1, urls.length);
             console.error("ai description failed", url, data.error);
           }
         } catch (err) {
           failed++;
+          done = Math.min(done + 1, urls.length);
           console.error("ai description failed", url, err);
         }
-        done++;
         setAiDescriptionProgress({ done, total: urls.length });
       }
       if (failed > 0) {
@@ -870,7 +871,7 @@ const cloudRecord: ShootRecord = {
           </div>
           <div className="flex flex-wrap items-center gap-3">
                 {record && record.fileUrls.length > 0 && (() => {
-                  const described = Object.keys(aiDescriptions).length;
+                  const described = Math.min(Object.keys(aiDescriptions).length, total);
                   const scored = record.aiResults?.filter((a) => a.score != null).length ?? 0;
                   const total = record.fileUrls.length;
                   return (
