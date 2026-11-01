@@ -1110,34 +1110,28 @@
   color: var(--color-foreground);
   font-size: 13px;
   line-height: 1.45;
-  max-height: 120px;
+  max-height: 3.45em; /* ~3 строки */
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+  scrollbar-width: none;
 }
 
 .d-ai-desc-text p::-webkit-scrollbar {
-  width: 5px;
-}
-
-.d-ai-desc-text p::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.d-ai-desc-text p::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 3px;
-}
-
-.d-ai-desc-text p::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.35);
+  display: none;
 }
 
 .d-ai-desc-tags {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 5px;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.d-ai-desc-tags::-webkit-scrollbar {
+  display: none;
 }
 
 .d-ai-desc-tags:empty {
