@@ -893,16 +893,6 @@ const cloudRecord: ShootRecord = {
                   Назад в кабинет
                 </Link>
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <h1 className="d-display text-[clamp(1.4rem,3vw,2rem)]">
-                  {record.fileUrls.length} фото{" "}
-                  <span className="text-muted-foreground font-normal">·</span>{" "}
-                  <span className="text-primary">
-                    {record.aiResults?.filter((r) => r.status === "ok" && r.score != null && r.score >= 7).length ?? 0}{" "}
-                    лучших
-                  </span>
-                </h1>
-              </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
                 {record && record.fileUrls.length > 0 && (() => {
@@ -914,8 +904,9 @@ const cloudRecord: ShootRecord = {
                     <div className="flex w-full flex-col gap-2">
                       <p className="shoot-title d-kicker mt-0">Съёмка #{record.shootId.slice(-6)}</p>
                     </div>
-                    <div className="flex w-full flex-col gap-2">
-                      <div className="w-full max-w-xs">
+                    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex w-full flex-wrap gap-3">
+                        <div className="w-full max-w-xs">
                         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                           <span>AI-описание</span>
                           <span>{described}/{total}</span>
@@ -926,8 +917,8 @@ const cloudRecord: ShootRecord = {
                             style={{ width: `${total ? (described / total) * 100 : 0}%` }}
                           />
                         </div>
-                      </div>
-                      <div className="w-full max-w-xs">
+                        </div>
+                        <div className="w-full max-w-xs">
                         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                           <span>AI-отбор</span>
                           <span>{scored}/{total}</span>
@@ -938,34 +929,45 @@ const cloudRecord: ShootRecord = {
                             style={{ width: `${total ? (scored / total) * 100 : 0}%` }}
                           />
                         </div>
+                        </div>
                       </div>
-                      <div className="inline-flex w-fit rounded-full border border-border bg-card p-1">
-                        <button
-                          type="button"
-                          onClick={() => setFilter("all")}
-                          className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
-                            filter === "all"
-                              ? "bg-primary text-primary-foreground"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          Все
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFilter("best")}
-                          className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
-                            filter === "best"
-                              ? "bg-primary text-primary-foreground"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          Лучшие
-                        </button>
+                      <div className="flex flex-col gap-2">
+                        <h1 className="d-display text-[clamp(1.4rem,3vw,2rem)]">
+                          {record.fileUrls.length} фото{" "}
+                          <span className="text-muted-foreground font-normal">·</span>{" "}
+                          <span className="text-primary">
+                            {record.aiResults?.filter((r) => r.status === "ok" && r.score != null && r.score >= 7).length ?? 0}{" "}
+                            лучших
+                          </span>
+                        </h1>
+                        <div className="inline-flex w-fit rounded-full border border-border bg-card p-1">
+                          <button
+                            type="button"
+                            onClick={() => setFilter("all")}
+                            className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                              filter === "all"
+                                ? "bg-primary text-primary-foreground"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            Все
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFilter("best")}
+                            className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                              filter === "best"
+                                ? "bg-primary text-primary-foreground"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            Лучшие
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    </>
-                    );
+                  </>
+                );
                     })()}
               </div>
 
