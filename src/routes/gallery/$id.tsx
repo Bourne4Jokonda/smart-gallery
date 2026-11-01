@@ -527,14 +527,14 @@ const cloudRecord: ShootRecord = {
     if (!record || curating) return;
     const urls = record.fileUrls;
     if (!urls.length) {
-      toast.error("Нет фото для AI-отбора");
+      toast.error("Нет фото для AI-оценки");
       return;
     }
     setCurating(true);
     setCurateProgress({ done: 0, total: urls.length });
     setCurateExpanded(false);
     setShowHint(true);
-    setActiveOp({ type: "curate", scope: "all", label: `Отбор 0/${urls.length}`, progress: { done: 0, total: urls.length } });
+    setActiveOp({ type: "curate", scope: "all", label: `Оценка 0/${urls.length}`, progress: { done: 0, total: urls.length } });
     const BATCH_SIZE = 10;
     try {
       let merged = [...(record.aiResults ?? [])];
@@ -578,7 +578,7 @@ const cloudRecord: ShootRecord = {
         const scored = merged.filter((a) => a.score != null).length;
         setRecord((prev) => (prev ? { ...prev, aiResults: merged } : prev));
         setCurateProgress({ done: scored, total: urls.length });
-        setActiveOp({ type: "curate", scope: "all", label: `Отбор ${scored}/${urls.length}`, progress: { done: scored, total: urls.length } });
+        setActiveOp({ type: "curate", scope: "all", label: `Оценка ${scored}/${urls.length}`, progress: { done: scored, total: urls.length } });
       }
       const updated = { ...record, aiResults: merged };
       setRecord(updated);
@@ -941,7 +941,7 @@ const cloudRecord: ShootRecord = {
                         </div>
                         <div className="w-full max-w-xs">
                         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                          <span>AI-отбор</span>
+                          <span>AI-оценка</span>
                           <span>{scored}/{total}</span>
                         </div>
                         <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
@@ -1092,13 +1092,13 @@ const cloudRecord: ShootRecord = {
             <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground shadow-lg">
               <span className="inline-flex items-center gap-2">
                 <RefreshCcw className="h-3.5 w-3.5" />
-                Если видите ошибку — подождите 1–2 минуты и снова запустите AI-отбор.
+                Если видите ошибку — подождите 1–2 минуты и снова запустите AI-оценку.
               </span>
             </div>
           )}
           {createPortal(
             <div className="pointer-events-none">
-              {/* Компактный индикатор AI-отбора (сворачиваемый) */}
+              {/* Компактный индикатор AI-оценки (сворачиваемый) */}
               {activeOp?.type === "curate" && (
                 <div className="fixed-widget-left">
                   {!curateExpanded ? (
@@ -1109,12 +1109,12 @@ const cloudRecord: ShootRecord = {
                       >
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                       <Brain className="h-4 w-4 text-primary" />
-                      <span>Отбор {curateProgress.done}/{curateProgress.total}</span>
+                      <span>Оценка {curateProgress.done}/{curateProgress.total}</span>
                     </button>
                   ) : (
                     <div className="pointer-events-auto w-64 rounded-2xl border border-border bg-card p-3 shadow-md">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-foreground">AI-отбор</span>
+                        <span className="text-xs font-bold text-foreground">AI-оценка</span>
                         <button
                           type="button"
                           onClick={() => setCurateExpanded(false)}

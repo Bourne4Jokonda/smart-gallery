@@ -57,7 +57,7 @@ export const SpeedDial = ({
       icon: loading.curate ? (
         <span className="block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
       ) : <Brain className="h-5 w-5" />,
-      label: hasAiResults ? "Перезапустить AI-отбор" : "AI-отбор",
+      label: hasAiResults ? "Перезапустить AI-оценку" : "AI-оценка",
       onClick: onCurate,
       disabled: loading.curate,
       color: "bg-purple-500 hover:bg-purple-600",
