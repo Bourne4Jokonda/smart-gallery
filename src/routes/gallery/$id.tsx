@@ -871,9 +871,9 @@ const cloudRecord: ShootRecord = {
           </div>
           <div className="flex flex-wrap items-center gap-3">
                 {record && record.fileUrls.length > 0 && (() => {
+                  const total = record.fileUrls.length;
                   const described = Math.min(Object.keys(aiDescriptions).length, total);
                   const scored = record.aiResults?.filter((a) => a.score != null).length ?? 0;
-                  const total = record.fileUrls.length;
                   return (
                     <>
                     <div className="flex w-full flex-row flex-nowrap items-start justify-between gap-3">
