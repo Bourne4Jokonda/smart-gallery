@@ -884,7 +884,7 @@ const cloudRecord: ShootRecord = {
         <div className="mx-auto max-w-5xl">
           <div className="sticky top-0 z-30 -mx-5 bg-background/90 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8">
             <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-nowrap">
                 <Link
                   to="/profile"
                   className="back-to-cabinet inline-flex items-center gap-1.5 text-sm font-bold text-primary transition-colors hover:text-foreground"
@@ -892,6 +892,7 @@ const cloudRecord: ShootRecord = {
                   <ChevronLeft className="h-4 w-4" />
                   Назад в кабинет
                 </Link>
+                <p className="shoot-title d-kicker mt-0">Съёмка #{record.shootId.slice(-6)}</p>
               </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -901,9 +902,6 @@ const cloudRecord: ShootRecord = {
                   const total = record.fileUrls.length;
                   return (
                     <>
-                    <div className="flex w-full flex-col gap-2">
-                      <p className="shoot-title d-kicker mt-0">Съёмка #{record.shootId.slice(-6)}</p>
-                    </div>
                     <div className="flex w-full flex-row flex-nowrap items-start justify-between gap-3">
                       <div className="flex w-1/2 flex-wrap gap-3">
                         <div className="w-full max-w-xs">
