@@ -158,6 +158,7 @@ function GalleryPage() {
   const [filter, setFilter] = useState<"all" | "best">("all");
   const [curating, setCurating] = useState(false);
   const [curateProgress, setCurateProgress] = useState({ done: 0, total: 0 });
+  const [reindexingUrl, setReindexingUrl] = useState<string | null>(null);
   const [curateExpanded, setCurateExpanded] = useState(false);
   const [publicGallery, setPublicGallery] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -530,7 +531,6 @@ const cloudRecord: ShootRecord = {
     setCurateProgress({ done: 0, total: urls.length });
     setCurateExpanded(false);
     setShowHint(true);
-    const toastId = toast.loading(`AI-отбор: 0/${urls.length} фото…`);
     const BATCH_SIZE = 10;
     try {
       let merged = [...(record.aiResults ?? [])];
@@ -574,7 +574,6 @@ const cloudRecord: ShootRecord = {
         const scored = merged.filter((a) => a.score != null).length;
         setRecord((prev) => (prev ? { ...prev, aiResults: merged } : prev));
         setCurateProgress({ done: scored, total: urls.length });
-        toast.loading(`AI-отбор: ${scored}/${urls.length} фото…`, { id: toastId });
       }
       const updated = { ...record, aiResults: merged };
       setRecord(updated);
@@ -584,19 +583,9 @@ const cloudRecord: ShootRecord = {
       } catch {
         // ignore cloud write errors
       }
-      const scoredFinal = merged.filter((a) => a.score != null).length;
-      const errored = merged.filter((a) => a.status === "error").length;
-      const unscored = urls.length - scoredFinal - errored;
-      if (errored > 0) {
-        toast.warning(`AI-отбор: ${scoredFinal} оценено, ${errored} ошибок, ${unscored} без оценки`, { id: toastId });
-      } else if (unscored > 0) {
-        toast.warning(`AI-отбор: ${scoredFinal} оценено, ${unscored} не оценено`, { id: toastId });
-      } else {
-        toast.success(`AI-отбор завершён: ${scoredFinal}/${urls.length} фото оценены`, { id: toastId });
-      }
+      // toast removed: progress shown in badge
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Неизвестная ошибка";
-      toast.error("Не удалось запустить AI-отбор", { id: toastId, description: message });
+      console.error("curate failed", err);
     } finally {
       setCurating(false);
       setCurateProgress({ done: 0, total: 0 });
@@ -641,7 +630,7 @@ const cloudRecord: ShootRecord = {
   );
   const reindexSingleImage = useCallback(async (url: string) => {
     if (!record || curating) return;
-    const toastId = toast.loading("Переоценка фото…");
+    setReindexingUrl(url);
     setCurating(true);
     try {
       const res = await fetch("/api/curate", {
@@ -671,16 +660,12 @@ const cloudRecord: ShootRecord = {
       } catch {
         // ignore
       }
-      if (result.status === "ok" && result.score != null) {
-        toast.success(`Оценка: ${result.score}/10`, { id: toastId });
-      } else {
-        toast.error(result.error || "Не удалось переоценить фото", { id: toastId });
-      }
+      // toast removed: spinner shown on badge
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Ошибка переоценки";
-      toast.error(message, { id: toastId });
+      console.error("reindex failed", err);
     } finally {
       setCurating(false);
+      setReindexingUrl(null);
     }
   }, [record, curating, saveShoot, updateShootRecord]);
 
@@ -731,9 +716,6 @@ const cloudRecord: ShootRecord = {
     const urls = record.fileUrls;
     setAiDescriptionProgress({ done: 0, total: urls.length });
     setAiDescriptionExpanded(false);
-    const toastId = toast.loading("AI-описание фото…", {
-      description: `0/${urls.length}`,
-    });
     let failed = 0;
     try {
       let done = 0;
@@ -741,10 +723,6 @@ const cloudRecord: ShootRecord = {
         if (aiDescriptions[url]) {
           done++;
           setAiDescriptionProgress({ done, total: urls.length });
-          toast.loading("AI-описание фото…", {
-            id: toastId,
-            description: `${done}/${urls.length}`,
-          });
           continue;
         }
         try {
@@ -769,15 +747,9 @@ const cloudRecord: ShootRecord = {
         }
         done++;
         setAiDescriptionProgress({ done, total: urls.length });
-        toast.loading("AI-описание фото…", {
-          id: toastId,
-          description: `${done}/${urls.length}`,
-        });
       }
       if (failed > 0) {
-        toast.error(`AI-описание: ${failed} фото не удалось`, { id: toastId });
-      } else {
-        toast.success("AI-описание готово", { id: toastId });
+        console.error("ai description failed for", failed, "photos");
       }
     } finally {
       setAiDescriptionLoading(false);
@@ -991,6 +963,14 @@ const cloudRecord: ShootRecord = {
                   <span className="d-num-badge">{i + 1}</span>
                   {(() => {
                     const match = record?.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(url));
+                    if (reindexingUrl === url) {
+                      return (
+                        <span className="d-score-badge">
+                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          <Sparkles className="h-3 w-3" />
+                        </span>
+                      );
+                    }
                     if (match?.score != null) {
                       return (
                         <span className={`d-score-badge ${isBest(url) ? "d-pill-on" : ""}`}>
