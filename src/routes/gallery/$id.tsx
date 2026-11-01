@@ -940,7 +940,7 @@ const cloudRecord: ShootRecord = {
                             лучших
                           </span>
                         </h1>
-                        <div className="inline-flex w-fit rounded-full border border-border bg-card p-1">
+                        <div className="inline-flex w-fit rounded-full border border-border bg-card p-1 ml-auto">
                           <button
                             type="button"
                             onClick={() => setFilter("all")}
