@@ -910,8 +910,11 @@ const cloudRecord: ShootRecord = {
                   const scored = record.aiResults?.filter((a) => a.score != null).length ?? 0;
                   const total = record.fileUrls.length;
                   return (
+                    <>
                     <div className="flex w-full flex-col gap-2">
                       <p className="shoot-title d-kicker mt-0">Съёмка #{record.shootId.slice(-6)}</p>
+                    </div>
+                    <div className="flex w-full flex-col gap-2">
                       <div className="w-full max-w-xs">
                         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                           <span>AI-описание</span>
@@ -961,8 +964,9 @@ const cloudRecord: ShootRecord = {
                         </button>
                       </div>
                     </div>
-                  );
-                })()}
+                    </>
+                    );
+                    })()}
               </div>
 
           <div className="d-photo-grid mt-8">
