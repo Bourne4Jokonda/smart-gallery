@@ -238,21 +238,25 @@ function RootComponent() {
             )}
           </nav>
 
-          {/* Мобильный: бургер */}
+          {/* Мобильный: бургер (плавающий) */}
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
             aria-expanded={mobileOpen}
             aria-label={mobileOpen ? "Закрыть меню" : "Открыть меню"}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border text-foreground transition-colors hover:border-primary hover:text-primary sm:hidden"
+            className="fixed top-4 right-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background/80 text-foreground backdrop-blur transition-colors hover:border-primary hover:text-primary sm:hidden"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 
-        {/* Мобильное выпадающее меню */}
-        {mobileOpen && (
-          <nav className="border-t border-border bg-background px-5 py-4 sm:hidden">
+          {/* Мобильное выпадающее меню (оверлей) */}
+          {mobileOpen && (
+            <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setMobileOpen(false)}>
+              <nav
+                className="absolute top-16 right-4 w-64 rounded-2xl border border-border bg-background p-4 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
             {user ? (
               <div className="flex flex-col gap-3">
                 <span className="truncate text-xs text-muted-foreground">{user.email}</span>
@@ -296,6 +300,7 @@ function RootComponent() {
               </Link>
             )}
           </nav>
+          </div>
         )}
       </header>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
