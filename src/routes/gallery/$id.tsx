@@ -173,6 +173,7 @@ function GalleryPage() {
   const [aiDescriptionProgress, setAiDescriptionProgress] = useState<{ done: number; total: number } | null>(null);
   const [aiDescriptionExpanded, setAiDescriptionExpanded] = useState(false);
   const [lbSpeedDialOpen, setLbSpeedDialOpen] = useState(false);
+  const [activeOp, setActiveOp] = useState<{ type: string; scope: "all" | "single"; label: string; progress?: { done: number; total: number }; url?: string } | null>(null);
 
   // Описание текущего кадра (из кэша)
   const aiDescription = lightboxUrl ? aiDescriptions[lightboxUrl] ?? null : null;
@@ -519,8 +520,9 @@ const cloudRecord: ShootRecord = {
       toast.error(message);
     } finally {
       setDeleting(false);
+      setActiveOp(null);
     }
-  }, [record, deleting, saveShoot, updateShootRecord]);
+  }, [record, deleting, saveShoot, updateShootRecord, activeOp]);
   const runCurate = useCallback(async () => {
     if (!record || curating) return;
     const urls = record.fileUrls;
@@ -532,6 +534,7 @@ const cloudRecord: ShootRecord = {
     setCurateProgress({ done: 0, total: urls.length });
     setCurateExpanded(false);
     setShowHint(true);
+    setActiveOp({ type: "curate", scope: "all", label: `Отбор 0/${urls.length}`, progress: { done: 0, total: urls.length } });
     const BATCH_SIZE = 10;
     try {
       let merged = [...(record.aiResults ?? [])];
@@ -575,6 +578,7 @@ const cloudRecord: ShootRecord = {
         const scored = merged.filter((a) => a.score != null).length;
         setRecord((prev) => (prev ? { ...prev, aiResults: merged } : prev));
         setCurateProgress({ done: scored, total: urls.length });
+        setActiveOp({ type: "curate", scope: "all", label: `Отбор ${scored}/${urls.length}`, progress: { done: scored, total: urls.length } });
       }
       const updated = { ...record, aiResults: merged };
       setRecord(updated);
@@ -590,6 +594,7 @@ const cloudRecord: ShootRecord = {
     } finally {
       setCurating(false);
       setCurateProgress({ done: 0, total: 0 });
+      setActiveOp(null);
     }
   }, [record, deleting, saveShoot, updateShootRecord]);
 
@@ -630,9 +635,10 @@ const cloudRecord: ShootRecord = {
     [record, saveShoot, updateShootRecord],
   );
   const reindexSingleImage = useCallback(async (url: string) => {
-    if (!record || curating) return;
+    if (!record || curating || activeOp) return;
     setReindexingUrl(url);
     setCurating(true);
+    setActiveOp({ type: "reindex", scope: "single", label: "Переоценка…", url });
     try {
       const res = await fetch("/api/curate", {
         method: "POST",
@@ -667,14 +673,16 @@ const cloudRecord: ShootRecord = {
     } finally {
       setCurating(false);
       setReindexingUrl(null);
+      setActiveOp(null);
     }
   }, [record, curating, saveShoot, updateShootRecord]);
 
   const makeBlackAndWhite = useCallback(async (idx: number) => {
-    if (!record || deleting) return;
+    if (!record || deleting || activeOp) return;
     const url = record.fileUrls[idx];
     if (!url) return;
     const isBw = url.includes("e_grayscale");
+    setActiveOp({ type: "bw", scope: "single", label: isBw ? "Возврат цвета…" : "Ч/б…", url });
     const newUrl = isBw
       ? url.replace("/image/upload/e_grayscale/", "/image/upload/")
       : url.replace("/image/upload/", "/image/upload/e_grayscale/");
@@ -703,9 +711,11 @@ const cloudRecord: ShootRecord = {
   // ADD: Fetch AI description for current photo
   const fetchAiDescription = useCallback(async () => {
     if (!record || currentLightboxIndex === null) return;
+    if (activeOp) return;
     const photoUrl = record.fileUrls[currentLightboxIndex];
     setAiDescriptionLoading(true);
     setAiDescriptionError(null);
+    setActiveOp({ type: "describe", scope: "single", label: "AI описание…", url: photoUrl });
     try {
       const response = await fetch("/api/ai-description", {
         method: "POST",
@@ -736,8 +746,9 @@ const cloudRecord: ShootRecord = {
       );
     } finally {
       setAiDescriptionLoading(false);
+      setActiveOp(null);
     }
-  }, [record, currentLightboxIndex]);
+  }, [record, currentLightboxIndex, activeOp]);
 
   // Массовое AI-описание всех фото сессии (SpeedDial → "AI-описание")
   const fetchAllAiDescriptions = useCallback(async () => {
@@ -748,6 +759,7 @@ const cloudRecord: ShootRecord = {
     const alreadyDescribed = urls.filter((u) => aiDescriptions[u]).length;
     setAiDescriptionProgress({ done: alreadyDescribed, total: urls.length });
     setAiDescriptionExpanded(false);
+    setActiveOp({ type: "describe", scope: "all", label: `AI ${alreadyDescribed}/${urls.length}`, progress: { done: alreadyDescribed, total: urls.length } });
     let failed = 0;
     try {
       let done = urls.filter((u) => aiDescriptions[u]).length;
@@ -769,6 +781,7 @@ const cloudRecord: ShootRecord = {
             }));
             done = Math.min(done + 1, urls.length);
             setAiDescriptionProgress({ done, total: urls.length });
+            setActiveOp({ type: "describe", scope: "all", label: `AI ${done}/${urls.length}`, progress: { done, total: urls.length } });
           } else {
             failed++;
             done = Math.min(done + 1, urls.length);
@@ -787,6 +800,7 @@ const cloudRecord: ShootRecord = {
     } finally {
       setAiDescriptionLoading(false);
       setTimeout(() => setAiDescriptionProgress(null), 3000);
+      setActiveOp(null);
     }
   }, [record, aiDescriptions]);
 
@@ -1085,7 +1099,7 @@ const cloudRecord: ShootRecord = {
           {createPortal(
             <div className="pointer-events-none">
               {/* Компактный индикатор AI-отбора (сворачиваемый) */}
-              {curating && curateProgress.total > 0 && (
+              {activeOp?.type === "curate" && (
                 <div className="fixed-widget-left">
                   {!curateExpanded ? (
                     <button
@@ -1125,7 +1139,7 @@ const cloudRecord: ShootRecord = {
                 </div>
               )}
               {/* Компактный индикатор массового AI-описания (сворачиваемый) */}
-              {aiDescriptionProgress && (
+              {activeOp?.type === "describe" && activeOp.scope === "all" && aiDescriptionProgress && (
                 <div className={`fixed-widget-left ${curating ? "fixed-widget-left--up" : ""}`}>
                   {!aiDescriptionExpanded ? (
                     <button
@@ -1164,6 +1178,21 @@ const cloudRecord: ShootRecord = {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+              {/* Одиночная операция (reindex / describe / ч/б) */}
+              {activeOp?.scope === "single" && (
+                <div className="fixed-widget-left">
+                  <button
+                    type="button"
+                    className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-md"
+                  >
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    {activeOp.type === "reindex" && <Sparkles className="h-4 w-4 text-primary" />}
+                    {activeOp.type === "describe" && <MessageSquareText className="h-4 w-4 text-primary" />}
+                    {activeOp.type === "bw" && <Contrast className="h-4 w-4 text-primary" />}
+                    <span>{activeOp.label}</span>
+                  </button>
                 </div>
               )}
             </div>,
