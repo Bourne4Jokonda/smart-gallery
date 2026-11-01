@@ -748,10 +748,10 @@ const cloudRecord: ShootRecord = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photoUrl, force }),
       });
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(data.error || `Ошибка сервера (${response.status})`);
       }
-      const data = await response.json();
       if (data.ok) {
         setAiDescriptions((prev) => ({
           ...prev,
@@ -1031,12 +1031,6 @@ const cloudRecord: ShootRecord = {
                     loading="lazy"
                     onClick={() => setLightboxUrl(url)}
                   />
-                  {isBest(url) && (
-                    <span className="d-best-badge">
-                      <Sparkles className="h-3 w-3" />
-                      Лучший
-                    </span>
-                  )}
                   <span className="d-num-badge">{i + 1}</span>
                   {(() => {
                     const match = record?.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(url));
@@ -1067,50 +1061,7 @@ const cloudRecord: ShootRecord = {
                       <span className="d-score-badge">AI: —</span>
                     );
                   })()}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteImageAt(i);
-                    }}
-                    disabled={deleting}
-                    className="d-cell-action"
-                    aria-label={`Удалить кадр ${i + 1}`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                  {(() => {
-                    const match = record?.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(url));
-                    const needsRetry = !match || match.status === "error" || (match.score == null && match.status !== "ok");
-                    if (!needsRetry) return null;
-                    return (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          reindexSingleImage(url);
-                        }}
-                        disabled={curating}
-                        className="d-cell-action d-cell-action-2"
-                        aria-label={`Переоценить кадр ${i + 1}`}
-                      >
-                        <Sparkles className="h-3.5 w-3.5" />
-                      </button>
-                    );
-                  })()}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      makeBlackAndWhite(i);
-                    }}
-                    disabled={deleting}
-                    className="d-cell-action d-cell-action-3"
-                    aria-label={url.includes("e_grayscale") ? `Вернуть цвет кадр ${i + 1}` : `Сделать ч/б кадр ${i + 1}`}
-                    title={url.includes("e_grayscale") ? "Вернуть цвет" : "Сделать ч/б"}
-                  >
-                    <Contrast className="h-3.5 w-3.5" />
-                  </button>
+
                 </div>
               ))}
             </div>
