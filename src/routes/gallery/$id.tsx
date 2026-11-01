@@ -306,7 +306,6 @@ const cloudRecord: ShootRecord = {
         );
         loaded += batch.length;
         setAiDescriptions((prev) => ({ ...prev, ...accumulated }));
-        setAiDescriptionProgress({ done: Object.keys(accumulated).length, total: urls.length });
       }
     };
     loadDescriptions();
@@ -714,11 +713,12 @@ const cloudRecord: ShootRecord = {
     setAiDescriptionLoading(true);
     setAiDescriptionError(null);
     const urls = record.fileUrls;
-    setAiDescriptionProgress({ done: 0, total: urls.length });
+    const alreadyDescribed = urls.filter((u) => aiDescriptions[u]).length;
+    setAiDescriptionProgress({ done: alreadyDescribed, total: urls.length });
     setAiDescriptionExpanded(false);
     let failed = 0;
     try {
-      let done = 0;
+      let done = urls.filter((u) => aiDescriptions[u]).length;
       for (const url of urls) {
         if (aiDescriptions[url]) {
           done++;
