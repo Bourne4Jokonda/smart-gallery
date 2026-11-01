@@ -1320,45 +1320,7 @@ const cloudRecord: ShootRecord = {
                                         onClick={(e) => e.stopPropagation()}
                                       />
 
-                                      {/* Header: AI-бейдж + кнопки переоценки и AI-описания (поверх фото) */}
-                                      <div className="d-lb-header">
-                                        {(() => {
-                                          const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                                          const match = record.aiResults?.find((r) => normalizeUrl(r.url) === normalizeUrl(currentUrl));
-                                          return match?.score != null ? (
-                                            <span className="d-ai-badge">AI: {match.score}/10</span>
-                                          ) : null;
-                                        })()}
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            const currentUrl = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
-                                            if (currentUrl) reindexSingleImage(currentUrl);
-                                          }}
-                                          disabled={curating}
-                                          className="d-lb-btn d-lb-spark"
-                                          aria-label="Переоценить кадр"
-                                        >
-                                          {curating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            fetchAiDescription();
-                                          }}
-                                          disabled={aiDescriptionLoading || !record || currentLightboxIndex === null}
-                                          className="d-lb-btn d-lb-ai-desc"
-                                          aria-label="Получить AI-описание"
-                                        >
-                                          {aiDescriptionLoading ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <MessageSquareText className="h-4 w-4" />
-                                          )}
-                                        </button>
-                                      </div>
+                                      {/* SpeedDial (top-left) handles AI actions */}
 
                                       {/* Close button */}
                                       <button
@@ -1401,31 +1363,10 @@ const cloudRecord: ShootRecord = {
                                         </>
                                       )}
 
-                                      {/* Нижняя панель внутри рамки фото: скачать слева, счётчик по центру, корзина справа */}
-                                      <div className="d-lb-bar" onClick={(e) => e.stopPropagation()}>
-                                        <button
-                                          type="button"
-                                          onClick={handleDownloadSingle}
-                                          disabled={singleDownloading}
-                                          className="d-lb-dl"
-                                        >
-                                          <Download className="h-4 w-4" />
-                                          {singleDownloading ? "Скачиваем…" : "Скачать это фото"}
-                                        </button>
-                                        <span className="d-lb-count">
-                                          {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
-                                        </span>
-                                        <button
-                                          type="button"
-                                          onClick={deleteCurrentImage}
-                                          disabled={deleting || currentLightboxIndex === null}
-                                          className="d-lb-trash"
-                                          aria-label="Удалить из Cloudinary"
-                                          title="Удалить фото"
-                                        >
-                                          {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                                        </button>
-                                      </div>
+                                      {/* Счётчик кадров */}
+                                      <span className="d-lb-count d-lb-count--solo">
+                                        {(currentLightboxIndex ?? 0) + 1} / {record.fileUrls.length}
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
