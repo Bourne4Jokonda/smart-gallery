@@ -932,7 +932,7 @@ const cloudRecord: ShootRecord = {
                         </div>
                       </div>
                       <div className="flex w-1/2 flex-col gap-2">
-                        <h1 className="d-display text-[clamp(1.4rem,3vw,2rem)]">
+                        <h1 className="d-display text-[clamp(1.4rem,3vw,2rem)] self-end text-right">
                           {record.fileUrls.length} фото{" "}
                           <span className="text-muted-foreground font-normal">·</span>{" "}
                           <span className="text-primary">
