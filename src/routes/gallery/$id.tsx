@@ -904,8 +904,8 @@ const cloudRecord: ShootRecord = {
                     <div className="flex w-full flex-col gap-2">
                       <p className="shoot-title d-kicker mt-0">Съёмка #{record.shootId.slice(-6)}</p>
                     </div>
-                    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="flex w-full flex-wrap gap-3">
+                    <div className="flex w-full flex-row flex-nowrap items-start justify-between gap-3">
+                      <div className="flex w-1/2 flex-wrap gap-3">
                         <div className="w-full max-w-xs">
                         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                           <span>AI-описание</span>
@@ -931,7 +931,7 @@ const cloudRecord: ShootRecord = {
                         </div>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className="flex w-1/2 flex-col gap-2">
                         <h1 className="d-display text-[clamp(1.4rem,3vw,2rem)]">
                           {record.fileUrls.length} фото{" "}
                           <span className="text-muted-foreground font-normal">·</span>{" "}
