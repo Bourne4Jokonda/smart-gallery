@@ -673,16 +673,15 @@ const cloudRecord: ShootRecord = {
     if (!record || deleting) return;
     const url = record.fileUrls[idx];
     if (!url) return;
-    if (url.includes("e_grayscale")) {
-      toast.info("Фото уже ч/б");
-      return;
-    }
-    const bwUrl = url.replace("/image/upload/", "/image/upload/e_grayscale/");
+    const isBw = url.includes("e_grayscale");
+    const newUrl = isBw
+      ? url.replace("/image/upload/e_grayscale/", "/image/upload/")
+      : url.replace("/image/upload/", "/image/upload/e_grayscale/");
     setDeleting(true);
     try {
       const newFileUrls = [...record.fileUrls];
-      newFileUrls[idx] = bwUrl;
-      const newAiResults = (record.aiResults ?? []).filter((r) => r.url !== url);
+      newFileUrls[idx] = newUrl;
+      const newAiResults = (record.aiResults ?? []).filter((r) => r.url !== url && r.url !== newUrl);
       const updated = { ...record, fileUrls: newFileUrls, aiResults: newAiResults };
       setRecord(updated);
       saveShoot(updated);
@@ -691,7 +690,7 @@ const cloudRecord: ShootRecord = {
       } catch {
         // ignore cloud write errors
       }
-      toast.success("Фото сделано ч/б");
+      toast.success(isBw ? "Возвращён цвет" : "Фото сделано ч/б");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ошибка";
       toast.error(message);
@@ -1065,8 +1064,8 @@ const cloudRecord: ShootRecord = {
                     }}
                     disabled={deleting}
                     className="d-cell-action d-cell-action-3"
-                    aria-label={`Сделать ч/б кадр ${i + 1}`}
-                    title="Сделать ч/б"
+                    aria-label={url.includes("e_grayscale") ? `Вернуть цвет кадр ${i + 1}` : `Сделать ч/б кадр ${i + 1}`}
+                    title={url.includes("e_grayscale") ? "Вернуть цвет" : "Сделать ч/б"}
                   >
                     <Contrast className="h-3.5 w-3.5" />
                   </button>
