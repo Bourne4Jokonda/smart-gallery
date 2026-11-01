@@ -912,30 +912,6 @@ const cloudRecord: ShootRecord = {
                   return (
                     <div className="flex w-full flex-col gap-2">
                       <p className="shoot-title d-kicker mt-0">Съёмка #{record.shootId.slice(-6)}</p>
-                      <div className="inline-flex w-fit rounded-full border border-border bg-card p-1">
-                        <button
-                          type="button"
-                          onClick={() => setFilter("all")}
-                          className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
-                            filter === "all"
-                              ? "bg-primary text-primary-foreground"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          Все
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFilter("best")}
-                          className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
-                            filter === "best"
-                              ? "bg-primary text-primary-foreground"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          Лучшие
-                        </button>
-                      </div>
                       <div className="w-full max-w-xs">
                         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                           <span>AI-описание</span>
@@ -959,6 +935,30 @@ const cloudRecord: ShootRecord = {
                             style={{ width: `${total ? (scored / total) * 100 : 0}%` }}
                           />
                         </div>
+                      </div>
+                      <div className="inline-flex w-fit rounded-full border border-border bg-card p-1">
+                        <button
+                          type="button"
+                          onClick={() => setFilter("all")}
+                          className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                            filter === "all"
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          Все
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFilter("best")}
+                          className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                            filter === "best"
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          Лучшие
+                        </button>
                       </div>
                     </div>
                   );
