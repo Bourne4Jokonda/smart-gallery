@@ -172,6 +172,7 @@ function GalleryPage() {
   const [aiDescriptionError, setAiDescriptionError] = useState<string | null>(null);
   const [aiDescriptionProgress, setAiDescriptionProgress] = useState<{ done: number; total: number } | null>(null);
   const [aiDescriptionExpanded, setAiDescriptionExpanded] = useState(false);
+  const [lbSpeedDialOpen, setLbSpeedDialOpen] = useState(false);
 
   // Описание текущего кадра (из кэша)
   const aiDescription = lightboxUrl ? aiDescriptions[lightboxUrl] ?? null : null;
@@ -1265,6 +1266,54 @@ const cloudRecord: ShootRecord = {
                                     )}
 
                                     <div className="d-lb-photo">
+                                      {/* SpeedDial (top-left, expands right) */}
+                                      <div className="d-lb-speeddial" onClick={(e) => e.stopPropagation()}>
+                                        <button
+                                          type="button"
+                                          onClick={() => setLbSpeedDialOpen((v) => !v)}
+                                          className="d-lb-speeddial-main"
+                                          aria-label="Меню действий"
+                                        >
+                                          {lbSpeedDialOpen ? <X className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
+                                        </button>
+                                        <div className={'d-lb-speeddial-items ' + (lbSpeedDialOpen ? 'open' : '')}>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const u = lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0];
+                                              if (u) reindexSingleImage(u);
+                                              setLbSpeedDialOpen(false);
+                                            }}
+                                            disabled={curating}
+                                            title="AI-оценка"
+                                          >
+                                            <Brain className="h-4 w-4" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              fetchAiDescription();
+                                              setLbSpeedDialOpen(false);
+                                            }}
+                                            disabled={aiDescriptionLoading}
+                                            title="AI-описание"
+                                          >
+                                            <MessageSquareText className="h-4 w-4" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const idx = currentLightboxIndex ?? 0;
+                                              makeBlackAndWhite(idx);
+                                              setLbSpeedDialOpen(false);
+                                            }}
+                                            disabled={deleting}
+                                            title="Сделать ч/б"
+                                          >
+                                            <Contrast className="h-4 w-4" />
+                                          </button>
+                                        </div>
+                                      </div>
                                       <img
                                         src={lightboxUrl ?? record.fileUrls[currentLightboxIndex ?? 0]}
                                         alt={`Кадр ${(currentLightboxIndex ?? 0) + 1}`}
