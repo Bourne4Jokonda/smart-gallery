@@ -1,3 +1,66 @@
+# Smart Gallery — Умная галерея для фотографов
+
+Веб-приложение для фотографов: загрузка съёмки, AI-отбор лучших кадров, AI-описания, защита галереи паролем, скачивание архивов.
+
+**Prod:** https://aleksandr-faraonov.vercel.app
+
+## Стек
+- **Frontend:** React 19, TanStack Router/Start, Vite, Tailwind CSS, Radix UI, Sonner, JSZip
+- **Backend:** TanStack Start server routes (Vercel serverless), Firestore REST client (service account)
+- **AI:** Gemini 2.5 Flash (оценка фото, описания), OpenRouter (fallback)
+- **Хранение:** Cloudinary (изображения), Firestore (съёмки, кэш описаний), localStorage (прогресс)
+- **Деплой:** Vercel (автодеплой из main)
+
+## Функционал
+
+### Для фотографа (приватная галерея)
+- Загрузка съёмки (много фото) в Cloudinary
+- Добавление фото в существующую съёмку
+- AI-оценка фото (0–10 баллов, батчи по 10, Gemini)
+- AI-описание фото (одно предложение + 5 тегов, OpenRouter/Gemini)
+- Фильтр «Все / Лучшие» (score ≥ 7)
+- Ч/б toggle для отдельных фото (Cloudinary e_grayscale)
+- Удаление фото, очистка всей сессии
+- Скачивание ZIP (все фото)
+- Публичная ссылка с паролем
+
+### Для клиента (публичная галерея)
+- Просмотр фото с водяным знаком (настройки фотографа)
+- Скачивание ZIP (все фото)
+- Защита паролем
+
+### Лайтбокс
+- Просмотр фото, навигация стрелками/клавиатурой
+- AI-описание (до 3 строк, scroll), теги (горизонтальный scroll)
+- SpeedDial (верхний левый угол): AI-оценка, AI-описание, ч/б toggle, перегенерация описания
+
+### Прогресс и UX
+- Бейджи прогресса AI-оценки и AI-описания (на сетке и в лайтбоксе)
+- localStorage прогресс (восстановление при перезагрузке)
+- Мобильное меню (overlay, без сдвига контента)
+- Адаптивная сетка фото
+
+## Env vars (Vercel)
+- `FIREBASE_SERVICE_ACCOUNT` (production/preview/development)
+- `GEMINI_API_KEY`
+- `OPENROUTER_API_KEY`
+- `VITE_CLOUDINARY_CLOUD_NAME`
+- `VITE_FIREBASE_*` (API key, auth domain, project id, storage bucket, etc.)
+
+## Деплой
+```sh
+cd lovable-export
+npm run build
+git add -A && git commit -m "..."
+git push origin main
+# Vercel автодеплой
+```
+
+## Статус
+Проект завершён (v1). Основной функционал работает на prod.
+
+---
+
 # Welcome to your Lovable project
 
 This project was built with [Lovable](https://lovable.dev).
